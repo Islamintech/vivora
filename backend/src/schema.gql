@@ -1,0 +1,378 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input AddStaffInput {
+  email: String!
+  name: String!
+  password: String!
+}
+
+type AdminRestaurantView {
+  _id: ID!
+  createdAt: DateTime!
+  isActive: Boolean!
+  name: String!
+  orderCount: Int!
+  revenue: Float!
+  slug: String!
+  status: RestaurantStatus!
+}
+
+type AnalyticsOverview {
+  averageOrderValue: Float!
+  dailyRevenue: [DailyRevenue!]!
+  pendingOrders: Int!
+  popularItems: [PopularItemStat!]!
+  servedOrders: Int!
+  tableTurnover: [TableTurnover!]!
+  totalOrders: Int!
+  totalRevenue: Float!
+}
+
+input AnalyticsPeriodInput {
+  endDate: DateTime!
+  startDate: DateTime!
+}
+
+type AuthPayload {
+  token: String!
+  user: UserModel!
+}
+
+input CreateCategoryInput {
+  name: String!
+  order: Int
+}
+
+input CreateMenuItemInput {
+  allergens: [String!]
+  categoryId: ID!
+  description: String
+  imageUrl: String
+  isAvailable: Boolean
+  isPopular: Boolean
+  name: String!
+  price: Float!
+  quantity: Int
+  tags: [String!]
+  trackQuantity: Boolean
+}
+
+input CreateTableInput {
+  capacity: Int
+  name: String!
+  number: Int!
+}
+
+type DailyRevenue {
+  date: String!
+  orderCount: Int!
+  revenue: Float!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+enum ErrorLogLevel {
+  ERROR
+  INFO
+  WARN
+}
+
+type ErrorLogModel {
+  _id: ID!
+  context: String
+  createdAt: DateTime!
+  level: ErrorLogLevel!
+  message: String!
+  restaurantId: ID
+  stack: String
+}
+
+type FeedbackModel {
+  _id: ID!
+  comment: String
+  createdAt: DateTime!
+  language: String!
+  orderId: ID
+  rating: Int!
+  restaurantId: ID!
+  tableNumber: Int!
+}
+
+type FeedbackSummary {
+  averageRating: Float!
+  recent: [FeedbackModel!]!
+  totalCount: Int!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type MenuCategoryModel {
+  _id: ID!
+  isActive: Boolean!
+  name: String!
+  order: Int!
+  restaurantId: ID!
+}
+
+type MenuItemModel {
+  _id: ID!
+  allergens: [String!]!
+  categoryId: ID!
+  description: String
+  imageUrl: String
+  isAvailable: Boolean!
+  isPopular: Boolean!
+  name: String!
+  price: Float!
+  quantity: Int!
+  restaurantId: ID!
+  tags: [String!]!
+  trackQuantity: Boolean!
+}
+
+type Mutation {
+  addStaff(input: AddStaffInput!): UserModel!
+  adminToggleRestaurant(restaurantId: ID!): RestaurantModel!
+  approveRestaurant(restaurantId: ID!): RestaurantModel!
+  createCategory(input: CreateCategoryInput!): MenuCategoryModel!
+  createMenuItem(input: CreateMenuItemInput!): MenuItemModel!
+  createTable(input: CreateTableInput!): TableModel!
+  deleteCategory(categoryId: ID!): Boolean!
+  deleteMenuItem(itemId: ID!): Boolean!
+  deleteTable(tableId: ID!): Boolean!
+  login(input: LoginInput!): AuthPayload!
+  placeOrder(input: PlaceOrderInput!): OrderModel!
+  regenerateQrCode(tableId: ID!): TableModel!
+  register(input: RegisterInput!): AuthPayload!
+  rejectRestaurant(reason: String, restaurantId: ID!): RestaurantModel!
+  submitFeedback(input: SubmitFeedbackInput!): FeedbackModel!
+  updateCategory(input: UpdateCategoryInput!): MenuCategoryModel!
+  updateItemAvailability(input: UpdateItemAvailabilityInput!): MenuItemModel!
+  updateMenuItem(input: UpdateMenuItemInput!): MenuItemModel!
+  updateOrderStatus(input: UpdateOrderStatusInput!): OrderModel!
+  updateRestaurant(input: UpdateRestaurantInput!): RestaurantModel!
+  updateTable(input: UpdateTableInput!): TableModel!
+}
+
+input OrderItemInput {
+  menuItemId: ID!
+  notes: String
+  quantity: Int!
+}
+
+type OrderItemModel {
+  menuItemId: ID!
+  name: String!
+  notes: String
+  price: Float!
+  quantity: Int!
+}
+
+type OrderModel {
+  _id: ID!
+  createdAt: DateTime!
+  customerNote: String
+  items: [OrderItemModel!]!
+  language: String!
+  restaurantId: ID!
+  status: OrderStatus!
+  tableId: ID!
+  tableNumber: Int!
+  totalAmount: Float!
+  updatedAt: DateTime!
+}
+
+enum OrderStatus {
+  CANCELLED
+  PENDING
+  PREPARING
+  READY
+  SERVED
+}
+
+input PlaceOrderInput {
+  customerNote: String
+  items: [OrderItemInput!]!
+  language: String = "en"
+  restaurantId: ID!
+  tableNumber: Int!
+}
+
+type PlatformStats {
+  activeRestaurants: Int!
+  totalErrorLogs: Int!
+  totalOrders: Int!
+  totalRestaurants: Int!
+  totalRevenue: Float!
+  totalUsers: Int!
+}
+
+type PopularItemStat {
+  menuItemId: ID!
+  name: String!
+  revenue: Float!
+  totalOrdered: Int!
+}
+
+type PublicMenuSection {
+  category: MenuCategoryModel!
+  items: [MenuItemModel!]!
+}
+
+type Query {
+  adminRestaurantAnalytics(period: AnalyticsPeriodInput!, restaurantId: String!): AnalyticsOverview!
+  adminRestaurants: [AdminRestaurantView!]!
+  allOrders(limit: Float): [OrderModel!]!
+  allRestaurants: [RestaurantModel!]!
+  analytics(period: AnalyticsPeriodInput!): AnalyticsOverview!
+  categories: [MenuCategoryModel!]!
+  errorLogs(restaurantId: ID): [ErrorLogModel!]!
+  feedbackList: [FeedbackModel!]!
+  feedbackSummary: FeedbackSummary!
+  me: UserModel!
+  menuItems(categoryId: ID): [MenuItemModel!]!
+  myRestaurant: RestaurantModel!
+  order(orderId: ID!): OrderModel!
+  orders(limit: Float, status: OrderStatus): [OrderModel!]!
+  pendingRestaurants: [RestaurantModel!]!
+  platformStats: PlatformStats!
+  publicMenu(restaurantId: ID!): [PublicMenuSection!]!
+  publicRestaurant(slug: String!): RestaurantModel!
+  tables: [TableModel!]!
+}
+
+input RegisterInput {
+  email: String!
+  name: String!
+  password: String!
+  restaurantName: String!
+}
+
+type RestaurantModel {
+  _id: ID!
+  address: String
+  createdAt: DateTime!
+  currency: String!
+  description: String
+  isActive: Boolean!
+  logo: String
+  name: String!
+  ownerId: ID
+  phone: String
+  rejectionReason: String
+  slug: String!
+  status: RestaurantStatus!
+  telegramChatId: String
+}
+
+enum RestaurantStatus {
+  APPROVED
+  PENDING_REVIEW
+  REJECTED
+}
+
+input SubmitFeedbackInput {
+  comment: String
+  language: String = "en"
+  orderId: ID
+  rating: Int!
+  restaurantId: ID!
+  tableNumber: Int = 0
+}
+
+type Subscription {
+  orderCreated(restaurantId: ID!): OrderModel!
+  orderStatusUpdated(restaurantId: ID!): OrderModel!
+}
+
+type TableModel {
+  _id: ID!
+  capacity: Int!
+  createdAt: DateTime!
+  isActive: Boolean!
+  name: String!
+  number: Int!
+  qrCodeDataUrl: String!
+  restaurantId: ID!
+}
+
+type TableTurnover {
+  tableName: String!
+  tableNumber: Int!
+  totalOrders: Int!
+  totalRevenue: Float!
+}
+
+input UpdateCategoryInput {
+  categoryId: ID!
+  isActive: Boolean
+  name: String
+  order: Int
+}
+
+input UpdateItemAvailabilityInput {
+  isAvailable: Boolean
+  itemId: ID!
+  quantity: Int
+  trackQuantity: Boolean
+}
+
+input UpdateMenuItemInput {
+  allergens: [String!]
+  description: String
+  imageUrl: String
+  isAvailable: Boolean
+  isPopular: Boolean
+  itemId: ID!
+  name: String
+  price: Float
+  quantity: Int
+  tags: [String!]
+  trackQuantity: Boolean
+}
+
+input UpdateOrderStatusInput {
+  orderId: ID!
+  status: OrderStatus!
+}
+
+input UpdateRestaurantInput {
+  address: String
+  currency: String
+  description: String
+  logo: String
+  name: String
+  phone: String
+  telegramChatId: String
+}
+
+input UpdateTableInput {
+  capacity: Int
+  isActive: Boolean
+  name: String
+  tableId: ID!
+}
+
+type UserModel {
+  _id: ID!
+  createdAt: DateTime!
+  email: String!
+  isActive: Boolean!
+  name: String!
+  restaurantId: ID
+  role: UserRole!
+}
+
+enum UserRole {
+  RESTAURANT_ADMIN
+  STAFF
+  SUPER_ADMIN
+}
