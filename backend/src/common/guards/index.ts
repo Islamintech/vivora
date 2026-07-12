@@ -8,6 +8,7 @@ import {
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { ROLES_KEY } from '../decorators';
 import { UserRole } from '../enums';
 
@@ -47,5 +48,16 @@ export class RolesGuard implements CanActivate {
       );
     }
     return true;
+  }
+}
+
+// Per-IP rate limiting for public GraphQL endpoints. The stock ThrottlerGuard
+// reads req/res from the HTTP context, which is empty under GraphQL — pull
+// them from the GQL context instead (Express keeps res on req.res).
+@Injectable()
+export class GqlThrottlerGuard extends ThrottlerGuard {
+  getRequestResponse(context: ExecutionContext) {
+    const ctx = GqlExecutionContext.create(context).getContext();
+    return { req: ctx.req, res: ctx.req?.res };
   }
 }

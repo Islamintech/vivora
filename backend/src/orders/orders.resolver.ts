@@ -22,7 +22,8 @@ import {
   UpdateOrderStatusInput,
 } from './models/order.model';
 import { PUB_SUB, ORDER_CREATED, ORDER_STATUS_UPDATED } from '../pubsub/pubsub.module';
-import { GqlAuthGuard } from '../common/guards';
+import { Throttle } from '@nestjs/throttler';
+import { GqlAuthGuard, GqlThrottlerGuard } from '../common/guards';
 import { CurrentUser } from '../common/decorators';
 import { OrderStatus, UserRole } from '../common/enums';
 
@@ -34,8 +35,11 @@ export class OrdersResolver {
     @Inject(PUB_SUB) private pubSub: PubSub,
   ) {}
 
-  // Public — no auth (customer places order)
+  // Public — no auth (customer places order). Generous limit because a whole
+  // restaurant's guests can share one IP behind the venue's WiFi NAT.
   @Mutation(() => OrderModel)
+  @UseGuards(GqlThrottlerGuard)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   async placeOrder(@Args('input') input: PlaceOrderInput): Promise<OrderModel> {
     return this.ordersService.placeOrder(input);
   }

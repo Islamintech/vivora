@@ -44,6 +44,10 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
       }
     }
 
+    if (status === 429) {
+      message = 'Too many requests — please wait a moment and try again.';
+    }
+
     const stack = exception instanceof Error ? exception.stack : undefined;
 
     const code =
@@ -55,7 +59,9 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
             ? 'BAD_USER_INPUT'
             : status === 404
               ? 'NOT_FOUND'
-              : 'INTERNAL_SERVER_ERROR';
+              : status === 429
+                ? 'TOO_MANY_REQUESTS'
+                : 'INTERNAL_SERVER_ERROR';
 
     let context = 'GraphQL';
     let restaurantId: string | undefined;

@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { GqlExceptionFilter } from './common/filters/gql-exception.filter';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -45,6 +46,9 @@ import { TelegramBotModule } from './telegram/telegram-bot.module';
         connectionParams,
       }),
     }),
+    // Default bucket for endpoints guarded by GqlThrottlerGuard; the public
+    // resolvers override per-endpoint with @Throttle.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     PubSubModule,
     TelegramModule,
     TelegramBotModule,
