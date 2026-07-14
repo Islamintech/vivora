@@ -1,6 +1,6 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Box, Card, CardContent, Typography, Stack, Grid,
@@ -25,10 +25,15 @@ const AnalyticsPage: NextPage = () => {
   const [period, setPeriod] = useState<PeriodKey>('30d');
 
   const days = PERIODS.find((p) => p.key === period)?.days ?? 30;
-  const periodInput = {
-    startDate: dayjs().subtract(days, 'day').toDate(),
-    endDate: dayjs().toDate(),
-  };
+  // Memoized: fresh Date objects on every render make Apollo see "new
+  // variables" and refetch in an endless loop.
+  const periodInput = useMemo(
+    () => ({
+      startDate: dayjs().subtract(days, 'day').startOf('day').toDate(),
+      endDate: dayjs().endOf('day').toDate(),
+    }),
+    [days],
+  );
 
   const { data, loading } = useQuery(ANALYTICS_QUERY, {
     variables: { period: periodInput },

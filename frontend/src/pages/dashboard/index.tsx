@@ -1,5 +1,6 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Box, Grid, Card, CardContent, Typography, Stack,
@@ -36,10 +37,15 @@ const StatCard = ({ label, value, icon, color, sub }: any) => (
 const DashboardPage: NextPage = () => {
   const { user } = useRequireAuth();
 
-  const period = {
-    startDate: dayjs().subtract(30, 'day').toDate(),
-    endDate: dayjs().toDate(),
-  };
+  // Memoized: fresh Date objects on every render make Apollo see "new
+  // variables" and refetch in an endless loop.
+  const period = useMemo(
+    () => ({
+      startDate: dayjs().subtract(30, 'day').startOf('day').toDate(),
+      endDate: dayjs().endOf('day').toDate(),
+    }),
+    [],
+  );
 
   const { data: analyticsData, loading: aLoading } = useQuery(ANALYTICS_QUERY, {
     variables: { period },

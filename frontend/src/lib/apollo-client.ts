@@ -35,10 +35,21 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
       console.error(`[GraphQL ${code}] ${operation.operationName}: ${err.message}`);
 
       if (code === 'UNAUTHENTICATED') {
-        toast.error('Session expired. Please sign in again.');
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('rp_token');
+        if (typeof window === 'undefined') return;
+        // On the auth pages a 401 just means wrong credentials — let the
+        // form handle it. Elsewhere it's an expired/invalid session: clear
+        // everything and hard-redirect so no query keeps retrying.
+        const onAuthPage = ['/login', '/register'].some((p) =>
+          window.location.pathname.startsWith(p),
+        );
+        if (onAuthPage) {
+          if (isMutation) toast.error(err.message || 'Sign-in failed');
+          return;
         }
+        localStorage.removeItem('rp_token');
+        localStorage.removeItem('rp_user');
+        toast.error('Session expired. Please sign in again.');
+        window.location.href = '/login';
         return;
       }
       if (code === 'FORBIDDEN') {
