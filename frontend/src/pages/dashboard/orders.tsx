@@ -114,6 +114,87 @@ function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id
   );
 }
 
+// Phone/tablet layout for a single order — the 7-column table is unusable
+// below ~900px, so each order becomes a self-contained card with the primary
+// action reachable without any horizontal scrolling.
+function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id: string, status: OrderStatus) => void }) {
+  const [open, setOpen] = useState(false);
+  const next = NEXT_STATUS[order.status as OrderStatus];
+
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 3 }}>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+          <Typography fontWeight={800} fontSize="1.05rem">{order.tableNumber}-stol</Typography>
+          <Chip
+            label={statusLabel[order.status as OrderStatus]}
+            color={statusColor[order.status as OrderStatus]}
+            size="small"
+          />
+        </Stack>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
+          <Typography variant="body2" color="text.secondary">
+            {order.items.length} ta taom · {dayjs(order.createdAt).format('HH:mm · MMM D')}
+          </Typography>
+          <Typography fontWeight={700}>${order.totalAmount.toFixed(2)}</Typography>
+        </Stack>
+
+        <Button
+          size="small"
+          onClick={() => setOpen((p) => !p)}
+          endIcon={open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          sx={{ px: 0, minWidth: 0, color: 'text.secondary' }}
+        >
+          {open ? 'Yashirish' : 'Tarkibini ko‘rish'}
+        </Button>
+        <Collapse in={open} unmountOnExit>
+          <Box sx={{ py: 1 }}>
+            {order.items.map((item, i) => (
+              <Stack key={i} direction="row" justifyContent="space-between" sx={{ py: 0.5 }}>
+                <Typography variant="body2">
+                  {item.name} × {item.quantity}
+                  {item.notes && <Typography component="span" variant="caption" color="text.secondary"> · {item.notes}</Typography>}
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>${(item.price * item.quantity).toFixed(2)}</Typography>
+              </Stack>
+            ))}
+            {order.customerNote && (
+              <Box mt={1}>
+                <Typography variant="caption" color="text.secondary">Mijoz izohi: </Typography>
+                <Typography variant="body2">{order.customerNote}</Typography>
+              </Box>
+            )}
+          </Box>
+        </Collapse>
+
+        {(next || order.status === 'PENDING') && (
+          <Stack direction="row" spacing={1} mt={1.5}>
+            {next && (
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => onStatusUpdate(order._id, next)}
+              >
+                {statusLabel[next]} deb belgilash
+              </Button>
+            )}
+            {order.status === 'PENDING' && (
+              <Button
+                variant="outlined"
+                color="error"
+                sx={{ flexShrink: 0 }}
+                onClick={() => onStatusUpdate(order._id, 'CANCELLED')}
+              >
+                Bekor
+              </Button>
+            )}
+          </Stack>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 const OrdersPage: NextPage = () => {
   const { user } = useRequireAuth();
   const [activeTab, setActiveTab] = useState(0);
@@ -328,7 +409,8 @@ const OrdersPage: NextPage = () => {
               </Tabs>
             </Box>
 
-            <Box sx={{ overflowX: 'auto' }}>
+            {/* Table on desktop (md+); stacked cards on phones and tablets. */}
+            <Box sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -355,6 +437,16 @@ const OrdersPage: NextPage = () => {
                 </TableBody>
               </Table>
             </Box>
+            <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' }, p: 2 }}>
+              {orders.map((order) => (
+                <OrderCardMobile key={order._id} order={order} onStatusUpdate={handleStatusUpdate} />
+              ))}
+              {orders.length === 0 && (
+                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 6 }}>
+                  Buyurtmalar topilmadi
+                </Typography>
+              )}
+            </Stack>
           </Card>
         </Box>
       </DashboardLayout>

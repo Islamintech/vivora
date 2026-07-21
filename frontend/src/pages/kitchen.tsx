@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useSubscription } from '@apollo/client';
 import {
   Box, Card, CardContent, Typography, Stack, Chip, Button,
-  Grid, ThemeProvider, CssBaseline, AppBar, Toolbar, Avatar, Badge,
+  ThemeProvider, CssBaseline, AppBar, Toolbar, Avatar, Badge,
 } from '@mui/material';
 import {
   Kitchen, Notifications, CheckCircle, LocalDining, DoneAll,
@@ -181,47 +181,63 @@ const KitchenPage: NextPage = () => {
           </Toolbar>
         </AppBar>
 
-        {/* Columns */}
-        <Box sx={{ p: 2 }}>
-          <Grid container spacing={2}>
-            {STATUS_COLUMNS.map((col) => (
-              <Grid item xs={12} md={4} key={col.status}>
-                {/* Column header */}
-                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                  <Typography fontWeight={700} color="white">{col.label}</Typography>
-                  <Chip
-                    label={byStatus(col.status).length}
-                    size="small"
-                    sx={{ bgcolor: `${col.color}20`, color: col.color, fontWeight: 700, height: 22 }}
-                  />
-                </Stack>
+        {/* Columns — three equal columns on desktop; on phones/tablets they
+            stay side-by-side as horizontal scroll-snap panes so kitchen staff
+            can glance across statuses instead of scrolling past a whole list. */}
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            gap: 2,
+            alignItems: 'flex-start',
+            overflowX: { xs: 'auto', md: 'visible' },
+            scrollSnapType: { xs: 'x mandatory', md: 'none' },
+            '& > *': { scrollSnapAlign: 'start' },
+          }}
+        >
+          {STATUS_COLUMNS.map((col) => (
+            <Box
+              key={col.status}
+              sx={{
+                flex: { xs: '0 0 82%', sm: '0 0 45%', md: 1 },
+                minWidth: 0,
+              }}
+            >
+              {/* Column header */}
+              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                <Typography fontWeight={700} color="white">{col.label}</Typography>
+                <Chip
+                  label={byStatus(col.status).length}
+                  size="small"
+                  sx={{ bgcolor: `${col.color}20`, color: col.color, fontWeight: 700, height: 22 }}
+                />
+              </Stack>
 
-                {/* Cards */}
-                <Stack spacing={2}>
-                  {byStatus(col.status).map((order) => (
-                    <OrderCard
-                      key={order._id}
-                      order={order}
-                      onUpdate={(id, status) => updateStatus({ variables: { input: { orderId: id, status } } })}
-                    />
-                  ))}
-                  {byStatus(col.status).length === 0 && (
-                    <Box
-                      sx={{
-                        border: '2px dashed #1E1E2E', borderRadius: 3,
-                        py: 6, textAlign: 'center',
-                      }}
-                    >
-                      <LocalDining sx={{ color: '#2A2A3E', fontSize: 40, mb: 1 }} />
-                      <Typography variant="body2" color="grey.700">
-                        {col.status === 'PENDING' ? 'No new orders' : 'All clear'}
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </Grid>
-            ))}
-          </Grid>
+              {/* Cards */}
+              <Stack spacing={2}>
+                {byStatus(col.status).map((order) => (
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    onUpdate={(id, status) => updateStatus({ variables: { input: { orderId: id, status } } })}
+                  />
+                ))}
+                {byStatus(col.status).length === 0 && (
+                  <Box
+                    sx={{
+                      border: '2px dashed #1E1E2E', borderRadius: 3,
+                      py: 6, textAlign: 'center',
+                    }}
+                  >
+                    <LocalDining sx={{ color: '#2A2A3E', fontSize: 40, mb: 1 }} />
+                    <Typography variant="body2" color="grey.700">
+                      {col.status === 'PENDING' ? 'No new orders' : 'All clear'}
+                    </Typography>
+                  </Box>
+                )}
+              </Stack>
+            </Box>
+          ))}
         </Box>
       </Box>
     </ThemeProvider>

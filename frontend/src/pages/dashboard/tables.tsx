@@ -74,7 +74,7 @@ const TablesPage: NextPage = () => {
       <Head><title>Stollar va QR — RestoPlatform</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
             <Box>
               <Typography variant="h4" fontWeight={800}>Stollar va QR kodlar</Typography>
               <Typography color="text.secondary">

@@ -143,7 +143,7 @@ const MenuPage: NextPage = () => {
       <Head><title>Menyu boshqaruvi — RestoPlatform</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
             <Box>
               <Typography variant="h4" fontWeight={800}>Menyu boshqaruvi</Typography>
               <Typography color="text.secondary">Kategoriyalar va taomlarni boshqaring</Typography>
@@ -166,7 +166,7 @@ const MenuPage: NextPage = () => {
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%', pr: 2 }}>
                   <DragIndicator sx={{ color: 'text.disabled' }} />
-                  <Typography fontWeight={700} sx={{ flex: 1 }}>
+                  <Typography fontWeight={700} noWrap sx={{ flex: 1, minWidth: 0 }}>
                     {cat.name || 'Nomsiz kategoriya'}
                   </Typography>
                   <Stack direction="row" spacing={1}>

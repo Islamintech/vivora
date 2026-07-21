@@ -176,7 +176,7 @@ const AdminPage: NextPage = () => {
           {/* Tabs */}
           <Card>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs value={tab} onChange={(_, v) => setTab(v)}>
+              <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile>
                 <Tab label="Restaurants" />
                 <Tab label="Recent Orders" />
                 <Tab label="Error Logs" />
@@ -310,7 +310,7 @@ const AdminPage: NextPage = () => {
 
             {/* Error Logs Tab */}
             {tab === 2 && (
-              <Box>
+              <Box sx={{ overflowX: 'auto' }}>
                 {logsLoading && <LinearProgress />}
                 <Table>
                   <TableHead>
@@ -377,7 +377,7 @@ const AdminPage: NextPage = () => {
                             </Stack>
                           </Grid>
                           <Grid item xs={12} md={4}>
-                            <Stack direction={{ xs: 'row', md: 'column' }} spacing={1} justifyContent="flex-end">
+                            <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} spacing={1} justifyContent="flex-end">
                               <Button
                                 fullWidth
                                 variant="contained"

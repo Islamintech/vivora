@@ -152,13 +152,16 @@ const baseTheme = createTheme({
 
 export const theme = responsiveFontSizes(baseTheme);
 
-// Dark variant used on kitchen display
-export const kitchenTheme = createTheme({
-  ...baseTheme,
-  palette: {
-    ...baseTheme.palette,
-    mode: 'dark',
-    background: { default: '#0A0A0F', paper: '#13131A' },
-    text: { primary: '#F8FAFC', secondary: '#94A3B8' },
-  },
-});
+// Dark variant used on kitchen display. Wrapped in responsiveFontSizes too so
+// headers/labels scale down on the phones and tablets kitchens actually use.
+export const kitchenTheme = responsiveFontSizes(
+  createTheme({
+    ...baseTheme,
+    palette: {
+      ...baseTheme.palette,
+      mode: 'dark',
+      background: { default: '#0A0A0F', paper: '#13131A' },
+      text: { primary: '#F8FAFC', secondary: '#94A3B8' },
+    },
+  }),
+);

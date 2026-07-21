@@ -171,9 +171,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <Toolbar>
           {isMobile && (
-            <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 1 }}>
+            <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 1 }} aria-label="Open navigation menu">
               <MenuIcon />
             </IconButton>
+          )}
+          {/* Keep page context visible on mobile once the drawer closes. */}
+          {isMobile && (
+            <Typography variant="h6" fontWeight={700} noWrap sx={{ fontSize: '1.05rem' }}>
+              {navItems.find((i) => i.href === router.pathname)?.label ?? 'RestoPlatform'}
+            </Typography>
           )}
           <Box sx={{ flex: 1 }} />
           <Tooltip title={user?.name || 'Hisob'}>

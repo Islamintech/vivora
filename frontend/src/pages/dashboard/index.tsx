@@ -116,7 +116,7 @@ const DashboardPage: NextPage = () => {
 
           <Grid container spacing={3}>
             {/* Popular items */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" fontWeight={700} mb={2}>🔥 Mashhur taomlar</Typography>
@@ -149,7 +149,7 @@ const DashboardPage: NextPage = () => {
             </Grid>
 
             {/* Table turnover */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" fontWeight={700} mb={2}>📊 Stollar faolligi</Typography>

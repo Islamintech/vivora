@@ -38,7 +38,7 @@ const FeedbackPage: NextPage = () => {
 
           <Grid container spacing={3}>
             {/* Summary card */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={5} md={4}>
               <Card>
                 <CardContent sx={{ textAlign: 'center', py: 4 }}>
                   <Typography variant="h1" fontWeight={800} sx={{ lineHeight: 1 }}>
@@ -70,7 +70,7 @@ const FeedbackPage: NextPage = () => {
             </Grid>
 
             {/* Feedback list */}
-            <Grid item xs={12} md={8}>
+            <Grid item xs={12} sm={7} md={8}>
               <Stack spacing={2}>
                 {(summary?.recent ?? []).map((fb: Feedback) => (
                   <Card key={fb._id}>
