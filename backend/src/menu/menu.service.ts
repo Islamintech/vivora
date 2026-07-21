@@ -24,6 +24,10 @@ export class MenuService {
     private itemModel: Model<MenuItemDocument>,
   ) {}
 
+  async countItemsByRestaurant(restaurantId: string): Promise<number> {
+    return this.itemModel.countDocuments({ restaurantId });
+  }
+
   // --- Categories ---
 
   async createCategory(

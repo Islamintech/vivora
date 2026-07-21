@@ -1,17 +1,25 @@
-import { Resolver, Query, Args, ID } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminService } from './admin.service';
-import { PlatformStats, AdminRestaurantView } from './models/admin-stats.model';
+import {
+  PlatformStats,
+  AdminRestaurantView,
+  AdminUserView,
+  AdminRestaurantDetail,
+  PlatformTimePoint,
+} from './models/admin-stats.model';
 import { ErrorLogModel } from '../error-logs/models/error-log.model';
 import { OrderModel } from '../orders/models/order.model';
 import { GqlAuthGuard, RolesGuard } from '../common/guards';
 import { CurrentUser, Roles } from '../common/decorators';
-import { UserRole } from '../common/enums';
+import { ErrorLogLevel, UserRole } from '../common/enums';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { UsersModule } from '../users/users.module';
 import { OrdersModule } from '../orders/orders.module';
+import { MenuModule } from '../menu/menu.module';
+import { TablesModule } from '../tables/tables.module';
 import { ErrorLogsModule } from '../error-logs/error-logs.module';
 import { Order, OrderSchema } from '../orders/schemas/order.schema';
 
@@ -34,8 +42,9 @@ export class AdminResolver {
   @Query(() => [ErrorLogModel])
   async errorLogs(
     @Args('restaurantId', { type: () => ID, nullable: true }) restaurantId?: string,
+    @Args('level', { type: () => ErrorLogLevel, nullable: true }) level?: ErrorLogLevel,
   ): Promise<ErrorLogModel[]> {
-    return this.adminService.getErrorLogs(restaurantId);
+    return this.adminService.getErrorLogs(restaurantId, level);
   }
 
   @Query(() => [OrderModel])
@@ -43,6 +52,51 @@ export class AdminResolver {
     @Args('limit', { nullable: true }) limit?: number,
   ): Promise<OrderModel[]> {
     return this.adminService.getAllOrders(Math.min(Math.max(limit || 100, 1), 500));
+  }
+
+  @Query(() => [AdminUserView])
+  async adminUsers(): Promise<AdminUserView[]> {
+    return this.adminService.getAdminUsers();
+  }
+
+  @Query(() => AdminRestaurantDetail)
+  async adminRestaurantDetail(
+    @Args('restaurantId', { type: () => ID }) restaurantId: string,
+  ): Promise<AdminRestaurantDetail> {
+    return this.adminService.getRestaurantDetail(restaurantId);
+  }
+
+  @Query(() => [PlatformTimePoint])
+  async platformTimeseries(
+    @Args('days', { type: () => Int, nullable: true }) days?: number,
+  ): Promise<PlatformTimePoint[]> {
+    return this.adminService.getPlatformTimeseries(days ?? 30);
+  }
+
+  @Mutation(() => Int)
+  async purgeErrorLogs(
+    @Args('olderThanDays', { type: () => Int }) olderThanDays: number,
+  ): Promise<number> {
+    return this.adminService.purgeErrorLogs(olderThanDays);
+  }
+
+  @Mutation(() => AdminUserView)
+  async adminToggleUser(
+    @Args('userId', { type: () => ID }) userId: string,
+    @CurrentUser() user: any,
+  ): Promise<AdminUserView> {
+    await this.adminService.toggleUser(userId, user._id?.toString());
+    // Return the refreshed view (with restaurant name) for the row.
+    const users = await this.adminService.getAdminUsers();
+    return users.find((u) => u._id.toString() === userId)!;
+  }
+
+  @Mutation(() => Boolean)
+  async adminResetUserPassword(
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('newPassword') newPassword: string,
+  ): Promise<boolean> {
+    return this.adminService.resetUserPassword(userId, newPassword);
   }
 }
 
@@ -52,6 +106,8 @@ export class AdminResolver {
     RestaurantsModule,
     UsersModule,
     OrdersModule,
+    MenuModule,
+    TablesModule,
     ErrorLogsModule,
   ],
   providers: [AdminService, AdminResolver],

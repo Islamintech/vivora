@@ -51,6 +51,17 @@ export class UsersService {
     return user.save();
   }
 
+  async findAll(): Promise<UserDocument[]> {
+    return this.userModel.find().sort({ createdAt: -1 }).exec();
+  }
+
+  async resetPassword(userId: string, newPassword: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    user.password = await bcrypt.hash(newPassword, 12);
+    return user.save();
+  }
+
   async countAll(): Promise<number> {
     return this.userModel.countDocuments();
   }

@@ -32,9 +32,14 @@ export class ErrorLogsService {
     return this.log(ErrorLogLevel.WARN, message, opts);
   }
 
-  async findAll(restaurantId?: string, limit = 100): Promise<ErrorLogDocument[]> {
+  async findAll(
+    restaurantId?: string,
+    limit = 100,
+    level?: ErrorLogLevel,
+  ): Promise<ErrorLogDocument[]> {
     const filter: any = {};
     if (restaurantId) filter.restaurantId = restaurantId;
+    if (level) filter.level = level;
     return this.logModel.find(filter).sort({ createdAt: -1 }).limit(limit).exec();
   }
 
@@ -47,5 +52,14 @@ export class ErrorLogsService {
     cutoff.setDate(cutoff.getDate() - days);
     const result = await this.logModel.deleteMany({ createdAt: { $lt: cutoff } });
     return result.deletedCount;
+  }
+
+  // olderThanDays <= 0 clears every log; otherwise only entries past the cutoff.
+  async purge(olderThanDays: number): Promise<number> {
+    if (olderThanDays <= 0) {
+      const result = await this.logModel.deleteMany({});
+      return result.deletedCount;
+    }
+    return this.deleteOlderThan(olderThanDays);
   }
 }

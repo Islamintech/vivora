@@ -392,10 +392,16 @@ export const REJECT_RESTAURANT_MUTATION = gql`
 `;
 
 export const ERROR_LOGS_QUERY = gql`
-  query ErrorLogs($restaurantId: ID) {
-    errorLogs(restaurantId: $restaurantId) {
+  query ErrorLogs($restaurantId: ID, $level: ErrorLogLevel) {
+    errorLogs(restaurantId: $restaurantId, level: $level) {
       _id level message stack context createdAt
     }
+  }
+`;
+
+export const PURGE_ERROR_LOGS_MUTATION = gql`
+  mutation PurgeErrorLogs($olderThanDays: Int!) {
+    purgeErrorLogs(olderThanDays: $olderThanDays)
   }
 `;
 
@@ -404,6 +410,53 @@ export const ALL_ORDERS_QUERY = gql`
     allOrders(limit: $limit) {
       _id restaurantId tableNumber status totalAmount createdAt
       items { quantity price name }
+    }
+  }
+`;
+
+// ─── Admin: users, restaurant drill-down, platform trends ─────────────────────
+
+export const ADMIN_USERS_QUERY = gql`
+  query AdminUsers {
+    adminUsers {
+      _id name email role restaurantId restaurantName isActive createdAt
+    }
+  }
+`;
+
+export const ADMIN_TOGGLE_USER_MUTATION = gql`
+  mutation AdminToggleUser($userId: ID!) {
+    adminToggleUser(userId: $userId) {
+      _id isActive
+    }
+  }
+`;
+
+export const ADMIN_RESET_USER_PASSWORD_MUTATION = gql`
+  mutation AdminResetUserPassword($userId: ID!, $newPassword: String!) {
+    adminResetUserPassword(userId: $userId, newPassword: $newPassword)
+  }
+`;
+
+export const ADMIN_RESTAURANT_DETAIL_QUERY = gql`
+  query AdminRestaurantDetail($restaurantId: ID!) {
+    adminRestaurantDetail(restaurantId: $restaurantId) {
+      _id name slug description address phone logo currency
+      isActive status rejectionReason
+      menuItemCount tableCount orderCount revenue createdAt
+      staff { _id name email role isActive createdAt }
+      recentOrders {
+        _id tableNumber status totalAmount createdAt
+        items { name quantity price }
+      }
+    }
+  }
+`;
+
+export const PLATFORM_TIMESERIES_QUERY = gql`
+  query PlatformTimeseries($days: Int) {
+    platformTimeseries(days: $days) {
+      date revenue orders signups
     }
   }
 `;

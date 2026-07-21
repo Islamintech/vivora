@@ -1,17 +1,18 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
 import {
   Box, Grid, Card, CardContent, Typography, Stack, Chip, Button,
   Avatar, Table, TableHead, TableRow, TableCell, TableBody,
   Tab, Tabs, LinearProgress, AppBar, Toolbar, Alert, Badge,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  IconButton, MenuItem, Divider, Tooltip,
 } from '@mui/material';
 import {
   Store, People, ShoppingBag, TrendingUp, AdminPanelSettings,
   Warning, Error as ErrorIcon, Info, Logout, CheckCircle, Cancel,
-  HourglassTop,
+  HourglassTop, DeleteSweep, Key, Visibility, Block, CheckCircleOutline,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
@@ -20,10 +21,14 @@ import {
   PLATFORM_STATS_QUERY, ADMIN_RESTAURANTS_QUERY, ERROR_LOGS_QUERY,
   ALL_ORDERS_QUERY, ADMIN_TOGGLE_RESTAURANT_MUTATION,
   PENDING_RESTAURANTS_QUERY, APPROVE_RESTAURANT_MUTATION, REJECT_RESTAURANT_MUTATION,
+  PURGE_ERROR_LOGS_MUTATION, ADMIN_USERS_QUERY, ADMIN_TOGGLE_USER_MUTATION,
+  ADMIN_RESET_USER_PASSWORD_MUTATION, ADMIN_RESTAURANT_DETAIL_QUERY,
+  PLATFORM_TIMESERIES_QUERY,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth.store';
 import { statusColor, OrderStatus, RestaurantStatus } from '@/types';
+import PlatformTrends from '@/components/admin/PlatformTrends';
 
 // Approval-status chip styling/labels for the super-admin tables.
 const APPROVAL_META: Record<RestaurantStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
@@ -57,14 +62,48 @@ const AdminPage: NextPage = () => {
   const { data: statsData, loading: statsLoading } = useQuery(PLATFORM_STATS_QUERY, { skip: !user });
   const { data: restData, loading: restLoading, refetch: refetchRests } = useQuery(ADMIN_RESTAURANTS_QUERY, { skip: !user });
   const { data: pendingData, loading: pendingLoading, refetch: refetchPending } = useQuery(PENDING_RESTAURANTS_QUERY, { skip: !user });
-  const { data: logsData, loading: logsLoading } = useQuery(ERROR_LOGS_QUERY, { skip: !user || tab !== 2 });
+  const [logLevel, setLogLevel] = useState<'' | 'ERROR' | 'WARN' | 'INFO'>('');
+  const { data: logsData, loading: logsLoading, refetch: refetchLogs } = useQuery(ERROR_LOGS_QUERY, {
+    variables: { level: logLevel || undefined },
+    skip: !user || tab !== 2,
+  });
   const { data: ordersData, loading: ordersLoading } = useQuery(ALL_ORDERS_QUERY, { variables: { limit: 100 }, skip: !user || tab !== 1 });
+  const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useQuery(ADMIN_USERS_QUERY, { skip: !user || tab !== 4 });
+  const { data: trendsData, loading: trendsLoading } = useQuery(PLATFORM_TIMESERIES_QUERY, { variables: { days: 30 }, skip: !user || tab !== 5 });
 
   // Reject flow needs a reason, so it's captured via a small dialog.
   const [rejectTarget, setRejectTarget] = useState<{ _id: string; name: string } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
+  // Reset-password dialog (super admin sets a new password for a staff login).
+  const [pwTarget, setPwTarget] = useState<{ _id: string; name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+
+  // Restaurant drill-down, loaded on demand.
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [loadDetail, { data: detailData, loading: detailLoading }] = useLazyQuery(ADMIN_RESTAURANT_DETAIL_QUERY);
+
   const refetchAll = () => { refetchRests(); refetchPending(); };
+
+  const openDetail = (id: string) => {
+    setDetailId(id);
+    loadDetail({ variables: { restaurantId: id }, fetchPolicy: 'network-only' });
+  };
+
+  const [purgeErrorLogs, { loading: purging }] = useMutation(PURGE_ERROR_LOGS_MUTATION, {
+    onCompleted(d) { toast.success(`Cleared ${d.purgeErrorLogs} log entr${d.purgeErrorLogs === 1 ? 'y' : 'ies'}`); refetchLogs(); },
+    onError(e) { toast.error(e.message); },
+  });
+
+  const [toggleUser] = useMutation(ADMIN_TOGGLE_USER_MUTATION, {
+    onCompleted(d) { toast.success(`Account ${d.adminToggleUser.isActive ? 'reactivated' : 'deactivated'}`); refetchUsers(); },
+    onError(e) { toast.error(e.message); },
+  });
+
+  const [resetUserPassword, { loading: resetting }] = useMutation(ADMIN_RESET_USER_PASSWORD_MUTATION, {
+    onCompleted() { toast.success('Password reset'); setPwTarget(null); setNewPassword(''); },
+    onError(e) { toast.error(e.message); },
+  });
 
   const [toggleRestaurant] = useMutation(ADMIN_TOGGLE_RESTAURANT_MUTATION, {
     onCompleted(d) {
@@ -94,6 +133,9 @@ const AdminPage: NextPage = () => {
   const pending = pendingData?.pendingRestaurants ?? [];
   const logs = logsData?.errorLogs ?? [];
   const orders = ordersData?.allOrders ?? [];
+  const users = usersData?.adminUsers ?? [];
+  const trends = trendsData?.platformTimeseries ?? [];
+  const detail = detailData?.adminRestaurantDetail;
 
   const handleLogout = () => { logout(); router.push('/login'); };
 
@@ -181,6 +223,8 @@ const AdminPage: NextPage = () => {
                 <Tab label="Recent Orders" />
                 <Tab label="Error Logs" />
                 <Tab label={<Badge color="warning" badgeContent={pending.length} sx={{ '& .MuiBadge-badge': { right: -14, top: 2 } }}>Approvals</Badge>} />
+                <Tab label="Users" />
+                <Tab label="Analytics" />
               </Tabs>
             </Box>
 
@@ -209,7 +253,13 @@ const AdminPage: NextPage = () => {
                             <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', color: 'primary.dark', fontSize: '0.875rem' }}>
                               {r.name.charAt(0)}
                             </Avatar>
-                            <Typography fontWeight={600}>{r.name}</Typography>
+                            <Button
+                              variant="text"
+                              onClick={() => openDetail(r._id)}
+                              sx={{ p: 0, minWidth: 0, fontWeight: 600, color: 'text.primary', textAlign: 'left', '&:hover': { color: 'primary.main', bgcolor: 'transparent' } }}
+                            >
+                              {r.name}
+                            </Button>
                           </Stack>
                         </TableCell>
                         <TableCell><Typography variant="caption" color="text.secondary">{r.slug}</Typography></TableCell>
@@ -310,7 +360,52 @@ const AdminPage: NextPage = () => {
 
             {/* Error Logs Tab */}
             {tab === 2 && (
-              <Box sx={{ overflowX: 'auto' }}>
+              <Box>
+                <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1.5} sx={{ p: 2 }}>
+                  <TextField
+                    select
+                    size="small"
+                    label="Level"
+                    value={logLevel}
+                    onChange={(e) => setLogLevel(e.target.value as any)}
+                    sx={{ minWidth: 140 }}
+                  >
+                    <MenuItem value="">All levels</MenuItem>
+                    <MenuItem value="ERROR">Error</MenuItem>
+                    <MenuItem value="WARN">Warning</MenuItem>
+                    <MenuItem value="INFO">Info</MenuItem>
+                  </TextField>
+                  <Box sx={{ flex: 1 }} />
+                  <Button
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    startIcon={<DeleteSweep />}
+                    disabled={purging || logs.length === 0}
+                    onClick={() => {
+                      if (window.confirm('Delete error logs older than 7 days?')) {
+                        purgeErrorLogs({ variables: { olderThanDays: 7 } });
+                      }
+                    }}
+                  >
+                    Clear &gt; 7 days
+                  </Button>
+                  <Button
+                    size="small"
+                    color="error"
+                    variant="contained"
+                    startIcon={<DeleteSweep />}
+                    disabled={purging || logs.length === 0}
+                    onClick={() => {
+                      if (window.confirm('Delete ALL error logs? This cannot be undone.')) {
+                        purgeErrorLogs({ variables: { olderThanDays: 0 } });
+                      }
+                    }}
+                  >
+                    Clear all
+                  </Button>
+                </Stack>
+                <Box sx={{ overflowX: 'auto' }}>
                 {logsLoading && <LinearProgress />}
                 <Table>
                   <TableHead>
@@ -346,6 +441,7 @@ const AdminPage: NextPage = () => {
                     )}
                   </TableBody>
                 </Table>
+                </Box>
               </Box>
             )}
 
@@ -410,6 +506,86 @@ const AdminPage: NextPage = () => {
                 </Stack>
               </Box>
             )}
+
+            {/* Users Tab — all accounts across restaurants */}
+            {tab === 4 && (
+              <Box sx={{ overflowX: 'auto' }}>
+                {usersLoading && <LinearProgress />}
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>User</TableCell>
+                      <TableCell>Role</TableCell>
+                      <TableCell>Restaurant</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Joined</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((u: any) => {
+                      const isSelf = u._id === (user as any)._id;
+                      return (
+                        <TableRow key={u._id} hover>
+                          <TableCell>
+                            <Typography fontWeight={600}>{u.name}</Typography>
+                            <Typography variant="caption" color="text.secondary">{u.email}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={u.role.replace('_', ' ').toLowerCase()}
+                              size="small"
+                              color={u.role === 'SUPER_ADMIN' ? 'secondary' : u.role === 'RESTAURANT_ADMIN' ? 'primary' : 'default'}
+                              variant="outlined"
+                              sx={{ textTransform: 'capitalize' }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color={u.restaurantName ? 'text.primary' : 'text.disabled'}>
+                              {u.restaurantName ?? '—'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip label={u.isActive ? 'Active' : 'Disabled'} size="small" color={u.isActive ? 'success' : 'default'} variant={u.isActive ? 'filled' : 'outlined'} />
+                          </TableCell>
+                          <TableCell><Typography variant="caption" color="text.secondary">{dayjs(u.createdAt).format('MMM D, YYYY')}</Typography></TableCell>
+                          <TableCell align="right">
+                            <Tooltip title="Reset password">
+                              <IconButton size="small" onClick={() => { setNewPassword(''); setPwTarget({ _id: u._id, name: u.name }); }}>
+                                <Key fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={isSelf ? 'You cannot disable your own account' : u.isActive ? 'Deactivate' : 'Reactivate'}>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color={u.isActive ? 'error' : 'success'}
+                                  disabled={isSelf}
+                                  onClick={() => toggleUser({ variables: { userId: u._id } })}
+                                >
+                                  {u.isActive ? <Block fontSize="small" /> : <CheckCircleOutline fontSize="small" />}
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {users.length === 0 && !usersLoading && (
+                      <TableRow><TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>No users</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Box>
+            )}
+
+            {/* Analytics Tab — platform trends over time */}
+            {tab === 5 && (
+              <Box sx={{ p: { xs: 2, md: 3 } }}>
+                {trendsLoading && <LinearProgress sx={{ mb: 2 }} />}
+                <PlatformTrends data={trends} />
+              </Box>
+            )}
           </Card>
         </Box>
       </Box>
@@ -442,6 +618,127 @@ const AdminPage: NextPage = () => {
             Reject
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Reset password dialog */}
+      <Dialog open={!!pwTarget} onClose={() => setPwTarget(null)} fullWidth maxWidth="xs">
+        <DialogTitle>Reset password — {pwTarget?.name}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Set a new password for this account. Share it with the owner securely; they can change it after logging in.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            label="New password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            helperText="At least 6 characters"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPwTarget(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={resetting || newPassword.length < 6}
+            onClick={() => pwTarget && resetUserPassword({ variables: { userId: pwTarget._id, newPassword } })}
+          >
+            Reset password
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Restaurant drill-down dialog */}
+      <Dialog open={!!detailId} onClose={() => setDetailId(null)} fullWidth maxWidth="md">
+        {detailLoading && <LinearProgress />}
+        {detail && (
+          <>
+            <DialogTitle>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
+                <Avatar src={detail.logo || undefined} sx={{ bgcolor: 'primary.light', color: 'primary.dark' }}>
+                  {detail.name.charAt(0)}
+                </Avatar>
+                <Box>
+                  <Typography fontWeight={800}>{detail.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    /{detail.slug} · joined {dayjs(detail.createdAt).format('MMM D, YYYY')}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1 }} />
+                <Chip
+                  label={(APPROVAL_META[detail.status as RestaurantStatus] ?? APPROVAL_META.PENDING_REVIEW).label}
+                  color={(APPROVAL_META[detail.status as RestaurantStatus] ?? APPROVAL_META.PENDING_REVIEW).color}
+                  size="small"
+                />
+              </Stack>
+            </DialogTitle>
+            <DialogContent dividers>
+              {/* Count tiles */}
+              <Grid container spacing={2} mb={3}>
+                {[
+                  { label: 'Menu items', value: detail.menuItemCount },
+                  { label: 'Tables', value: detail.tableCount },
+                  { label: 'Orders', value: detail.orderCount },
+                  { label: 'Revenue', value: `${detail.currency} ${detail.revenue.toFixed(2)}` },
+                ].map((s) => (
+                  <Grid item xs={6} sm={3} key={s.label}>
+                    <Card variant="outlined" sx={{ textAlign: 'center', py: 1.5 }}>
+                      <Typography variant="h6" fontWeight={800}>{s.value}</Typography>
+                      <Typography variant="caption" color="text.secondary">{s.label}</Typography>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+
+              {/* Profile */}
+              <Typography variant="subtitle2" fontWeight={700} mb={1}>Profile</Typography>
+              <Stack spacing={0.5} mb={3}>
+                <Typography variant="body2"><strong>Description:</strong> {detail.description || <em>— not provided —</em>}</Typography>
+                <Typography variant="body2"><strong>Address:</strong> {detail.address || <em>— not provided —</em>}</Typography>
+                <Typography variant="body2"><strong>Phone:</strong> {detail.phone || <em>— not provided —</em>}</Typography>
+                {detail.status === 'REJECTED' && detail.rejectionReason && (
+                  <Typography variant="body2" color="error"><strong>Rejection reason:</strong> {detail.rejectionReason}</Typography>
+                )}
+              </Stack>
+
+              {/* Staff */}
+              <Typography variant="subtitle2" fontWeight={700} mb={1}>Staff ({detail.staff.length})</Typography>
+              <Stack spacing={1} mb={3}>
+                {detail.staff.map((s: any) => (
+                  <Stack key={s._id} direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                    <Typography variant="body2" fontWeight={600}>{s.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">{s.email}</Typography>
+                    <Chip label={s.role.replace('_', ' ').toLowerCase()} size="small" variant="outlined" sx={{ textTransform: 'capitalize' }} />
+                    {!s.isActive && <Chip label="disabled" size="small" color="default" />}
+                  </Stack>
+                ))}
+                {detail.staff.length === 0 && <Typography variant="body2" color="text.secondary">No staff accounts.</Typography>}
+              </Stack>
+
+              {/* Recent orders */}
+              <Typography variant="subtitle2" fontWeight={700} mb={1}>Recent orders</Typography>
+              {detail.recentOrders.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">No orders yet.</Typography>
+              ) : (
+                <Stack spacing={0.5}>
+                  {detail.recentOrders.map((o: any) => (
+                    <Stack key={o._id} direction="row" justifyContent="space-between" alignItems="center" sx={{ py: 0.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+                      <Typography variant="body2">Table {o.tableNumber} · {o.items.length} items</Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip label={statusLabel[o.status as OrderStatus]} color={statusColor[o.status as OrderStatus]} size="small" />
+                        <Typography variant="body2" fontWeight={600} sx={{ minWidth: 70, textAlign: 'right' }}>${o.totalAmount.toFixed(2)}</Typography>
+                        <Typography variant="caption" color="text.secondary">{dayjs(o.createdAt).format('MMM D HH:mm')}</Typography>
+                      </Stack>
+                    </Stack>
+                  ))}
+                </Stack>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDetailId(null)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
       </Dialog>
     </>
   );

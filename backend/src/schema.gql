@@ -14,6 +14,27 @@ input AddStaffInput {
   password: String!
 }
 
+type AdminRestaurantDetail {
+  _id: ID!
+  address: String
+  createdAt: DateTime!
+  currency: String!
+  description: String
+  isActive: Boolean!
+  logo: String
+  menuItemCount: Int!
+  name: String!
+  orderCount: Int!
+  phone: String
+  recentOrders: [OrderModel!]!
+  rejectionReason: String
+  revenue: Float!
+  slug: String!
+  staff: [AdminUserView!]!
+  status: RestaurantStatus!
+  tableCount: Int!
+}
+
 type AdminRestaurantView {
   _id: ID!
   createdAt: DateTime!
@@ -23,6 +44,17 @@ type AdminRestaurantView {
   revenue: Float!
   slug: String!
   status: RestaurantStatus!
+}
+
+type AdminUserView {
+  _id: ID!
+  createdAt: DateTime!
+  email: String!
+  isActive: Boolean!
+  name: String!
+  restaurantId: ID
+  restaurantName: String
+  role: UserRole!
 }
 
 type AnalyticsOverview {
@@ -147,7 +179,9 @@ type MenuItemModel {
 type Mutation {
   addOrderToSession(input: AddOrderToSessionInput!): OrderModel!
   addStaff(input: AddStaffInput!): UserModel!
+  adminResetUserPassword(newPassword: String!, userId: ID!): Boolean!
   adminToggleRestaurant(restaurantId: ID!): RestaurantModel!
+  adminToggleUser(userId: ID!): AdminUserView!
   approveRestaurant(restaurantId: ID!): RestaurantModel!
   closeTableSession(sessionId: ID!): TableSessionModel!
   createCategory(input: CreateCategoryInput!): MenuCategoryModel!
@@ -158,6 +192,7 @@ type Mutation {
   deleteTable(tableId: ID!): Boolean!
   login(input: LoginInput!): AuthPayload!
   placeOrder(input: PlaceOrderInput!): OrderModel!
+  purgeErrorLogs(olderThanDays: Int!): Int!
   regenerateQrCode(tableId: ID!): TableModel!
   register(input: RegisterInput!): AuthPayload!
   rejectRestaurant(reason: String, restaurantId: ID!): RestaurantModel!
@@ -224,6 +259,13 @@ type PlatformStats {
   totalUsers: Int!
 }
 
+type PlatformTimePoint {
+  date: String!
+  orders: Int!
+  revenue: Float!
+  signups: Int!
+}
+
 type PopularItemStat {
   menuItemId: ID!
   name: String!
@@ -238,12 +280,14 @@ type PublicMenuSection {
 
 type Query {
   adminRestaurantAnalytics(period: AnalyticsPeriodInput!, restaurantId: String!): AnalyticsOverview!
+  adminRestaurantDetail(restaurantId: ID!): AdminRestaurantDetail!
   adminRestaurants: [AdminRestaurantView!]!
+  adminUsers: [AdminUserView!]!
   allOrders(limit: Float): [OrderModel!]!
   allRestaurants: [RestaurantModel!]!
   analytics(period: AnalyticsPeriodInput!): AnalyticsOverview!
   categories: [MenuCategoryModel!]!
-  errorLogs(restaurantId: ID): [ErrorLogModel!]!
+  errorLogs(level: ErrorLogLevel, restaurantId: ID): [ErrorLogModel!]!
   feedbackList: [FeedbackModel!]!
   feedbackSummary: FeedbackSummary!
   me: UserModel!
@@ -254,6 +298,7 @@ type Query {
   orders(limit: Float, status: OrderStatus): [OrderModel!]!
   pendingRestaurants: [RestaurantModel!]!
   platformStats: PlatformStats!
+  platformTimeseries(days: Int): [PlatformTimePoint!]!
   publicMenu(restaurantId: ID!): [PublicMenuSection!]!
   publicRestaurant(slug: String!): RestaurantModel!
   tableSession(restaurantId: ID!, tableNumber: Int!): TableSessionModel
