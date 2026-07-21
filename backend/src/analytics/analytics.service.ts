@@ -14,10 +14,10 @@ export class AnalyticsService {
     if (!Types.ObjectId.isValid(restaurantId)) {
       throw new BadRequestException('Invalid restaurant id');
     }
-    // Aggregation pipelines bypass Mongoose casting — restaurantId must be a
-    // real ObjectId here or every $match silently returns nothing.
+    // Orders store restaurantId as a plain string (the schema path is Mixed,
+    // so nothing is ever cast) — $match must use the string, not an ObjectId.
     const filter = {
-      restaurantId: new Types.ObjectId(restaurantId),
+      restaurantId,
       createdAt: { $gte: startDate, $lte: endDate },
     };
 

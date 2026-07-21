@@ -58,8 +58,10 @@ export class AdminService {
         const rid = r._id.toString();
         const agg = await this.orderModel.aggregate([
           {
+            // Orders store restaurantId as a string — match on rid, not the
+            // ObjectId r._id, or this returns nothing.
             $match: {
-              restaurantId: r._id,
+              restaurantId: rid,
               status: { $in: [OrderStatus.SERVED, OrderStatus.READY] },
             },
           },

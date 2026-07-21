@@ -36,9 +36,10 @@ export class FeedbackService {
     if (!Types.ObjectId.isValid(restaurantId)) {
       throw new BadRequestException('Invalid restaurant id');
     }
-    // Aggregation bypasses Mongoose casting — must match on a real ObjectId.
+    // Feedbacks store restaurantId as a plain string (the schema path is
+    // Mixed, so nothing is ever cast) — $match must use the string.
     const agg = await this.feedbackModel.aggregate([
-      { $match: { restaurantId: new Types.ObjectId(restaurantId) } },
+      { $match: { restaurantId } },
       {
         $group: {
           _id: null,
