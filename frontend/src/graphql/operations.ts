@@ -255,6 +255,50 @@ export const ORDER_STATUS_UPDATED_SUBSCRIPTION = gql`
   }
 `;
 
+// ─── Table sessions (tabs) ────────────────────────────────────────────────────
+
+// Public — customer's running tab for the current visit.
+export const TABLE_SESSION_QUERY = gql`
+  query TableSession($restaurantId: ID!, $tableNumber: Int!) {
+    tableSession(restaurantId: $restaurantId, tableNumber: $tableNumber) {
+      _id status totalAmount lastOrderAt
+      orders {
+        _id status totalAmount createdAt
+        items { name quantity price }
+      }
+    }
+  }
+`;
+
+export const OPEN_TABLE_SESSIONS_QUERY = gql`
+  query OpenTableSessions {
+    openTableSessions {
+      _id tableNumber status totalAmount lastOrderAt createdAt
+      orders {
+        _id status totalAmount createdAt
+        items { name quantity price }
+      }
+    }
+  }
+`;
+
+// Staff add verbally-taken items to an open tab (recorded as SERVED).
+export const ADD_ORDER_TO_SESSION_MUTATION = gql`
+  mutation AddOrderToSession($input: AddOrderToSessionInput!) {
+    addOrderToSession(input: $input) {
+      _id sessionId totalAmount status
+    }
+  }
+`;
+
+export const CLOSE_TABLE_SESSION_MUTATION = gql`
+  mutation CloseTableSession($sessionId: ID!) {
+    closeTableSession(sessionId: $sessionId) {
+      _id status totalAmount closedAt
+    }
+  }
+`;
+
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
 export const ANALYTICS_QUERY = gql`

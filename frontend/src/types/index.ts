@@ -74,6 +74,19 @@ export interface Order {
   updatedAt: string;
 }
 
+// One dine-in visit at a table: groups every order placed between the first
+// QR scan and staff closing the bill.
+export interface TableSession {
+  _id: string;
+  tableNumber: number;
+  status: 'OPEN' | 'CLOSED';
+  totalAmount: number;
+  orders: Order[];
+  lastOrderAt: string;
+  closedAt?: string;
+  createdAt: string;
+}
+
 export interface Table {
   _id: string;
   restaurantId: string;

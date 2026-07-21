@@ -12,6 +12,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
 import { MenuModule } from './menu/menu.module';
 import { TablesModule } from './tables/tables.module';
 import { OrdersModule } from './orders/orders.module';
+import { TableSessionsModule } from './table-sessions/table-sessions.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { ErrorLogsModule } from './error-logs/error-logs.module';
@@ -58,6 +59,7 @@ import { TelegramBotModule } from './telegram/telegram-bot.module';
     MenuModule,
     TablesModule,
     OrdersModule,
+    TableSessionsModule,
     AnalyticsModule,
     FeedbackModule,
     ErrorLogsModule,

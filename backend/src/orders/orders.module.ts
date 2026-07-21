@@ -5,6 +5,7 @@ import { OrdersService } from './orders.service';
 import { OrdersResolver } from './orders.resolver';
 import { MenuModule } from '../menu/menu.module';
 import { TablesModule } from '../tables/tables.module';
+import { TableSessionsModule } from '../table-sessions/table-sessions.module';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { AuthModule } from '../auth/auth.module';
 
@@ -13,6 +14,7 @@ import { AuthModule } from '../auth/auth.module';
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     MenuModule,
     TablesModule,
+    TableSessionsModule,
     RestaurantsModule,
     AuthModule,
   ],

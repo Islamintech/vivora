@@ -28,7 +28,15 @@ export enum RestaurantStatus {
   REJECTED = 'REJECTED',
 }
 
+// One dine-in visit at a table. OPEN collects orders into a running tab;
+// staff closes it when the bill is paid.
+export enum TableSessionStatus {
+  OPEN = 'OPEN',
+  CLOSED = 'CLOSED',
+}
+
 registerEnumType(UserRole, { name: 'UserRole' });
+registerEnumType(TableSessionStatus, { name: 'TableSessionStatus' });
 registerEnumType(OrderStatus, { name: 'OrderStatus' });
 registerEnumType(ErrorLogLevel, { name: 'ErrorLogLevel' });
 registerEnumType(RestaurantStatus, { name: 'RestaurantStatus' });

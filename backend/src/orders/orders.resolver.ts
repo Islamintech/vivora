@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PubSub } from 'graphql-subscriptions';
 import { OrdersService } from './orders.service';
 import {
+  AddOrderToSessionInput,
   OrderModel,
   PlaceOrderInput,
   UpdateOrderStatusInput,
@@ -67,6 +68,18 @@ export class OrdersResolver {
     return this.ordersService.findByIdForRestaurant(
       user.restaurantId?.toString(),
       orderId,
+    );
+  }
+
+  @Mutation(() => OrderModel)
+  @UseGuards(GqlAuthGuard)
+  async addOrderToSession(
+    @Args('input') input: AddOrderToSessionInput,
+    @CurrentUser() user: any,
+  ): Promise<OrderModel> {
+    return this.ordersService.addOrderToSession(
+      user.restaurantId?.toString(),
+      input,
     );
   }
 

@@ -47,6 +47,9 @@ export class OrderModel {
   @Field(() => ID)
   tableId: any;
 
+  @Field(() => ID, { nullable: true })
+  sessionId?: any;
+
   @Field(() => Int)
   tableNumber: number;
 
@@ -115,6 +118,26 @@ export class PlaceOrderInput {
   @IsOptional()
   @MaxLength(10)
   language?: string;
+}
+
+// Staff-side: append items (taken verbally by a waiter) to an open table
+// session so the final bill is correct.
+@InputType()
+export class AddOrderToSessionInput {
+  @Field(() => ID)
+  sessionId: any;
+
+  @Field(() => [OrderItemInput])
+  @ArrayMinSize(1)
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemInput)
+  items: OrderItemInput[];
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @MaxLength(500)
+  note?: string;
 }
 
 @InputType()

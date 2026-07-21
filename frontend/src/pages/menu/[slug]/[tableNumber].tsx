@@ -10,13 +10,13 @@ import {
 } from '@mui/material';
 import {
   ShoppingCart, Add, Remove, Delete, Star, Close,
-  Translate, ThumbUp,
+  Translate, ThumbUp, ReceiptLong,
 } from '@mui/icons-material';
 import {
   PUBLIC_MENU_QUERY, PLACE_ORDER_MUTATION, SUBMIT_FEEDBACK_MUTATION,
-  PUBLIC_RESTAURANT_QUERY,
+  PUBLIC_RESTAURANT_QUERY, TABLE_SESSION_QUERY,
 } from '@/graphql/operations';
-import { CartItem, MenuItem } from '@/types';
+import { CartItem, MenuItem, Order, OrderStatus, TableSession } from '@/types';
 
 const ui = {
   addToCart: 'Add', cart: 'Your Order', placeOrder: 'Place Order', total: 'Total',
@@ -24,6 +24,18 @@ const ui = {
   popular: 'Popular', orderPlaced: 'Order placed!', feedbackTitle: 'How was your experience?',
   feedbackBtn: 'Leave Feedback', cancel: 'Cancel', submit: 'Submit',
   noteHint: 'Any allergies or special requests?', close: 'Close',
+  myOrders: 'My orders', tabTotal: 'Total so far',
+  payNote: 'Show this to the staff when you are ready to pay.',
+  orderN: 'Order',
+};
+
+// Customer-facing status labels (dashboard uses the Uzbek statusLabel map).
+const customerStatus: Record<OrderStatus, { label: string; color: 'warning' | 'info' | 'success' | 'error' | 'default' }> = {
+  PENDING: { label: 'Received', color: 'warning' },
+  PREPARING: { label: 'Preparing', color: 'info' },
+  READY: { label: 'Ready', color: 'success' },
+  SERVED: { label: 'Served', color: 'default' },
+  CANCELLED: { label: 'Cancelled', color: 'error' },
 };
 
 interface Props { slug: string; tableNumber: number; }
@@ -38,6 +50,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   const [feedbackComment, setFeedbackComment] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [tabOpen, setTabOpen] = useState(false);
 
   const { data: restaurantData, error: restError, loading: restLoading } = useQuery(PUBLIC_RESTAURANT_QUERY, { variables: { slug } });
   const restaurant = restaurantData?.publicRestaurant;
@@ -49,12 +62,24 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   });
   const sections = menuData?.publicMenu ?? [];
 
+  // The table's open tab: every order placed this visit, shared by the whole
+  // table, until staff closes it as paid.
+  const { data: sessionData, refetch: refetchSession } = useQuery(TABLE_SESSION_QUERY, {
+    variables: { restaurantId, tableNumber },
+    skip: !restaurantId,
+    pollInterval: 20000,
+  });
+  const session: TableSession | null = sessionData?.tableSession ?? null;
+  const placedOrders: Order[] = session?.orders ?? [];
+  const tabTotal = session?.totalAmount ?? 0;
+
   const [placeOrder, { loading: ordering }] = useMutation(PLACE_ORDER_MUTATION, {
     onCompleted() {
       setCart([]);
       setOrderNote('');
       setCartOpen(false);
       setOrderSuccess(true);
+      refetchSession();
       setTimeout(() => setFeedbackOpen(true), 2000);
     },
   });
@@ -239,21 +264,84 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           ))}
         </Box>
 
-        {/* Floating cart button */}
-        {cartCount > 0 && (
+        {/* Floating cart + running tab buttons */}
+        {(cartCount > 0 || placedOrders.length > 0) && (
           <Box sx={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, width: 'calc(100% - 32px)', maxWidth: 448 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              onClick={() => setCartOpen(true)}
-              sx={{ py: 1.8, borderRadius: 3, boxShadow: '0 8px 30px rgba(249,115,22,0.4)', fontSize: '1rem' }}
-              startIcon={<ShoppingCart />}
-            >
-              {ui.cart} ({cartCount}) — {fmt(cartTotal)}
-            </Button>
+            <Stack direction="row" spacing={1.5}>
+              {placedOrders.length > 0 && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => setTabOpen(true)}
+                  startIcon={<ReceiptLong />}
+                  sx={{
+                    py: 1.8, borderRadius: 3, fontSize: '1rem', whiteSpace: 'nowrap',
+                    flex: cartCount > 0 ? '0 0 auto' : 1,
+                    bgcolor: '#0F172A', '&:hover': { bgcolor: '#1E293B' },
+                    boxShadow: '0 8px 30px rgba(15,23,42,0.35)',
+                  }}
+                >
+                  {cartCount > 0 ? fmt(tabTotal) : `${ui.myOrders} — ${fmt(tabTotal)}`}
+                </Button>
+              )}
+              {cartCount > 0 && (
+                <Button
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  onClick={() => setCartOpen(true)}
+                  sx={{ py: 1.8, borderRadius: 3, flex: 1, boxShadow: '0 8px 30px rgba(249,115,22,0.4)', fontSize: '1rem' }}
+                  startIcon={<ShoppingCart />}
+                >
+                  {ui.cart} ({cartCount}) — {fmt(cartTotal)}
+                </Button>
+              )}
+            </Stack>
           </Box>
         )}
+
+        {/* Running tab drawer — all orders this visit + grand total */}
+        <Drawer anchor="bottom" open={tabOpen} onClose={() => setTabOpen(false)}
+          PaperProps={{ sx: { borderRadius: '20px 20px 0 0', maxHeight: '80vh', maxWidth: 480, mx: 'auto' } }}>
+          <Box sx={{ p: 2.5 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" fontWeight={800}>{ui.myOrders}</Typography>
+              <IconButton onClick={() => setTabOpen(false)}><Close /></IconButton>
+            </Stack>
+            <Stack spacing={2} mb={2} sx={{ overflowY: 'auto' }}>
+              {placedOrders.map((order, idx) => {
+                const st = customerStatus[order.status];
+                return (
+                  <Box key={order._id} sx={{ border: '1px solid #F1F5F9', borderRadius: 3, p: 1.5 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
+                      <Typography fontWeight={700} fontSize="0.9rem">
+                        {ui.orderN} #{idx + 1}
+                        <Typography component="span" variant="caption" color="text.secondary" ml={1}>
+                          {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Typography>
+                      </Typography>
+                      <Chip label={st.label} color={st.color} size="small" />
+                    </Stack>
+                    {order.items.map((item, i) => (
+                      <Stack key={i} direction="row" justifyContent="space-between">
+                        <Typography variant="body2" sx={{ textDecoration: order.status === 'CANCELLED' ? 'line-through' : 'none' }}>
+                          {item.name} × {item.quantity}
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>{fmt(item.price * item.quantity)}</Typography>
+                      </Stack>
+                    ))}
+                  </Box>
+                );
+              })}
+            </Stack>
+            <Divider sx={{ mb: 2 }} />
+            <Stack direction="row" justifyContent="space-between" mb={1}>
+              <Typography fontWeight={700}>{ui.tabTotal}</Typography>
+              <Typography fontWeight={800} color="primary" fontSize="1.1rem">{fmt(tabTotal)}</Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary">{ui.payNote}</Typography>
+          </Box>
+        </Drawer>
 
         {/* Cart drawer */}
         <Drawer anchor="bottom" open={cartOpen} onClose={() => setCartOpen(false)}
