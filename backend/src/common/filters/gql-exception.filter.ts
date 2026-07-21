@@ -82,7 +82,9 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
     if (status >= 500) {
       const svc = this.getErrorLogs();
       svc?.error(message, { context, stack, restaurantId, meta: { code } }).catch(() => {});
-    } else if (status === 401 || status === 403) {
+    } else if (status === 403) {
+      // 401s stay console-only: a logged-out dashboard is expected, and a
+      // client-side refetch loop can flood the DB with warn writes.
       const svc = this.getErrorLogs();
       svc?.warn(message, { context, restaurantId, meta: { code, status } }).catch(() => {});
     }
