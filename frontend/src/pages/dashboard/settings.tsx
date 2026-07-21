@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
   Box, Card, CardContent, Typography, TextField, Button,
-  Stack, Divider, Grid, Avatar, Alert,
+  Stack, Divider, Grid, Avatar, Alert, FormControlLabel, Switch,
 } from '@mui/material';
-import { Save, Store } from '@mui/icons-material';
+import { Save, Store, Print } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { MY_RESTAURANT_QUERY, UPDATE_RESTAURANT_MUTATION } from '@/graphql/operations';
@@ -19,6 +19,7 @@ const SettingsPage: NextPage = () => {
 
   const [form, setForm] = useState({
     name: '', description: '', address: '', phone: '', logo: '', currency: 'USD', telegramChatId: '',
+    printerEnabled: false, printerIp: '', printerPort: '9100',
   });
 
   useEffect(() => {
@@ -31,6 +32,9 @@ const SettingsPage: NextPage = () => {
         logo: restaurant.logo || '',
         currency: restaurant.currency || 'USD',
         telegramChatId: restaurant.telegramChatId || '',
+        printerEnabled: restaurant.printerEnabled || false,
+        printerIp: restaurant.printerIp || '',
+        printerPort: String(restaurant.printerPort || 9100),
       });
     }
   }, [restaurant]);
@@ -45,6 +49,17 @@ const SettingsPage: NextPage = () => {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((p) => ({ ...p, [key]: e.target.value })),
   });
+
+  const handleSave = () => {
+    update({
+      variables: {
+        input: {
+          ...form,
+          printerPort: parseInt(form.printerPort, 10) || 9100,
+        },
+      },
+    });
+  };
 
   return (
     <>
@@ -107,10 +122,64 @@ const SettingsPage: NextPage = () => {
                 startIcon={<Save />}
                 sx={{ mt: 3 }}
                 disabled={loading}
-                onClick={() => update({ variables: { input: form } })}
+                onClick={handleSave}
               >
                 {loading ? 'Saving…' : 'Save Settings'}
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card sx={{ mb: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                <Avatar sx={{ width: 48, height: 48, bgcolor: 'grey.800' }}>
+                  <Print />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>Kitchen ticket printing</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Auto-print a ticket to your kitchen printer when a customer places an order
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <Divider sx={{ mb: 3 }} />
+
+              <FormControlLabel
+                sx={{ mb: 2 }}
+                control={
+                  <Switch
+                    checked={form.printerEnabled}
+                    onChange={(e) => setForm((p) => ({ ...p, printerEnabled: e.target.checked }))}
+                  />
+                }
+                label="Enable auto-printing"
+              />
+
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} sm={8}>
+                  <TextField
+                    label="Printer IP address"
+                    {...field('printerIp')}
+                    fullWidth
+                    placeholder="e.g. 192.168.1.50"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    label="Port"
+                    {...field('printerPort')}
+                    fullWidth
+                    placeholder="9100"
+                  />
+                </Grid>
+              </Grid>
+
+              <Alert severity="info" sx={{ mt: 2.5, borderRadius: 2 }}>
+                This only tells the print agent where your printer is — you still need to install the
+                small print-agent program on a computer at the restaurant, on the same network as the
+                printer. See <strong>print-agent/README.md</strong> for setup steps.
+              </Alert>
             </CardContent>
           </Card>
 

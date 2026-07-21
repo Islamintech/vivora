@@ -1,5 +1,8 @@
-import { Field, ID, ObjectType, InputType } from '@nestjs/graphql';
-import { IsString, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { Field, ID, Int, ObjectType, InputType } from '@nestjs/graphql';
+import {
+  IsBoolean, IsIP, IsInt, IsOptional, IsString, Max, MaxLength, Min,
+  MinLength, ValidateIf,
+} from 'class-validator';
 import { RestaurantStatus } from '../../common/enums';
 
 @ObjectType()
@@ -33,6 +36,15 @@ export class RestaurantModel {
 
   @Field({ nullable: true })
   telegramChatId?: string;
+
+  @Field()
+  printerEnabled: boolean;
+
+  @Field({ nullable: true })
+  printerIp?: string;
+
+  @Field()
+  printerPort: number;
 
   @Field()
   isActive: boolean;
@@ -86,4 +98,24 @@ export class UpdateRestaurantInput {
   @IsString()
   @MaxLength(64)
   telegramChatId?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  printerEnabled?: boolean;
+
+  // Empty string clears the setting; otherwise must be a valid IPv4/IPv6.
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @ValidateIf((o) => !!o.printerIp)
+  @IsIP(undefined, { message: 'printerIp must be a valid IP address' })
+  printerIp?: string;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  printerPort?: number;
 }

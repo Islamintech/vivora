@@ -1,0 +1,15 @@
+{
+  "apiUrl": "https://your-backend-domain.com/graphql",
+  "wsUrl": "wss://your-backend-domain.com/graphql",
+  "email": "printer@your-restaurant.com",
+  "password": "the-account-password",
+
+  "_comment_credentials": "Create this login from the dashboard's Staff page — a dedicated account just for the printer, not the owner's own login.",
+
+  "printerIp": "192.168.1.50",
+  "printerPort": 9100,
+  "_comment_printer": "Leave printerIp empty to use the IP/port saved in Settings > Kitchen ticket printing on the dashboard instead. A value here overrides that.",
+
+  "paperWidth": 48,
+  "_comment_paperWidth": "Characters per line: 48 for 80mm paper (default), 32 for 58mm paper."
+}

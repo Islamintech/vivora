@@ -45,7 +45,8 @@ export const ADD_STAFF_MUTATION = gql`
 export const MY_RESTAURANT_QUERY = gql`
   query MyRestaurant {
     myRestaurant {
-      _id name slug description address phone logo currency telegramChatId isActive status rejectionReason createdAt
+      _id name slug description address phone logo currency telegramChatId
+      printerEnabled printerIp printerPort isActive status rejectionReason createdAt
     }
   }
 `;
@@ -62,6 +63,7 @@ export const UPDATE_RESTAURANT_MUTATION = gql`
   mutation UpdateRestaurant($input: UpdateRestaurantInput!) {
     updateRestaurant(input: $input) {
       _id name description address phone logo currency telegramChatId
+      printerEnabled printerIp printerPort
     }
   }
 `;

@@ -1,0 +1,17 @@
+{
+  "name": "restoplatform-print-agent",
+  "version": "1.0.0",
+  "description": "Runs at the restaurant, listens for new orders, and prints a kitchen ticket automatically.",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "graphql-ws": "^5.16.0",
+    "ws": "^8.17.0"
+  }
+}

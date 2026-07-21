@@ -2,6 +2,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddOrderToSessionInput {
+  items: [OrderItemInput!]!
+  note: String
+  sessionId: ID!
+}
+
 input AddStaffInput {
   email: String!
   name: String!
@@ -139,9 +145,11 @@ type MenuItemModel {
 }
 
 type Mutation {
+  addOrderToSession(input: AddOrderToSessionInput!): OrderModel!
   addStaff(input: AddStaffInput!): UserModel!
   adminToggleRestaurant(restaurantId: ID!): RestaurantModel!
   approveRestaurant(restaurantId: ID!): RestaurantModel!
+  closeTableSession(sessionId: ID!): TableSessionModel!
   createCategory(input: CreateCategoryInput!): MenuCategoryModel!
   createMenuItem(input: CreateMenuItemInput!): MenuItemModel!
   createTable(input: CreateTableInput!): TableModel!
@@ -183,6 +191,7 @@ type OrderModel {
   items: [OrderItemModel!]!
   language: String!
   restaurantId: ID!
+  sessionId: ID
   status: OrderStatus!
   tableId: ID!
   tableNumber: Int!
@@ -240,12 +249,14 @@ type Query {
   me: UserModel!
   menuItems(categoryId: ID): [MenuItemModel!]!
   myRestaurant: RestaurantModel!
+  openTableSessions: [TableSessionModel!]!
   order(orderId: ID!): OrderModel!
   orders(limit: Float, status: OrderStatus): [OrderModel!]!
   pendingRestaurants: [RestaurantModel!]!
   platformStats: PlatformStats!
   publicMenu(restaurantId: ID!): [PublicMenuSection!]!
   publicRestaurant(slug: String!): RestaurantModel!
+  tableSession(restaurantId: ID!, tableNumber: Int!): TableSessionModel
   tables: [TableModel!]!
 }
 
@@ -267,6 +278,9 @@ type RestaurantModel {
   name: String!
   ownerId: ID
   phone: String
+  printerEnabled: Boolean!
+  printerIp: String
+  printerPort: Float!
   rejectionReason: String
   slug: String!
   status: RestaurantStatus!
@@ -302,6 +316,24 @@ type TableModel {
   number: Int!
   qrCodeDataUrl: String!
   restaurantId: ID!
+}
+
+type TableSessionModel {
+  _id: ID!
+  closedAt: DateTime
+  createdAt: DateTime!
+  lastOrderAt: DateTime!
+  orders: [OrderModel!]!
+  restaurantId: ID!
+  status: TableSessionStatus!
+  tableId: ID!
+  tableNumber: Int!
+  totalAmount: Float!
+}
+
+enum TableSessionStatus {
+  CLOSED
+  OPEN
 }
 
 type TableTurnover {
@@ -351,6 +383,9 @@ input UpdateRestaurantInput {
   logo: String
   name: String
   phone: String
+  printerEnabled: Boolean
+  printerIp: String
+  printerPort: Int
   telegramChatId: String
 }
 

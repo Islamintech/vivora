@@ -35,6 +35,17 @@ export class Restaurant {
   @Prop({ default: '' })
   telegramChatId: string;
 
+  // Kitchen ticket auto-printing, driven by the local print-agent (see
+  // print-agent/README.md) — it reads these via myRestaurant after login.
+  @Prop({ default: false })
+  printerEnabled: boolean;
+
+  @Prop({ default: '' })
+  printerIp: string;
+
+  @Prop({ default: 9100 })
+  printerPort: number;
+
   @Prop({ default: true })
   isActive: boolean;
 
