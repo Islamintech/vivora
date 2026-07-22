@@ -1,6 +1,6 @@
 import type { NextPage, GetServerSideProps } from 'next';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
   Box, Typography, Stack, Card, CardContent, Button, Chip,
@@ -27,7 +27,8 @@ const ui = {
   noteHint: 'Any allergies or special requests?', close: 'Close',
   myOrders: 'My orders', tabTotal: 'Total so far',
   payNote: 'Show this to the staff when you are ready to pay.',
-  orderN: 'Order',
+  orderN: 'Order', soldOut: 'Sold out', left: 'left',
+  onlyLeft: 'Only {n} left in stock',
 };
 
 // Customer-facing status labels (dashboard uses the Uzbek statusLabel map).
@@ -46,6 +47,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   const [cartOpen, setCartOpen] = useState(false);
   const [orderNote, setOrderNote] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState('');
@@ -57,7 +59,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   const restaurant = restaurantData?.publicRestaurant;
   const restaurantId: string | undefined = restaurant?._id;
 
-  const { data: menuData, loading } = useQuery(PUBLIC_MENU_QUERY, {
+  const { data: menuData, loading, refetch: refetchMenu } = useQuery(PUBLIC_MENU_QUERY, {
     variables: { restaurantId },
     skip: !restaurantId,
   });
@@ -81,28 +83,78 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
       setCartOpen(false);
       setOrderSuccess(true);
       refetchSession();
+      refetchMenu();
       setTimeout(() => setFeedbackOpen(true), 2000);
+    },
+    onError(err) {
+      // e.g. an item sold out between browsing and ordering. Surface a friendly
+      // message instead of letting the ApolloError crash the page, and refresh
+      // the menu so the customer sees updated stock.
+      setOrderError(err.message || 'Something went wrong. Please try again.');
+      refetchMenu();
     },
   });
 
   const [submitFeedback] = useMutation(SUBMIT_FEEDBACK_MUTATION, {
     onCompleted() { setFeedbackOpen(false); setFeedbackSent(true); },
+    onError(err) { setOrderError(err.message || 'Could not submit feedback.'); },
   });
 
+  // How many of each item may still be ordered. Untracked items are unlimited;
+  // tracked ones are capped at their remaining stock, so the cart can never ask
+  // for more than exists.
+  const stockById = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const section of sections as any[]) {
+      for (const it of (section.items ?? []) as MenuItem[]) {
+        m.set(it._id, it.trackQuantity ? Math.max(0, it.quantity ?? 0) : Infinity);
+      }
+    }
+    return m;
+  }, [menuData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const maxFor = (menuItemId: string) => stockById.get(menuItemId) ?? Infinity;
+
   const addToCart = (item: MenuItem) => {
+    const max = maxFor(item._id);
+    if (max <= 0) return;
     setCart((prev) => {
       const existing = prev.find((c) => c.menuItemId === item._id);
-      if (existing) return prev.map((c) => c.menuItemId === item._id ? { ...c, quantity: c.quantity + 1 } : c);
+      if (existing) {
+        if (existing.quantity >= max) return prev; // already at the stock limit
+        return prev.map((c) => c.menuItemId === item._id ? { ...c, quantity: c.quantity + 1 } : c);
+      }
       return [...prev, { menuItemId: item._id, name: item.name, price: item.price, quantity: 1 }];
     });
   };
 
   const updateQty = (menuItemId: string, delta: number) => {
+    const max = maxFor(menuItemId);
     setCart((prev) =>
-      prev.map((c) => c.menuItemId === menuItemId ? { ...c, quantity: c.quantity + delta } : c)
+      prev.map((c) => c.menuItemId === menuItemId
+          ? { ...c, quantity: Math.min(c.quantity + delta, max) }
+          : c)
          .filter((c) => c.quantity > 0),
     );
   };
+
+  // Stock can drop while the customer is browsing (another table ordered the
+  // last one). Trim the cart to what's left so they see it right away instead
+  // of hitting an error at checkout.
+  useEffect(() => {
+    setCart((prev) => {
+      const next = prev
+        .map((c) => {
+          const max = maxFor(c.menuItemId);
+          return c.quantity > max ? { ...c, quantity: max } : c;
+        })
+        .filter((c) => c.quantity > 0);
+      const changed =
+        next.length !== prev.length ||
+        next.some((c, i) => c.quantity !== prev[i].quantity);
+      return changed ? next : prev;
+    });
+  }, [stockById]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cartCount = cart.reduce((s, c) => s + c.quantity, 0);
   const cartTotal = cart.reduce((s, c) => s + c.price * c.quantity, 0);
@@ -208,8 +260,15 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                   const cartItem = cart.find((c) => c.menuItemId === item._id);
                   const name = item.name;
                   const desc = item.description ?? '';
+                  // Stock signalling for tracked items: show the count at 5 or
+                  // fewer left, "Sold out" at 0 (which also blocks ordering),
+                  // and stop the cart from exceeding what's in stock.
+                  const remaining = maxFor(item._id);
+                  const soldOut = !item.isAvailable || remaining <= 0;
+                  const lowStock = Number.isFinite(remaining) && remaining > 0 && remaining <= 5;
+                  const atMax = !!cartItem && cartItem.quantity >= remaining;
                   return (
-                    <Card key={item._id} sx={{ borderRadius: 3, opacity: item.isAvailable ? 1 : 0.55 }}>
+                    <Card key={item._id} sx={{ borderRadius: 3, opacity: soldOut ? 0.55 : 1 }}>
                       <CardContent sx={{ p: 2, pb: '12px !important' }}>
                         <Stack direction="row" spacing={1.5} alignItems="flex-start">
                           {item.imageUrl ? (
@@ -233,25 +292,39 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                               </Typography>
                             )}
                             <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
-                              <Typography fontWeight={700} color="primary">{fmt(item.price)}</Typography>
-                              {item.isAvailable ? (
-                                cartItem ? (
-                                  <Stack direction="row" alignItems="center" spacing={0.5}>
-                                    <IconButton size="small" onClick={() => updateQty(item._id, -1)} sx={{ bgcolor: 'primary.light', width: 28, height: 28 }}>
-                                      <Remove sx={{ fontSize: 14 }} />
-                                    </IconButton>
-                                    <Typography fontWeight={700} sx={{ minWidth: 20, textAlign: 'center' }}>{cartItem.quantity}</Typography>
-                                    <IconButton size="small" onClick={() => addToCart(item)} sx={{ bgcolor: 'primary.main', color: 'white', width: 28, height: 28, '&:hover': { bgcolor: 'primary.dark' } }}>
-                                      <Add sx={{ fontSize: 14 }} />
-                                    </IconButton>
-                                  </Stack>
-                                ) : (
-                                  <Button size="small" variant="contained" onClick={() => addToCart(item)} sx={{ minWidth: 64, borderRadius: 2 }}>
-                                    {ui.addToCart}
-                                  </Button>
-                                )
+                              <Stack direction="row" alignItems="center" spacing={1}>
+                                <Typography fontWeight={700} color="primary">{fmt(item.price)}</Typography>
+                                {lowStock && (
+                                  <Chip
+                                    label={`${remaining} ${ui.left}`}
+                                    size="small"
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                                  />
+                                )}
+                              </Stack>
+                              {soldOut ? (
+                                <Chip label={ui.soldOut} size="small" color="error" variant="outlined" />
+                              ) : cartItem ? (
+                                <Stack direction="row" alignItems="center" spacing={0.5}>
+                                  <IconButton size="small" onClick={() => updateQty(item._id, -1)} sx={{ bgcolor: 'primary.light', width: 28, height: 28 }}>
+                                    <Remove sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                  <Typography fontWeight={700} sx={{ minWidth: 20, textAlign: 'center' }}>{cartItem.quantity}</Typography>
+                                  <IconButton
+                                    size="small"
+                                    disabled={atMax}
+                                    onClick={() => addToCart(item)}
+                                    sx={{ bgcolor: 'primary.main', color: 'white', width: 28, height: 28, '&:hover': { bgcolor: 'primary.dark' }, '&.Mui-disabled': { bgcolor: 'grey.300' } }}
+                                  >
+                                    <Add sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Stack>
                               ) : (
-                                <Chip label={ui.unavailable} size="small" color="error" variant="outlined" />
+                                <Button size="small" variant="contained" onClick={() => addToCart(item)} sx={{ minWidth: 64, borderRadius: 2 }}>
+                                  {ui.addToCart}
+                                </Button>
                               )}
                             </Stack>
                           </Box>
@@ -353,19 +426,32 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
               <IconButton onClick={() => setCartOpen(false)}><Close /></IconButton>
             </Stack>
             <Stack spacing={1.5} mb={2}>
-              {cart.map((item) => (
-                <Stack key={item.menuItemId} direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>{item.name}</Typography>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <IconButton size="small" onClick={() => updateQty(item.menuItemId, -1)}><Remove fontSize="small" /></IconButton>
-                    <Typography fontWeight={700}>{item.quantity}</Typography>
-                    <IconButton size="small" onClick={() => updateQty(item.menuItemId, 1)}><Add fontSize="small" /></IconButton>
-                    <Typography variant="body2" fontWeight={600} sx={{ minWidth: 60, textAlign: 'right' }}>
-                      {fmt(item.price * item.quantity)}
-                    </Typography>
+              {cart.map((item) => {
+                const max = maxFor(item.menuItemId);
+                const atMax = item.quantity >= max;
+                return (
+                  <Stack key={item.menuItemId} direction="row" justifyContent="space-between" alignItems="center">
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" fontWeight={600}>{item.name}</Typography>
+                      {atMax && Number.isFinite(max) && (
+                        <Typography variant="caption" color="warning.main" fontWeight={600}>
+                          {ui.onlyLeft.replace('{n}', String(max))}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <IconButton size="small" onClick={() => updateQty(item.menuItemId, -1)}><Remove fontSize="small" /></IconButton>
+                      <Typography fontWeight={700}>{item.quantity}</Typography>
+                      <IconButton size="small" disabled={atMax} onClick={() => updateQty(item.menuItemId, 1)}>
+                        <Add fontSize="small" />
+                      </IconButton>
+                      <Typography variant="body2" fontWeight={600} sx={{ minWidth: 60, textAlign: 'right' }}>
+                        {fmt(item.price * item.quantity)}
+                      </Typography>
+                    </Stack>
                   </Stack>
-                </Stack>
-              ))}
+                );
+              })}
             </Stack>
             <TextField
               label={ui.note}
@@ -393,6 +479,13 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
         <Snackbar open={orderSuccess} autoHideDuration={4000} onClose={() => setOrderSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
           <Alert severity="success" icon={<ThumbUp />} sx={{ borderRadius: 3, fontWeight: 600 }}>
             {ui.orderPlaced} 🎉
+          </Alert>
+        </Snackbar>
+
+        {/* Order failure (e.g. an item sold out before the order went through) */}
+        <Snackbar open={!!orderError} autoHideDuration={6000} onClose={() => setOrderError(null)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert severity="error" onClose={() => setOrderError(null)} sx={{ borderRadius: 3, fontWeight: 600 }}>
+            {orderError}
           </Alert>
         </Snackbar>
 
