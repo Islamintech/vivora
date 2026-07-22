@@ -29,6 +29,24 @@ function line(width, char = '-') {
   return text(char.repeat(width));
 }
 
+// Currencies with no minor unit — printing "9500.00 KRW" would be wrong.
+const ZERO_DECIMAL = new Set(['KRW', 'JPY', 'VND', 'CLP', 'ISK', 'KMF', 'XAF', 'XOF']);
+
+/**
+ * Money for a thermal ticket. Deliberately uses the ASCII currency code rather
+ * than a symbol: ticket text is encoded latin1, which cannot represent ₩ (or
+ * most non-latin symbols) — those would print as garbage.
+ */
+function money(amount, currency) {
+  const code = (currency || '').trim();
+  const digits = ZERO_DECIMAL.has(code.toUpperCase()) ? 0 : 2;
+  const num = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(amount ?? 0);
+  return code ? `${num} ${code}` : num;
+}
+
 // Left-justify a label against a right-justified value on one line, e.g.
 // row(48, 'TOTAL', '$14.00') -> "TOTAL                                 $14.00"
 function row(width, left, right) {
@@ -67,7 +85,7 @@ function wrap(str, width) {
  */
 function buildTicket(opts) {
   const width = opts.width || 48;
-  const fmt = (n) => `${opts.currency || ''} ${n.toFixed(2)}`.trim();
+  const fmt = (n) => money(n, opts.currency);
   const chunks = [INIT];
 
   chunks.push(ALIGN_CENTER, BOLD_ON, DOUBLE_ON);

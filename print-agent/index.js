@@ -72,6 +72,23 @@ function effectivePrinter() {
   return { ip, port };
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A kitchen ticket is worth retrying — the printer is often just momentarily
+// busy, asleep, or mid-reconnect, and a dropped ticket means a missed order.
+async function printWithRetry(ip, port, buffer, attempts = 3) {
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      await printToNetwork(ip, port, buffer);
+      return;
+    } catch (err) {
+      if (i === attempts) throw err;
+      log(`Print attempt ${i}/${attempts} failed (${err.message}); retrying…`);
+      await sleep(2000 * i);
+    }
+  }
+}
+
 async function printOrder(order) {
   const { ip, port } = effectivePrinter();
   if (!ip) {
@@ -95,7 +112,7 @@ async function printOrder(order) {
   });
 
   try {
-    await printToNetwork(ip, port, buffer);
+    await printWithRetry(ip, port, buffer);
     log(`Printed ticket for table ${order.tableNumber} (order ${order._id}).`);
   } catch (err) {
     log(`FAILED to print order ${order._id} to ${ip}:${port} — ${err.message}`);
@@ -164,6 +181,23 @@ async function main() {
   setInterval(() => {
     authenticate().catch((err) => log(`Re-authentication failed: ${err.message}`));
   }, 6 * 24 * 60 * 60 * 1000);
+
+  // Re-read printer settings often, so changing the printer IP (or currency,
+  // or name) in the dashboard takes effect in minutes rather than waiting for
+  // the next re-authentication.
+  setInterval(async () => {
+    try {
+      const fresh = await getMyRestaurant(config.apiUrl, session.token);
+      const before = effectivePrinter();
+      session.restaurant = fresh;
+      const after = effectivePrinter();
+      if (before.ip !== after.ip || before.port !== after.port) {
+        log(`Printer target changed to ${after.ip || '(none)'}:${after.port}.`);
+      }
+    } catch {
+      // Transient API blip — keep the cached config and try again next tick.
+    }
+  }, 2 * 60 * 1000);
 
   log('Print agent running. Waiting for new orders…');
 }
