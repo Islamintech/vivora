@@ -54,7 +54,7 @@ export const MY_RESTAURANT_QUERY = gql`
 export const PUBLIC_RESTAURANT_QUERY = gql`
   query PublicRestaurant($slug: String!) {
     publicRestaurant(slug: $slug) {
-      _id name slug description logo currency
+      _id name slug description logo currency address phone
     }
   }
 `;

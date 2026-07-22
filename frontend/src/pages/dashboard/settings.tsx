@@ -80,7 +80,7 @@ const SettingsPage: NextPage = () => {
                 <Box>
                   <Typography variant="h6" fontWeight={700}>{restaurant?.name}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Public URL: /menu/{restaurant?.slug}/[table]
+                    Public URL: /{restaurant?.slug}/[table]
                   </Typography>
                 </Box>
               </Stack>
@@ -185,7 +185,7 @@ const SettingsPage: NextPage = () => {
 
           <Alert severity="info" sx={{ borderRadius: 2 }}>
             Your restaurant's public menu URL is:{' '}
-            <strong>{process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/menu/{restaurant?.slug}/[table-number]</strong>
+            <strong>{process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/{restaurant?.slug}/[table-number]</strong>
           </Alert>
         </Box>
       </DashboardLayout>

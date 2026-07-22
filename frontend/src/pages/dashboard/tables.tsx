@@ -137,7 +137,7 @@ const TablesPage: NextPage = () => {
 
                     {/* URL label */}
                     <Typography variant="caption" color="text.disabled" display="block" mb={2} sx={{ wordBreak: 'break-all' }}>
-                      /menu/{restaurant?.slug}/{table.number}
+                      /{restaurant?.slug}/{table.number}
                     </Typography>
 
                     <Stack direction="row" spacing={1} justifyContent="center">

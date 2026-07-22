@@ -196,7 +196,7 @@ async function run() {
   console.log('');
   console.log(`  Dashboard:   http://localhost:3000/dashboard`);
   console.log(`  Kitchen:     http://localhost:3000/kitchen`);
-  console.log(`  Customer menu: http://localhost:3000/menu/${slug}/1`);
+  console.log(`  Customer menu: http://localhost:3000/${slug}/1`);
   console.log('========================================\n');
 
   await app.close();

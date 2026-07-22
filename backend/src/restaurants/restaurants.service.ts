@@ -10,6 +10,15 @@ import { Restaurant, RestaurantDocument } from './schemas/restaurant.schema';
 import { UpdateRestaurantInput } from './models/restaurant.model';
 import { RestaurantStatus } from '../common/enums';
 
+// Restaurant slugs live at the site root (e.g. /zaytoon), so a slug must never
+// collide with a real app route or it would shadow that page. Any name that
+// slugifies to one of these gets a numeric suffix instead.
+const RESERVED_SLUGS = new Set([
+  'admin', 'dashboard', 'login', 'register', 'kitchen', 'menu',
+  'api', 'app', 'auth', 'about', 'help', 'support', 'settings',
+  'index', 'public', 'static', '_next', 'favicon.ico',
+]);
+
 @Injectable()
 export class RestaurantsService {
   constructor(
@@ -115,11 +124,14 @@ export class RestaurantsService {
   }
 
   private async uniqueSlug(base: string): Promise<string> {
-    let slug = base;
+    // Fall back to a generic base if the name slugifies to nothing (e.g. all
+    // non-latin) so we never create an empty root path.
+    const safeBase = base || 'restaurant';
+    let slug = safeBase;
     let count = 0;
-    while (await this.restaurantModel.exists({ slug })) {
+    while (RESERVED_SLUGS.has(slug) || (await this.restaurantModel.exists({ slug }))) {
       count++;
-      slug = `${base}-${count}`;
+      slug = `${safeBase}-${count}`;
     }
     return slug;
   }

@@ -17,7 +17,7 @@ export class TablesService {
     input: CreateTableInput,
     frontendUrl: string,
   ): Promise<TableDocument> {
-    const menuUrl = `${frontendUrl}/menu/${restaurantSlug}/${input.number}`;
+    const menuUrl = `${frontendUrl}/${restaurantSlug}/${input.number}`;
     const qrCodeDataUrl = await QRCode.toDataURL(menuUrl, {
       errorCorrectionLevel: 'H',
       width: 400,
@@ -80,7 +80,7 @@ export class TablesService {
     const table = await this.tableModel.findOne({ _id: tableId, restaurantId });
     if (!table) throw new NotFoundException('Table not found');
 
-    const menuUrl = `${frontendUrl}/menu/${restaurantSlug}/${table.number}`;
+    const menuUrl = `${frontendUrl}/${restaurantSlug}/${table.number}`;
     table.qrCodeDataUrl = await QRCode.toDataURL(menuUrl, {
       errorCorrectionLevel: 'H',
       width: 400,
