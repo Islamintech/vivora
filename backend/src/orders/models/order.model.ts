@@ -10,13 +10,14 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
+  IsEnum,
   IsOptional,
   Max,
   MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
-import { OrderStatus } from '../../common/enums';
+import { OrderStatus, OrderType } from '../../common/enums';
 
 @ObjectType()
 export class OrderItemModel {
@@ -58,6 +59,9 @@ export class OrderModel {
 
   @Field(() => OrderStatus)
   status: OrderStatus;
+
+  @Field(() => OrderType)
+  orderType: OrderType;
 
   @Field(() => Float)
   totalAmount: number;
@@ -118,6 +122,11 @@ export class PlaceOrderInput {
   @IsOptional()
   @MaxLength(10)
   language?: string;
+
+  @Field(() => OrderType, { nullable: true, defaultValue: OrderType.DINE_IN })
+  @IsOptional()
+  @IsEnum(OrderType)
+  orderType?: OrderType;
 }
 
 // Staff-side: append items (taken verbally by a waiter) to an open table

@@ -20,7 +20,7 @@ import { TableSessionsService } from '../table-sessions/table-sessions.service';
 import { RestaurantsService } from '../restaurants/restaurants.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { PUB_SUB, ORDER_CREATED, ORDER_STATUS_UPDATED } from '../pubsub/pubsub.module';
-import { OrderStatus } from '../common/enums';
+import { OrderStatus, OrderType } from '../common/enums';
 
 @Injectable()
 export class OrdersService {
@@ -117,7 +117,7 @@ export class OrdersService {
   }
 
   async placeOrder(input: PlaceOrderInput): Promise<OrderDocument> {
-    const { restaurantId, tableNumber, items, customerNote, language } = input;
+    const { restaurantId, tableNumber, items, customerNote, language, orderType } = input;
 
     // Block orders for restaurants that aren't approved/active.
     await this.restaurantsService.assertServable(restaurantId.toString());
@@ -147,6 +147,7 @@ export class OrdersService {
         totalAmount,
         customerNote: customerNote || '',
         language: language || 'en',
+        orderType: orderType || OrderType.DINE_IN,
         status: OrderStatus.PENDING,
       });
     } catch (err) {
@@ -170,6 +171,7 @@ export class OrdersService {
         totalAmount,
         currency: restaurant.currency,
         customerNote: customerNote || '',
+        takeOut: order.orderType === OrderType.TAKE_OUT,
       });
       // Include the "Served" button so waiters can close the order from Telegram.
       void this.telegram.sendMessage(

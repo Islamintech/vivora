@@ -209,7 +209,7 @@ export const REGENERATE_QR_MUTATION = gql`
 export const ORDERS_QUERY = gql`
   query Orders($status: OrderStatus, $limit: Float) {
     orders(status: $status, limit: $limit) {
-      _id tableNumber status totalAmount customerNote language createdAt updatedAt
+      _id tableNumber status orderType totalAmount customerNote language createdAt updatedAt
       items {
         menuItemId quantity price notes
         name
@@ -241,7 +241,7 @@ export const UPDATE_ORDER_STATUS_MUTATION = gql`
 export const ORDER_CREATED_SUBSCRIPTION = gql`
   subscription OrderCreated($restaurantId: ID!) {
     orderCreated(restaurantId: $restaurantId) {
-      _id tableNumber status totalAmount customerNote createdAt
+      _id tableNumber status orderType totalAmount customerNote createdAt
       items {
         menuItemId quantity price notes
         name

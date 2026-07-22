@@ -79,6 +79,7 @@ function wrap(str, width) {
  * @param {number} opts.totalAmount
  * @param {string} opts.currency
  * @param {string} [opts.customerNote]
+ * @param {boolean} [opts.takeOut] - print a prominent TAKE-OUT banner
  * @param {string} [opts.orderShortId] - last few chars of the order id, for reference
  * @param {Date} [opts.createdAt]
  * @param {number} [opts.width] - characters per line (48 for 80mm, 32 for 58mm)
@@ -92,6 +93,10 @@ function buildTicket(opts) {
   chunks.push(text(opts.restaurantName || 'Restaurant'));
   chunks.push(DOUBLE_OFF);
   chunks.push(text(`TABLE ${opts.tableNumber}`));
+  // Take-out has to be impossible to miss — the kitchen packs it differently.
+  if (opts.takeOut) {
+    chunks.push(DOUBLE_ON, text('** TAKE-OUT **'), DOUBLE_OFF);
+  }
   chunks.push(BOLD_OFF, ALIGN_LEFT);
   chunks.push(line(width));
 

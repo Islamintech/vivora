@@ -66,6 +66,13 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
               {order.tableNumber}
             </Avatar>
             <Typography fontWeight={700} color="white">Table {order.tableNumber}</Typography>
+            {order.orderType === 'TAKE_OUT' && (
+              <Chip
+                label="🥡 TAKE-OUT"
+                size="small"
+                sx={{ bgcolor: '#7C3AED', color: 'white', fontWeight: 800, height: 22 }}
+              />
+            )}
           </Stack>
           <Typography variant="caption" sx={{ color: isUrgent ? '#EF4444' : 'grey.500' }}>
             {dayjs(order.createdAt).fromNow()}

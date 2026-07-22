@@ -225,6 +225,7 @@ type OrderModel {
   customerNote: String
   items: [OrderItemModel!]!
   language: String!
+  orderType: OrderType!
   restaurantId: ID!
   sessionId: ID
   status: OrderStatus!
@@ -242,10 +243,16 @@ enum OrderStatus {
   SERVED
 }
 
+enum OrderType {
+  DINE_IN
+  TAKE_OUT
+}
+
 input PlaceOrderInput {
   customerNote: String
   items: [OrderItemInput!]!
   language: String = "en"
+  orderType: OrderType = DINE_IN
   restaurantId: ID!
   tableNumber: Int!
 }

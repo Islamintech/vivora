@@ -110,6 +110,7 @@ export class TelegramService {
     totalAmount: number;
     currency: string;
     customerNote?: string;
+    takeOut?: boolean;
   }): string {
     const lines = opts.items
       .map((i) => `• ${i.quantity}× ${this.escapeHtml(i.name)}`)
@@ -118,9 +119,11 @@ export class TelegramService {
     const note = opts.customerNote
       ? `\n📝 <i>${this.escapeHtml(opts.customerNote)}</i>`
       : '';
+    const serving = opts.takeOut ? '🥡 <b>TAKE-OUT</b>\n' : '';
     return (
       `🧾 <b>New order — Table ${opts.tableNumber}</b>\n` +
-      `<b>${this.escapeHtml(opts.restaurantName)}</b>\n\n` +
+      `<b>${this.escapeHtml(opts.restaurantName)}</b>\n` +
+      `${serving}\n` +
       `${lines}\n\n` +
       `💰 <b>Total: ${total}</b>${note}`
     );

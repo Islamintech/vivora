@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
-import { OrderStatus } from '../../common/enums';
+import { OrderStatus, OrderType } from '../../common/enums';
 
 export class OrderItem {
   menuItemId: Types.ObjectId;
@@ -34,6 +34,10 @@ export class Order {
 
   @Prop({ type: String, enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
+
+  // Dine-in unless the guest picked take-out when they scanned the QR.
+  @Prop({ type: String, enum: OrderType, default: OrderType.DINE_IN })
+  orderType: OrderType;
 
   @Prop({ required: true, min: 0 })
   totalAmount: number;

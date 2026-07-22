@@ -14,6 +14,13 @@ export enum OrderStatus {
   CANCELLED = 'CANCELLED',
 }
 
+// How the guest wants the order served. Chosen when they scan the QR; the
+// kitchen needs it to know whether to plate or pack.
+export enum OrderType {
+  DINE_IN = 'DINE_IN',
+  TAKE_OUT = 'TAKE_OUT',
+}
+
 export enum ErrorLogLevel {
   ERROR = 'ERROR',
   WARN = 'WARN',
@@ -38,5 +45,6 @@ export enum TableSessionStatus {
 registerEnumType(UserRole, { name: 'UserRole' });
 registerEnumType(TableSessionStatus, { name: 'TableSessionStatus' });
 registerEnumType(OrderStatus, { name: 'OrderStatus' });
+registerEnumType(OrderType, { name: 'OrderType' });
 registerEnumType(ErrorLogLevel, { name: 'ErrorLogLevel' });
 registerEnumType(RestaurantStatus, { name: 'RestaurantStatus' });

@@ -60,6 +60,9 @@ export interface OrderItem {
 
 export type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'SERVED' | 'CANCELLED';
 
+// Chosen by the guest when they scan the QR; the kitchen packs take-out orders.
+export type OrderType = 'DINE_IN' | 'TAKE_OUT';
+
 export interface Order {
   _id: string;
   restaurantId: string;
@@ -67,6 +70,7 @@ export interface Order {
   tableNumber: number;
   items: OrderItem[];
   status: OrderStatus;
+  orderType?: OrderType;
   totalAmount: number;
   customerNote?: string;
   language: string;

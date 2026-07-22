@@ -55,7 +55,14 @@ function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id
             {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
           </IconButton>
         </TableCell>
-        <TableCell><Typography fontWeight={600}>{order.tableNumber}-stol</Typography></TableCell>
+        <TableCell>
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Typography fontWeight={600}>{order.tableNumber}-stol</Typography>
+            {order.orderType === 'TAKE_OUT' && (
+              <Chip label="Olib ketish" size="small" color="secondary" sx={{ height: 20, fontSize: '0.68rem' }} />
+            )}
+          </Stack>
+        </TableCell>
         <TableCell>
           <Chip
             label={statusLabel[order.status as OrderStatus]}
@@ -129,7 +136,12 @@ function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpda
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography fontWeight={800} fontSize="1.05rem">{order.tableNumber}-stol</Typography>
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Typography fontWeight={800} fontSize="1.05rem">{order.tableNumber}-stol</Typography>
+            {order.orderType === 'TAKE_OUT' && (
+              <Chip label="Olib ketish" size="small" color="secondary" sx={{ height: 20, fontSize: '0.68rem' }} />
+            )}
+          </Stack>
           <Chip
             label={statusLabel[order.status as OrderStatus]}
             color={statusColor[order.status as OrderStatus]}

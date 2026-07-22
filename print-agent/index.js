@@ -108,6 +108,7 @@ async function printOrder(order) {
     customerNote: order.customerNote,
     orderShortId: order._id?.slice(-6),
     createdAt: order.createdAt,
+    takeOut: order.orderType === 'TAKE_OUT',
     width: config.paperWidth || 48,
   });
 
@@ -122,7 +123,7 @@ async function printOrder(order) {
 const ORDER_CREATED_SUBSCRIPTION = `
   subscription OrderCreated($restaurantId: ID!) {
     orderCreated(restaurantId: $restaurantId) {
-      _id tableNumber totalAmount customerNote createdAt
+      _id tableNumber totalAmount customerNote createdAt orderType
       items { name quantity price notes }
     }
   }
@@ -165,6 +166,7 @@ async function main() {
       totalAmount: 12.5,
       customerNote: 'This is a test ticket from the print agent.',
       createdAt: new Date(),
+      orderType: 'TAKE_OUT',
       items: [
         { name: 'Test Item', quantity: 2, price: 5, notes: 'no onions' },
         { name: 'Sample Drink', quantity: 1, price: 2.5 },
