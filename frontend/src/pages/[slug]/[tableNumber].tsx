@@ -17,6 +17,7 @@ import {
   PUBLIC_RESTAURANT_QUERY, TABLE_SESSION_QUERY,
 } from '@/graphql/operations';
 import { CartItem, MenuItem, Order, OrderStatus, TableSession } from '@/types';
+import { formatMoney } from '@/lib/money';
 
 const ui = {
   addToCart: 'Add', cart: 'Your Order', placeOrder: 'Place Order', total: 'Total',
@@ -105,8 +106,8 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
 
   const cartCount = cart.reduce((s, c) => s + c.quantity, 0);
   const cartTotal = cart.reduce((s, c) => s + c.price * c.quantity, 0);
-  const currency = restaurant?.currency || 'USD';
-  const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n);
+  const currency = restaurant?.currency || 'KRW';
+  const fmt = (n: number) => formatMoney(n, currency);
 
   const handlePlaceOrder = () => {
     if (!cart.length || !restaurantId) return;

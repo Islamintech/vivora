@@ -5,12 +5,14 @@ import { useQuery, useMutation } from '@apollo/client';
 import {
   Box, Card, CardContent, Typography, TextField, Button,
   Stack, Divider, Grid, Avatar, Alert, FormControlLabel, Switch,
+  CircularProgress,
 } from '@mui/material';
-import { Save, Store, Print } from '@mui/icons-material';
+import { Save, Store, Print, PhotoCamera, Delete } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { MY_RESTAURANT_QUERY, UPDATE_RESTAURANT_MUTATION } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { uploadImage, cloudinaryConfigured } from '@/lib/cloudinary';
 
 const SettingsPage: NextPage = () => {
   const { user } = useRequireAuth();
@@ -18,9 +20,10 @@ const SettingsPage: NextPage = () => {
   const restaurant = data?.myRestaurant;
 
   const [form, setForm] = useState({
-    name: '', description: '', address: '', phone: '', logo: '', currency: 'USD', telegramChatId: '',
+    name: '', description: '', address: '', phone: '', logo: '', currency: 'KRW', telegramChatId: '',
     printerEnabled: false, printerIp: '', printerPort: '9100',
   });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
@@ -30,7 +33,7 @@ const SettingsPage: NextPage = () => {
         address: restaurant.address || '',
         phone: restaurant.phone || '',
         logo: restaurant.logo || '',
-        currency: restaurant.currency || 'USD',
+        currency: restaurant.currency || 'KRW',
         telegramChatId: restaurant.telegramChatId || '',
         printerEnabled: restaurant.printerEnabled || false,
         printerIp: restaurant.printerIp || '',
@@ -61,6 +64,30 @@ const SettingsPage: NextPage = () => {
     });
   };
 
+  const handleLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    if (!cloudinaryConfigured) {
+      toast.error('Image upload is not configured yet.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Logo must be under 5 MB.');
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const url = await uploadImage(file);
+      setForm((p) => ({ ...p, logo: url }));
+      toast.success('Logo uploaded — remember to save.');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   return (
     <>
       <Head><title>Settings — RestoPlatform</title></Head>
@@ -74,7 +101,7 @@ const SettingsPage: NextPage = () => {
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ p: 3 }}>
               <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-                <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main', fontSize: '1.5rem' }}>
+                <Avatar src={form.logo || undefined} sx={{ width: 64, height: 64, bgcolor: 'primary.main', fontSize: '1.5rem' }}>
                   <Store />
                 </Avatar>
                 <Box>
@@ -101,10 +128,38 @@ const SettingsPage: NextPage = () => {
                   <TextField label="Phone" {...field('phone')} fullWidth />
                 </Grid>
                 <Grid item xs={12} sm={8}>
-                  <TextField label="Logo URL" {...field('logo')} fullWidth placeholder="https://..." />
+                  <Typography variant="body2" fontWeight={600} mb={1}>Logo</Typography>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar
+                      src={form.logo || undefined}
+                      variant="rounded"
+                      sx={{ width: 64, height: 64, bgcolor: 'grey.100', color: 'grey.500' }}
+                    >
+                      <Store />
+                    </Avatar>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                      <Button
+                        component="label"
+                        variant="outlined"
+                        startIcon={uploadingLogo ? <CircularProgress size={16} /> : <PhotoCamera />}
+                        disabled={uploadingLogo}
+                      >
+                        {form.logo ? 'Replace' : 'Upload logo'}
+                        <input hidden type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" onChange={handleLogoFile} />
+                      </Button>
+                      {form.logo && (
+                        <Button color="error" startIcon={<Delete />} onClick={() => setForm((p) => ({ ...p, logo: '' }))}>
+                          Remove
+                        </Button>
+                      )}
+                    </Stack>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                    PNG or SVG recommended, up to 5 MB.
+                  </Typography>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <TextField label="Currency" {...field('currency')} fullWidth placeholder="USD" />
+                  <TextField label="Currency" {...field('currency')} fullWidth placeholder="KRW" helperText="ISO code: KRW (₩), USD, EUR…" />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField

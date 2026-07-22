@@ -12,6 +12,8 @@ import {
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ANALYTICS_QUERY, FEEDBACK_SUMMARY_QUERY } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { formatMoney } from '@/lib/money';
+import { useCurrency } from '@/hooks/useCurrency';
 import dayjs from 'dayjs';
 import { statusColor, statusLabel } from '@/types';
 
@@ -36,6 +38,7 @@ const StatCard = ({ label, value, icon, color, sub }: any) => (
 
 const DashboardPage: NextPage = () => {
   const { user } = useRequireAuth();
+  const currency = useCurrency();
 
   // Memoized: fresh Date objects on every render make Apollo see "new
   // variables" and refetch in an endless loop.
@@ -75,7 +78,7 @@ const DashboardPage: NextPage = () => {
               {aLoading ? <Skeleton variant="rounded" height={120} /> : (
                 <StatCard
                   label="Umumiy daromad (30 kun)"
-                  value={`$${analytics?.totalRevenue?.toFixed(2) ?? '0.00'}`}
+                  value={formatMoney(analytics?.totalRevenue ?? 0, currency)}
                   icon={<TrendingUp />}
                   color="success"
                   sub={`${analytics?.totalOrders ?? 0} ta buyurtma`}
@@ -97,7 +100,7 @@ const DashboardPage: NextPage = () => {
               {aLoading ? <Skeleton variant="rounded" height={120} /> : (
                 <StatCard
                   label="O‘rtacha buyurtma summasi"
-                  value={`$${analytics?.averageOrderValue?.toFixed(2) ?? '0.00'}`}
+                  value={formatMoney(analytics?.averageOrderValue ?? 0, currency)}
                   icon={<TableRestaurant />}
                   color="info"
                 />
@@ -159,7 +162,7 @@ const DashboardPage: NextPage = () => {
                         <Typography variant="body2" fontWeight={600}>{table.tableName}</Typography>
                         <Stack direction="row" spacing={1}>
                           <Chip label={`${table.totalOrders} ta buyurtma`} size="small" variant="outlined" />
-                          <Chip label={`$${table.totalRevenue.toFixed(0)}`} size="small" color="primary" variant="outlined" />
+                          <Chip label={formatMoney(table.totalRevenue, currency)} size="small" color="primary" variant="outlined" />
                         </Stack>
                       </Stack>
                     ))}

@@ -26,6 +26,8 @@ import {
   CartItem, MenuItem, Order, OrderStatus, TableSession,
   statusColor, statusLabel,
 } from '@/types';
+import { formatMoney } from '@/lib/money';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const STATUS_TABS: { label: string; value: OrderStatus | 'ALL' }[] = [
   { label: 'Hammasi', value: 'ALL' },
@@ -43,6 +45,7 @@ const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 
 function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id: string, status: OrderStatus) => void }) {
   const [open, setOpen] = useState(false);
+  const currency = useCurrency();
 
   return (
     <>
@@ -61,7 +64,7 @@ function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id
           />
         </TableCell>
         <TableCell>{order.items.length} ta taom</TableCell>
-        <TableCell><Typography fontWeight={600}>${order.totalAmount.toFixed(2)}</Typography></TableCell>
+        <TableCell><Typography fontWeight={600}>{formatMoney(order.totalAmount, currency)}</Typography></TableCell>
         <TableCell>{dayjs(order.createdAt).format('HH:mm · MMM D')}</TableCell>
         <TableCell>
           {NEXT_STATUS[order.status as OrderStatus] && (
@@ -97,7 +100,7 @@ function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id
                     {item.name} × {item.quantity}
                     {item.notes && <Typography component="span" variant="caption" color="text.secondary"> · {item.notes}</Typography>}
                   </Typography>
-                  <Typography variant="body2" fontWeight={600}>${(item.price * item.quantity).toFixed(2)}</Typography>
+                  <Typography variant="body2" fontWeight={600}>{formatMoney(item.price * item.quantity, currency)}</Typography>
                 </Stack>
               ))}
               {order.customerNote && (
@@ -119,6 +122,7 @@ function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id
 // action reachable without any horizontal scrolling.
 function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id: string, status: OrderStatus) => void }) {
   const [open, setOpen] = useState(false);
+  const currency = useCurrency();
   const next = NEXT_STATUS[order.status as OrderStatus];
 
   return (
@@ -136,7 +140,7 @@ function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpda
           <Typography variant="body2" color="text.secondary">
             {order.items.length} ta taom · {dayjs(order.createdAt).format('HH:mm · MMM D')}
           </Typography>
-          <Typography fontWeight={700}>${order.totalAmount.toFixed(2)}</Typography>
+          <Typography fontWeight={700}>{formatMoney(order.totalAmount, currency)}</Typography>
         </Stack>
 
         <Button
@@ -155,7 +159,7 @@ function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpda
                   {item.name} × {item.quantity}
                   {item.notes && <Typography component="span" variant="caption" color="text.secondary"> · {item.notes}</Typography>}
                 </Typography>
-                <Typography variant="body2" fontWeight={600}>${(item.price * item.quantity).toFixed(2)}</Typography>
+                <Typography variant="body2" fontWeight={600}>{formatMoney(item.price * item.quantity, currency)}</Typography>
               </Stack>
             ))}
             {order.customerNote && (
@@ -197,6 +201,7 @@ function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpda
 
 const OrdersPage: NextPage = () => {
   const { user } = useRequireAuth();
+  const currency = useCurrency();
   const [activeTab, setActiveTab] = useState(0);
 
   const status = STATUS_TABS[activeTab].value;
@@ -314,7 +319,7 @@ const OrdersPage: NextPage = () => {
                             {activeOrders.length} ta buyurtma · ochilgan {dayjs(session.createdAt).format('HH:mm')}
                           </Typography>
                           <Typography variant="h6" fontWeight={800} color="primary" mb={1.5}>
-                            ${session.totalAmount.toFixed(2)}
+                            {formatMoney(session.totalAmount, currency)}
                           </Typography>
                           <Stack spacing={1}>
                             <Button
@@ -355,7 +360,7 @@ const OrdersPage: NextPage = () => {
               </Typography>
               <Autocomplete
                 options={menuItems}
-                getOptionLabel={(o) => `${o.name} — $${o.price.toFixed(2)}`}
+                getOptionLabel={(o) => `${o.name} — ${formatMoney(o.price, currency)}`}
                 value={null}
                 blurOnSelect
                 onChange={(_, item) => addPickItem(item)}
@@ -385,7 +390,7 @@ const OrdersPage: NextPage = () => {
                   <Divider sx={{ mb: 1.5 }} />
                   <Stack direction="row" justifyContent="space-between">
                     <Typography fontWeight={700}>Jami</Typography>
-                    <Typography fontWeight={800} color="primary">${pickTotal.toFixed(2)}</Typography>
+                    <Typography fontWeight={800} color="primary">{formatMoney(pickTotal, currency)}</Typography>
                   </Stack>
                 </>
               )}

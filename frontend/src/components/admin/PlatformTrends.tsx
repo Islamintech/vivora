@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
+import { formatMoney } from '@/lib/money';
 
 export interface TrendPoint {
   date: string;
@@ -150,7 +151,8 @@ export default function PlatformTrends({ data }: { data: TrendPoint[] }) {
     return <Typography color="text.secondary">No trend data yet.</Typography>;
   }
 
-  const money = (n: number) => `$${n.toFixed(n % 1 === 0 ? 0 : 2)}`;
+  // Platform revenue is cross-restaurant; format with the app default (kr).
+  const money = (n: number) => formatMoney(n);
   const count = (n: number) => `${n}`;
 
   const sum = (key: keyof TrendPoint) =>

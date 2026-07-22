@@ -11,6 +11,8 @@ import dayjs from 'dayjs';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ANALYTICS_QUERY } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { formatMoney } from '@/lib/money';
+import { useCurrency } from '@/hooks/useCurrency';
 
 type PeriodKey = '7d' | '30d' | '90d';
 
@@ -22,6 +24,7 @@ const PERIODS: { label: string; key: PeriodKey; days: number }[] = [
 
 const AnalyticsPage: NextPage = () => {
   const { user } = useRequireAuth();
+  const currency = useCurrency();
   const [period, setPeriod] = useState<PeriodKey>('30d');
 
   const days = PERIODS.find((p) => p.key === period)?.days ?? 30;
@@ -64,9 +67,9 @@ const AnalyticsPage: NextPage = () => {
           {/* KPI Cards */}
           <Grid container spacing={3} mb={4}>
             {[
-              { label: 'Total Revenue', value: `$${(analytics?.totalRevenue ?? 0).toFixed(2)}`, icon: <TrendingUp />, color: 'success' },
+              { label: 'Total Revenue', value: formatMoney(analytics?.totalRevenue ?? 0, currency), icon: <TrendingUp />, color: 'success' },
               { label: 'Total Orders', value: analytics?.totalOrders ?? 0, icon: <ShoppingBag />, color: 'primary' },
-              { label: 'Avg Order Value', value: `$${(analytics?.averageOrderValue ?? 0).toFixed(2)}`, icon: <TableRestaurant />, color: 'info' },
+              { label: 'Avg Order Value', value: formatMoney(analytics?.averageOrderValue ?? 0, currency), icon: <TableRestaurant />, color: 'info' },
               { label: 'Orders Served', value: analytics?.servedOrders ?? 0, icon: <Star />, color: 'warning' },
             ].map((kpi) => (
               <Grid item xs={12} sm={6} md={3} key={kpi.label}>
@@ -98,7 +101,7 @@ const AnalyticsPage: NextPage = () => {
                       {analytics.dailyRevenue.map((day: any) => (
                         <Box key={day.date} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 28, flex: 1 }}>
                           <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.65rem' }}>
-                            ${day.revenue.toFixed(0)}
+                            {formatMoney(day.revenue, currency)}
                           </Typography>
                           <Box
                             sx={{
@@ -168,7 +171,7 @@ const AnalyticsPage: NextPage = () => {
                           <Typography fontWeight={700} fontSize="1.5rem">{table.tableNumber}</Typography>
                           <Typography variant="caption" color="text.secondary" display="block">{table.tableName}</Typography>
                           <Typography variant="h6" fontWeight={700} color="primary" mt={1}>
-                            ${table.totalRevenue.toFixed(0)}
+                            {formatMoney(table.totalRevenue, currency)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">{table.totalOrders} orders</Typography>
                         </Card>

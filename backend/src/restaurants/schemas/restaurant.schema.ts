@@ -28,7 +28,8 @@ export class Restaurant {
   @Prop({ default: '' })
   logo: string;
 
-  @Prop({ default: 'USD' })
+  // Korean won (ISO 4217); Intl renders it as ₩ with no decimals.
+  @Prop({ default: 'KRW' })
   currency: string;
 
   // Telegram group chat ID for staff order alerts (paired with platform bot token)

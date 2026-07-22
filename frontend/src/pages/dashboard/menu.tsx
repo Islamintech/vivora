@@ -21,10 +21,13 @@ import {
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { MenuItem, MenuCategory } from '@/types';
+import { formatMoney } from '@/lib/money';
+import { useCurrency } from '@/hooks/useCurrency';
 import { uploadImage, cloudinaryConfigured } from '@/lib/cloudinary';
 
 const MenuPage: NextPage = () => {
   const { user } = useRequireAuth();
+  const currency = useCurrency();
 
   const { data: catData, refetch: refetchCats } = useQuery(CATEGORIES_QUERY, { skip: !user });
   const { data: itemData, refetch: refetchItems } = useQuery(MENU_ITEMS_QUERY, { skip: !user });
@@ -204,7 +207,7 @@ const MenuPage: NextPage = () => {
                             )}
                             <Box flex={1} minWidth={0}>
                               <Typography fontWeight={700} noWrap>{item.name}</Typography>
-                              <Typography variant="body2" color="primary" fontWeight={600}>${item.price.toFixed(2)}</Typography>
+                              <Typography variant="body2" color="primary" fontWeight={600}>{formatMoney(item.price, currency)}</Typography>
                               <Stack direction="row" spacing={0.5} mt={0.5} flexWrap="wrap">
                                 {item.isPopular && <Chip label="Mashhur" size="small" color="warning" />}
                                 {!item.isAvailable && <Chip label="Tugadi" size="small" color="error" />}

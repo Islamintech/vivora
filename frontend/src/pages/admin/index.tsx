@@ -28,6 +28,7 @@ import {
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth.store';
 import { statusColor, OrderStatus, RestaurantStatus } from '@/types';
+import { formatMoney } from '@/lib/money';
 import PlatformTrends from '@/components/admin/PlatformTrends';
 
 // Approval-status chip styling/labels for the super-admin tables.
@@ -177,7 +178,7 @@ const AdminPage: NextPage = () => {
               { label: 'Total Restaurants', value: stats?.totalRestaurants ?? 0, sub: `${stats?.activeRestaurants ?? 0} active`, icon: <Store />, color: 'primary' },
               { label: 'Total Users', value: stats?.totalUsers ?? 0, icon: <People />, color: 'info' },
               { label: 'Total Orders', value: stats?.totalOrders ?? 0, icon: <ShoppingBag />, color: 'warning' },
-              { label: 'Total Revenue', value: `$${(stats?.totalRevenue ?? 0).toFixed(2)}`, icon: <TrendingUp />, color: 'success' },
+              { label: 'Total Revenue', value: formatMoney(stats?.totalRevenue ?? 0), icon: <TrendingUp />, color: 'success' },
             ].map((kpi) => (
               <Grid item xs={12} sm={6} md={3} key={kpi.label}>
                 <Card>
@@ -274,7 +275,7 @@ const AdminPage: NextPage = () => {
                           <Chip label={r.isActive ? 'Active' : 'Inactive'} color={r.isActive ? 'success' : 'default'} size="small" variant="outlined" />
                         </TableCell>
                         <TableCell>{r.orderCount}</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>${r.revenue.toFixed(2)}</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>{formatMoney(r.revenue)}</TableCell>
                         <TableCell>{dayjs(r.createdAt).format('MMM D, YYYY')}</TableCell>
                         <TableCell>
                           {r.status === 'APPROVED' ? (
@@ -346,7 +347,7 @@ const AdminPage: NextPage = () => {
                         <TableCell>
                           <Chip label={statusLabel[o.status as OrderStatus]} color={statusColor[o.status as OrderStatus]} size="small" />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>${o.totalAmount.toFixed(2)}</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>{formatMoney(o.totalAmount)}</TableCell>
                         <TableCell>{dayjs(o.createdAt).format('MMM D, HH:mm')}</TableCell>
                       </TableRow>
                     ))}
@@ -679,7 +680,7 @@ const AdminPage: NextPage = () => {
                   { label: 'Menu items', value: detail.menuItemCount },
                   { label: 'Tables', value: detail.tableCount },
                   { label: 'Orders', value: detail.orderCount },
-                  { label: 'Revenue', value: `${detail.currency} ${detail.revenue.toFixed(2)}` },
+                  { label: 'Revenue', value: formatMoney(detail.revenue, detail.currency) },
                 ].map((s) => (
                   <Grid item xs={6} sm={3} key={s.label}>
                     <Card variant="outlined" sx={{ textAlign: 'center', py: 1.5 }}>
@@ -726,7 +727,7 @@ const AdminPage: NextPage = () => {
                       <Typography variant="body2">Table {o.tableNumber} · {o.items.length} items</Typography>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Chip label={statusLabel[o.status as OrderStatus]} color={statusColor[o.status as OrderStatus]} size="small" />
-                        <Typography variant="body2" fontWeight={600} sx={{ minWidth: 70, textAlign: 'right' }}>${o.totalAmount.toFixed(2)}</Typography>
+                        <Typography variant="body2" fontWeight={600} sx={{ minWidth: 70, textAlign: 'right' }}>{formatMoney(o.totalAmount, detail.currency)}</Typography>
                         <Typography variant="caption" color="text.secondary">{dayjs(o.createdAt).format('MMM D HH:mm')}</Typography>
                       </Stack>
                     </Stack>

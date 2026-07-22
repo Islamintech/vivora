@@ -16,8 +16,11 @@ import { kitchenTheme } from '@/theme';
 import {
   ORDERS_QUERY, UPDATE_ORDER_STATUS_MUTATION,
   ORDER_CREATED_SUBSCRIPTION, ORDER_STATUS_UPDATED_SUBSCRIPTION,
+  MY_RESTAURANT_QUERY,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useCurrency } from '@/hooks/useCurrency';
+import { formatMoney } from '@/lib/money';
 import { Order, OrderStatus } from '@/types';
 
 dayjs.extend(relativeTime);
@@ -29,6 +32,7 @@ const STATUS_COLUMNS: { status: OrderStatus; label: string; color: string; next?
 ];
 
 function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, status: OrderStatus) => void }) {
+  const currency = useCurrency();
   const col = STATUS_COLUMNS.find((c) => c.status === order.status);
   const ageMinutes = dayjs().diff(dayjs(order.createdAt), 'minute');
   const isUrgent = order.status === 'PENDING' && ageMinutes > 10;
@@ -91,7 +95,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
         )}
 
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography fontWeight={700} color={col?.color}>${order.totalAmount.toFixed(2)}</Typography>
+          <Typography fontWeight={700} color={col?.color}>{formatMoney(order.totalAmount, currency)}</Typography>
           {col?.next && (
             <Button
               size="small"
@@ -118,6 +122,9 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
 const KitchenPage: NextPage = () => {
   const { user } = useRequireAuth();
   const restaurantId = user?.restaurantId;
+
+  const { data: restData } = useQuery(MY_RESTAURANT_QUERY, { skip: !user });
+  const restaurant = restData?.myRestaurant;
 
   const { data, refetch } = useQuery(ORDERS_QUERY, {
     variables: { limit: 80 },
@@ -166,10 +173,19 @@ const KitchenPage: NextPage = () => {
         {/* Kitchen Header */}
         <AppBar position="sticky" elevation={0} sx={{ bgcolor: '#0D0D18', borderBottom: '1px solid #1E1E2E' }}>
           <Toolbar>
-            <Kitchen sx={{ mr: 1.5, color: 'primary.main' }} />
-            <Typography variant="h6" fontWeight={800} sx={{ flex: 1, color: 'white' }}>
-              Kitchen Display
-            </Typography>
+            {restaurant?.logo ? (
+              <Avatar src={restaurant.logo} sx={{ width: 34, height: 34, mr: 1.5 }} />
+            ) : (
+              <Kitchen sx={{ mr: 1.5, color: 'primary.main' }} />
+            )}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="h6" fontWeight={800} noWrap sx={{ color: 'white', lineHeight: 1.2 }}>
+                {restaurant?.name || 'Kitchen Display'}
+              </Typography>
+              {restaurant?.name && (
+                <Typography variant="caption" sx={{ color: 'grey.500' }}>Kitchen Display</Typography>
+              )}
+            </Box>
             <Stack direction="row" spacing={2} alignItems="center">
               <Badge badgeContent={pendingCount} color="warning">
                 <Notifications sx={{ color: 'grey.400' }} />
