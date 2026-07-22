@@ -7,6 +7,7 @@ import {
   IconButton, Drawer, Badge, Avatar, Divider, Dialog,
   DialogTitle, DialogContent, DialogActions, TextField,
   ToggleButtonGroup, ToggleButton, Snackbar, Alert, LinearProgress,
+  Menu, MenuItem as MuiMenuItem,
 } from '@mui/material';
 import {
   ShoppingCart, Add, Remove, Delete, Star, Close,
@@ -18,27 +19,28 @@ import {
 } from '@/graphql/operations';
 import { CartItem, MenuItem, Order, OrderStatus, TableSession } from '@/types';
 import { formatMoney } from '@/lib/money';
+import { Lang, LANGUAGES, getStrings, UIStrings } from '@/lib/i18n';
+import WelcomeGate, { OrderType } from '@/components/customer/WelcomeGate';
 
-const ui = {
-  addToCart: 'Add', cart: 'Your Order', placeOrder: 'Place Order', total: 'Total',
-  note: 'Special instructions', empty: 'Your cart is empty', unavailable: 'Unavailable',
-  popular: 'Popular', orderPlaced: 'Order placed!', feedbackTitle: 'How was your experience?',
-  feedbackBtn: 'Leave Feedback', cancel: 'Cancel', submit: 'Submit',
-  noteHint: 'Any allergies or special requests?', close: 'Close',
-  myOrders: 'My orders', tabTotal: 'Total so far',
-  payNote: 'Show this to the staff when you are ready to pay.',
-  orderN: 'Order', soldOut: 'Sold out', left: 'left',
-  onlyLeft: 'Only {n} left in stock',
+const STATUS_COLOR: Record<OrderStatus, 'warning' | 'info' | 'success' | 'error' | 'default'> = {
+  PENDING: 'warning',
+  PREPARING: 'info',
+  READY: 'success',
+  SERVED: 'default',
+  CANCELLED: 'error',
 };
 
-// Customer-facing status labels (dashboard uses the Uzbek statusLabel map).
-const customerStatus: Record<OrderStatus, { label: string; color: 'warning' | 'info' | 'success' | 'error' | 'default' }> = {
-  PENDING: { label: 'Received', color: 'warning' },
-  PREPARING: { label: 'Preparing', color: 'info' },
-  READY: { label: 'Ready', color: 'success' },
-  SERVED: { label: 'Served', color: 'default' },
-  CANCELLED: { label: 'Cancelled', color: 'error' },
-};
+const statusLabelFor = (t: UIStrings, s: OrderStatus) => ({
+  PENDING: t.statusPending,
+  PREPARING: t.statusPreparing,
+  READY: t.statusReady,
+  SERVED: t.statusServed,
+  CANCELLED: t.statusCancelled,
+}[s]);
+
+// Language + dine-in/take-out are remembered per table so the gate only shows
+// on the first scan of a sitting.
+const prefsKey = (slug: string, table: number) => `resto:prefs:${slug}:${table}`;
 
 interface Props { slug: string; tableNumber: number; }
 
@@ -54,6 +56,33 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [tabOpen, setTabOpen] = useState(false);
+
+  // null until we've read localStorage; then either the saved prefs or none
+  // (which shows the welcome gate).
+  const [prefs, setPrefs] = useState<{ lang: Lang; orderType: OrderType } | null>(null);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [langMenuAnchor, setLangMenuAnchor] = useState<null | HTMLElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(prefsKey(slug, tableNumber));
+      if (raw) setPrefs(JSON.parse(raw));
+    } catch {
+      // Corrupt/blocked storage — just show the gate.
+    }
+    setPrefsLoaded(true);
+  }, [slug, tableNumber]);
+
+  const savePrefs = (next: { lang: Lang; orderType: OrderType }) => {
+    setPrefs(next);
+    try {
+      window.localStorage.setItem(prefsKey(slug, tableNumber), JSON.stringify(next));
+    } catch {
+      // Non-fatal: prefs just won't persist across reloads.
+    }
+  };
+
+  const t = getStrings(prefs?.lang ?? 'en');
 
   const { data: restaurantData, error: restError, loading: restLoading } = useQuery(PUBLIC_RESTAURANT_QUERY, { variables: { slug } });
   const restaurant = restaurantData?.publicRestaurant;
@@ -170,13 +199,33 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           tableNumber,
           items: cart.map((c) => ({ menuItemId: c.menuItemId, quantity: c.quantity, notes: c.notes })),
           customerNote: orderNote,
-          language: 'en',
+          language: prefs?.lang ?? 'en',
+          orderType: prefs?.orderType ?? 'DINE_IN',
         },
       },
     });
   };
 
   const filteredSections = activeCat ? sections.filter((s: any) => s.category._id === activeCat) : sections;
+
+  // First scan of this sitting: ask for language, then dine-in vs take-out.
+  // Held until localStorage has been read so the gate doesn't flash.
+  if (prefsLoaded && !prefs && !restError) {
+    return (
+      <>
+        <Head>
+          <title>{restaurant?.name || 'Menu'}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        </Head>
+        <WelcomeGate
+          restaurantName={restaurant?.name}
+          logo={restaurant?.logo}
+          tableNumber={tableNumber}
+          onComplete={(lang, orderType) => savePrefs({ lang, orderType })}
+        />
+      </>
+    );
+  }
 
   // Restaurant not available (pending approval, rejected, or suspended) — the
   // publicRestaurant query is rejected by the backend gate.
@@ -188,10 +237,8 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           <Card sx={{ width: '100%', textAlign: 'center' }}>
             <CardContent sx={{ p: 4 }}>
               <Typography sx={{ fontSize: 48, mb: 1 }}>🍽️</Typography>
-              <Typography variant="h6" fontWeight={800} mb={1}>Menu is not available</Typography>
-              <Typography color="text.secondary">
-                This restaurant isn’t accepting orders right now. Please check back later.
-              </Typography>
+              <Typography variant="h6" fontWeight={800} mb={1}>{t.menuUnavailable}</Typography>
+              <Typography color="text.secondary">{t.menuUnavailableHint}</Typography>
             </CardContent>
           </Card>
         </Box>
@@ -215,6 +262,36 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             pt: 4, pb: 6, px: 2.5, position: 'relative',
           }}
         >
+          {/* Language switcher — the gate sets it once, this allows changing it later. */}
+          <IconButton
+            onClick={(e) => setLangMenuAnchor(e.currentTarget)}
+            aria-label={t.chooseLanguage}
+            sx={{ position: 'absolute', top: 8, right: 8, color: 'white' }}
+          >
+            <Typography component="span" sx={{ fontSize: '1.3rem', lineHeight: 1 }}>
+              {LANGUAGES.find((l) => l.code === prefs?.lang)?.flag ?? '🌐'}
+            </Typography>
+          </IconButton>
+          <Menu
+            anchorEl={langMenuAnchor}
+            open={!!langMenuAnchor}
+            onClose={() => setLangMenuAnchor(null)}
+          >
+            {LANGUAGES.map((l) => (
+              <MuiMenuItem
+                key={l.code}
+                selected={l.code === prefs?.lang}
+                onClick={() => {
+                  if (prefs) savePrefs({ ...prefs, lang: l.code });
+                  setLangMenuAnchor(null);
+                }}
+              >
+                <Typography component="span" sx={{ fontSize: '1.2rem', mr: 1.5 }}>{l.flag}</Typography>
+                {l.label}
+              </MuiMenuItem>
+            ))}
+          </Menu>
+
           {restaurant?.logo && (
             <Avatar src={restaurant.logo} sx={{ width: 56, height: 56, mb: 1.5, mx: 'auto' }} />
           )}
@@ -222,7 +299,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             {restaurant?.name}
           </Typography>
           <Typography variant="body2" sx={{ color: 'grey.400', textAlign: 'center', mt: 0.5 }}>
-            Table {tableNumber}
+            {t.table} {tableNumber} · {prefs?.orderType === 'TAKE_OUT' ? t.takeOut : t.dineIn}
           </Typography>
         </Box>
 
@@ -231,7 +308,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
         <Box sx={{ px: 2, py: 1.5, bgcolor: 'white', borderBottom: '1px solid #F1F5F9', position: 'sticky', top: 0, zIndex: 10, overflowX: 'auto' }}>
           <Stack direction="row" spacing={1} sx={{ minWidth: 'max-content' }}>
             <Chip
-              label="All"
+              label={t.all}
               onClick={() => setActiveCat(null)}
               color={activeCat === null ? 'primary' : 'default'}
               sx={{ fontWeight: 600 }}
@@ -296,7 +373,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                                 <Typography fontWeight={700} color="primary">{fmt(item.price)}</Typography>
                                 {lowStock && (
                                   <Chip
-                                    label={`${remaining} ${ui.left}`}
+                                    label={`${remaining} ${t.left}`}
                                     size="small"
                                     color="warning"
                                     variant="outlined"
@@ -305,7 +382,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                                 )}
                               </Stack>
                               {soldOut ? (
-                                <Chip label={ui.soldOut} size="small" color="error" variant="outlined" />
+                                <Chip label={t.soldOut} size="small" color="error" variant="outlined" />
                               ) : cartItem ? (
                                 <Stack direction="row" alignItems="center" spacing={0.5}>
                                   <IconButton size="small" onClick={() => updateQty(item._id, -1)} sx={{ bgcolor: 'primary.light', width: 28, height: 28 }}>
@@ -323,7 +400,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                                 </Stack>
                               ) : (
                                 <Button size="small" variant="contained" onClick={() => addToCart(item)} sx={{ minWidth: 64, borderRadius: 2 }}>
-                                  {ui.addToCart}
+                                  {t.addToCart}
                                 </Button>
                               )}
                             </Stack>
@@ -355,7 +432,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                     boxShadow: '0 8px 30px rgba(15,23,42,0.35)',
                   }}
                 >
-                  {cartCount > 0 ? fmt(tabTotal) : `${ui.myOrders} — ${fmt(tabTotal)}`}
+                  {cartCount > 0 ? fmt(tabTotal) : `${t.myOrders} — ${fmt(tabTotal)}`}
                 </Button>
               )}
               {cartCount > 0 && (
@@ -367,7 +444,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                   sx={{ py: 1.8, borderRadius: 3, flex: 1, boxShadow: '0 8px 30px rgba(249,115,22,0.4)', fontSize: '1rem' }}
                   startIcon={<ShoppingCart />}
                 >
-                  {ui.cart} ({cartCount}) — {fmt(cartTotal)}
+                  {t.cart} ({cartCount}) — {fmt(cartTotal)}
                 </Button>
               )}
             </Stack>
@@ -379,17 +456,17 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           PaperProps={{ sx: { borderRadius: '20px 20px 0 0', maxHeight: '80vh', maxWidth: 480, mx: 'auto' } }}>
           <Box sx={{ p: 2.5 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" fontWeight={800}>{ui.myOrders}</Typography>
+              <Typography variant="h6" fontWeight={800}>{t.myOrders}</Typography>
               <IconButton onClick={() => setTabOpen(false)}><Close /></IconButton>
             </Stack>
             <Stack spacing={2} mb={2} sx={{ overflowY: 'auto' }}>
               {placedOrders.map((order, idx) => {
-                const st = customerStatus[order.status];
+                const st = { label: statusLabelFor(t, order.status), color: STATUS_COLOR[order.status] };
                 return (
                   <Box key={order._id} sx={{ border: '1px solid #F1F5F9', borderRadius: 3, p: 1.5 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
                       <Typography fontWeight={700} fontSize="0.9rem">
-                        {ui.orderN} #{idx + 1}
+                        {t.orderN} #{idx + 1}
                         <Typography component="span" variant="caption" color="text.secondary" ml={1}>
                           {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Typography>
@@ -410,10 +487,10 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             </Stack>
             <Divider sx={{ mb: 2 }} />
             <Stack direction="row" justifyContent="space-between" mb={1}>
-              <Typography fontWeight={700}>{ui.tabTotal}</Typography>
+              <Typography fontWeight={700}>{t.tabTotal}</Typography>
               <Typography fontWeight={800} color="primary" fontSize="1.1rem">{fmt(tabTotal)}</Typography>
             </Stack>
-            <Typography variant="caption" color="text.secondary">{ui.payNote}</Typography>
+            <Typography variant="caption" color="text.secondary">{t.payNote}</Typography>
           </Box>
         </Drawer>
 
@@ -422,7 +499,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           PaperProps={{ sx: { borderRadius: '20px 20px 0 0', maxHeight: '80vh', maxWidth: 480, mx: 'auto' } }}>
           <Box sx={{ p: 2.5 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" fontWeight={800}>{ui.cart}</Typography>
+              <Typography variant="h6" fontWeight={800}>{t.cart}</Typography>
               <IconButton onClick={() => setCartOpen(false)}><Close /></IconButton>
             </Stack>
             <Stack spacing={1.5} mb={2}>
@@ -435,7 +512,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                       <Typography variant="body2" fontWeight={600}>{item.name}</Typography>
                       {atMax && Number.isFinite(max) && (
                         <Typography variant="caption" color="warning.main" fontWeight={600}>
-                          {ui.onlyLeft.replace('{n}', String(max))}
+                          {t.onlyLeft.replace('{n}', String(max))}
                         </Typography>
                       )}
                     </Box>
@@ -454,15 +531,15 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
               })}
             </Stack>
             <TextField
-              label={ui.note}
-              placeholder={ui.noteHint}
+              label={t.note}
+              placeholder={t.noteHint}
               value={orderNote}
               onChange={(e) => setOrderNote(e.target.value)}
               fullWidth multiline rows={2} sx={{ mb: 2 }}
             />
             <Divider sx={{ mb: 2 }} />
             <Stack direction="row" justifyContent="space-between" mb={2}>
-              <Typography fontWeight={700}>{ui.total}</Typography>
+              <Typography fontWeight={700}>{t.total}</Typography>
               <Typography fontWeight={800} color="primary" fontSize="1.1rem">{fmt(cartTotal)}</Typography>
             </Stack>
             <Button
@@ -470,7 +547,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
               onClick={handlePlaceOrder} disabled={ordering || !cart.length}
               sx={{ py: 1.8, borderRadius: 3, fontSize: '1rem' }}
             >
-              {ordering ? '...' : ui.placeOrder}
+              {ordering ? '...' : t.placeOrder}
             </Button>
           </Box>
         </Drawer>
@@ -478,7 +555,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
         {/* Order success */}
         <Snackbar open={orderSuccess} autoHideDuration={4000} onClose={() => setOrderSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
           <Alert severity="success" icon={<ThumbUp />} sx={{ borderRadius: 3, fontWeight: 600 }}>
-            {ui.orderPlaced} 🎉
+            {t.orderPlaced} 🎉
           </Alert>
         </Snackbar>
 
@@ -491,7 +568,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
 
         {/* Feedback dialog */}
         <Dialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 4, m: 2 } }}>
-          <DialogTitle textAlign="center" fontWeight={800}>{ui.feedbackTitle}</DialogTitle>
+          <DialogTitle textAlign="center" fontWeight={800}>{t.feedbackTitle}</DialogTitle>
           <DialogContent>
             <Stack alignItems="center" spacing={2}>
               <Stack direction="row" spacing={0.5}>
@@ -502,7 +579,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                 ))}
               </Stack>
               <TextField
-                label="Comment (optional)"
+                label={t.comment}
                 value={feedbackComment}
                 onChange={(e) => setFeedbackComment(e.target.value)}
                 fullWidth multiline rows={2}
@@ -510,20 +587,20 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             </Stack>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 2.5 }}>
-            <Button onClick={() => setFeedbackOpen(false)}>{ui.cancel}</Button>
+            <Button onClick={() => setFeedbackOpen(false)}>{t.cancel}</Button>
             <Button
               variant="contained" onClick={() => submitFeedback({
                 variables: { input: { restaurantId, rating, comment: feedbackComment, language: 'en', tableNumber } },
               })}
             >
-              {ui.submit}
+              {t.submit}
             </Button>
           </DialogActions>
         </Dialog>
 
         {feedbackSent && (
           <Snackbar open autoHideDuration={3000} onClose={() => setFeedbackSent(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-            <Alert severity="success" sx={{ borderRadius: 3 }}>Thank you for your feedback! 🙏</Alert>
+            <Alert severity="success" sx={{ borderRadius: 3 }}>{t.thanks} 🙏</Alert>
           </Snackbar>
         )}
       </Box>
