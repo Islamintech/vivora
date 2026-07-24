@@ -1,9 +1,11 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   Inject,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PubSub } from 'graphql-subscriptions';
@@ -24,6 +26,8 @@ import { OrderStatus, OrderType } from '../common/enums';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     @Inject(PUB_SUB) private pubSub: PubSub,
@@ -245,6 +249,40 @@ export class OrdersService {
     return order;
   }
 
+  /**
+   * Advance-only status change used by automatic signals (e.g. the print
+   * agent reporting a ticket printed). Never regresses an order that a human
+   * already moved further along, and never touches a finished/cancelled one.
+   */
+  async advanceStatus(
+    restaurantId: string,
+    orderId: string,
+    status: OrderStatus,
+  ): Promise<OrderDocument | null> {
+    const rank: Record<OrderStatus, number> = {
+      [OrderStatus.PENDING]: 0,
+      [OrderStatus.PREPARING]: 1,
+      [OrderStatus.READY]: 2,
+      [OrderStatus.SERVED]: 3,
+      [OrderStatus.CANCELLED]: 3,
+    };
+    const order = await this.orderModel.findOne({ _id: orderId, restaurantId });
+    if (!order) return null;
+    // Only move forward, and never out of a terminal state.
+    if (rank[order.status] >= rank[status]) return order;
+    if (order.status === OrderStatus.SERVED || order.status === OrderStatus.CANCELLED) {
+      return order;
+    }
+
+    order.status = status;
+    await order.save();
+    await this.pubSub.publish(ORDER_STATUS_UPDATED, {
+      orderStatusUpdated: order,
+      restaurantId: order.restaurantId.toString(),
+    });
+    return order;
+  }
+
   async findByRestaurant(
     restaurantId: string,
     status?: OrderStatus,
@@ -298,5 +336,68 @@ export class OrdersService {
 
   async countByRestaurant(restaurantId: string): Promise<number> {
     return this.orderModel.countDocuments({ restaurantId });
+  }
+
+  // How long an order may sit before it's auto-served, and how quickly a
+  // never-printed order is assumed to be in the kitchen. Kept generous — the
+  // point is to keep the board clean when 2-3 staff can't tap every stage,
+  // not to be precise.
+  private static readonly AUTO_SERVE_MS = 20 * 60_000; // 20 min
+  private static readonly AUTO_PREP_MS = 60_000; // 1 min
+
+  /**
+   * Keeps order status moving without staff taps. Runs every minute:
+   *   1. anything still open after 20 min is auto-served (safety net),
+   *   2. fresh PENDING orders slide to PREPARING after ~1 min, so the customer
+   *      sees progress even at restaurants with no printer (printers advance
+   *      it instantly via the print agent).
+   */
+  @Cron(CronExpression.EVERY_MINUTE)
+  async autoAdvanceOrders(): Promise<void> {
+    const now = Date.now();
+    const serveCutoff = new Date(now - OrdersService.AUTO_SERVE_MS);
+    const prepCutoff = new Date(now - OrdersService.AUTO_PREP_MS);
+
+    const publish = async (order: OrderDocument) => {
+      await order.save();
+      await this.pubSub.publish(ORDER_STATUS_UPDATED, {
+        orderStatusUpdated: order,
+        restaurantId: order.restaurantId.toString(),
+      });
+    };
+
+    try {
+      // 1. Auto-serve anything left open past the timeout.
+      const toServe = await this.orderModel
+        .find({
+          status: { $in: [OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY] },
+          createdAt: { $lt: serveCutoff },
+        })
+        .limit(200);
+      for (const order of toServe) {
+        order.status = OrderStatus.SERVED;
+        await publish(order);
+      }
+
+      // 2. Nudge still-pending (but not yet stale) orders into PREPARING.
+      const toPrep = await this.orderModel
+        .find({
+          status: OrderStatus.PENDING,
+          createdAt: { $lt: prepCutoff, $gte: serveCutoff },
+        })
+        .limit(200);
+      for (const order of toPrep) {
+        order.status = OrderStatus.PREPARING;
+        await publish(order);
+      }
+
+      if (toServe.length || toPrep.length) {
+        this.logger.log(
+          `Auto-advanced orders: ${toPrep.length} → preparing, ${toServe.length} → served`,
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(`autoAdvanceOrders failed: ${err.message}`);
+    }
   }
 }

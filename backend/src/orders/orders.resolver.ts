@@ -92,6 +92,21 @@ export class OrdersResolver {
     return this.ordersService.updateStatus(user.restaurantId?.toString(), input);
   }
 
+  // Called by the print agent when a kitchen ticket prints — advance-only, so
+  // it never regresses an order a staff member already marked done.
+  @Mutation(() => OrderModel, { nullable: true })
+  @UseGuards(GqlAuthGuard)
+  async markOrderPreparing(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @CurrentUser() user: any,
+  ): Promise<OrderModel | null> {
+    return this.ordersService.advanceStatus(
+      user.restaurantId?.toString(),
+      orderId,
+      OrderStatus.PREPARING,
+    );
+  }
+
   // --- Kitchen Subscriptions ---
   // Guards don't run on the WebSocket path, so each subscribe verifies the JWT
   // sent in graphql-ws connectionParams and pins it to the requested restaurant.

@@ -22,21 +22,46 @@ import { Lang, LANGUAGES, getStrings, UIStrings } from '@/lib/i18n';
 import WelcomeGate, { OrderType } from '@/components/customer/WelcomeGate';
 import ItemSheet from '@/components/customer/ItemSheet';
 
-const STATUS_COLOR: Record<OrderStatus, 'warning' | 'info' | 'success' | 'error' | 'default'> = {
-  PENDING: 'warning',
-  PREPARING: 'info',
-  READY: 'success',
-  SERVED: 'default',
-  CANCELLED: 'error',
-};
+// Which of the 3 calm stages an order is at (READY folds into "preparing").
+const orderStep = (s: OrderStatus): number =>
+  s === 'SERVED' ? 2 : s === 'PREPARING' || s === 'READY' ? 1 : 0;
 
-const statusLabelFor = (t: UIStrings, s: OrderStatus) => ({
-  PENDING: t.statusPending,
-  PREPARING: t.statusPreparing,
-  READY: t.statusReady,
-  SERVED: t.statusServed,
-  CANCELLED: t.statusCancelled,
-}[s]);
+// A quiet 3-segment progress strip: Received → Preparing → Served. Far calmer
+// than a chip that implies second-by-second accuracy.
+function OrderProgress({ t, status }: { t: UIStrings; status: OrderStatus }) {
+  if (status === 'CANCELLED') {
+    return <Chip label={t.statusCancelled} color="error" size="small" variant="outlined" />;
+  }
+  const step = orderStep(status);
+  const labels = [t.statusPending, t.statusPreparing, t.statusServed];
+  return (
+    <Box sx={{ mt: 0.5 }}>
+      <Stack direction="row" spacing={0.5} mb={0.5}>
+        {[0, 1, 2].map((i) => (
+          <Box
+            key={i}
+            sx={{
+              flex: 1, height: 4, borderRadius: 2,
+              bgcolor: i <= step ? '#22C55E' : '#E2E8F0',
+              transition: 'background-color .3s ease',
+            }}
+          />
+        ))}
+      </Stack>
+      <Stack direction="row" justifyContent="space-between">
+        {labels.map((label, i) => (
+          <Typography
+            key={label}
+            variant="caption"
+            sx={{ fontSize: '0.66rem', fontWeight: i === step ? 800 : 500, color: i <= step ? 'success.main' : 'text.disabled' }}
+          >
+            {label}
+          </Typography>
+        ))}
+      </Stack>
+    </Box>
+  );
+}
 
 // Language + dine-in/take-out are remembered per table so the gate only shows
 // on the first scan of a sitting.
@@ -607,18 +632,18 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             </Stack>
             <Stack spacing={2} mb={2} sx={{ overflowY: 'auto' }}>
               {placedOrders.map((order, idx) => {
-                const st = { label: statusLabelFor(t, order.status), color: STATUS_COLOR[order.status] };
                 return (
                   <Box key={order._id} sx={{ border: '1px solid #F1F5F9', borderRadius: 3, p: 1.5 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.5}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Typography fontWeight={700} fontSize="0.9rem">
                         {t.orderN} #{idx + 1}
                         <Typography component="span" variant="caption" color="text.secondary" ml={1}>
                           {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Typography>
                       </Typography>
-                      <Chip label={st.label} color={st.color} size="small" />
                     </Stack>
+                    <OrderProgress t={t} status={order.status} />
+                    <Box sx={{ mt: 1 }} />
                     {order.items.map((item, i) => (
                       <Stack key={i} direction="row" justifyContent="space-between">
                         <Typography variant="body2" sx={{ textDecoration: order.status === 'CANCELLED' ? 'line-through' : 'none' }}>

@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const { createClient } = require('graphql-ws');
-const { login, getMyRestaurant } = require('./graphql');
+const { login, getMyRestaurant, markOrderPreparing } = require('./graphql');
 const { buildTicket } = require('./escpos');
 const { printToNetwork } = require('./printer');
 
@@ -89,6 +89,10 @@ async function printWithRetry(ip, port, buffer, attempts = 3) {
   }
 }
 
+function markPreparing(orderId) {
+  return markOrderPreparing(config.apiUrl, session.token, orderId);
+}
+
 async function printOrder(order) {
   const { ip, port } = effectivePrinter();
   if (!ip) {
@@ -115,6 +119,13 @@ async function printOrder(order) {
   try {
     await printWithRetry(ip, port, buffer);
     log(`Printed ticket for table ${order.tableNumber} (order ${order._id}).`);
+    // A printed ticket means the kitchen has the order — advance it to
+    // Preparing so the customer sees progress without any staff tap.
+    if (order._id && order._id !== 'testprint') {
+      markPreparing(order._id).catch((err) =>
+        log(`Could not mark order ${order._id} preparing: ${err.message}`),
+      );
+    }
   } catch (err) {
     log(`FAILED to print order ${order._id} to ${ip}:${port} — ${err.message}`);
   }

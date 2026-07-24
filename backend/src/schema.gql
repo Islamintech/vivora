@@ -191,6 +191,7 @@ type Mutation {
   deleteMenuItem(itemId: ID!): Boolean!
   deleteTable(tableId: ID!): Boolean!
   login(input: LoginInput!): AuthPayload!
+  markOrderPreparing(orderId: ID!): OrderModel
   placeOrder(input: PlaceOrderInput!): OrderModel!
   purgeErrorLogs(olderThanDays: Int!): Int!
   regenerateQrCode(tableId: ID!): TableModel!

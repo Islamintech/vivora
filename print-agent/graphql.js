@@ -45,4 +45,15 @@ async function getMyRestaurant(apiUrl, token) {
   return data.myRestaurant;
 }
 
-module.exports = { login, getMyRestaurant };
+async function markOrderPreparing(apiUrl, token, orderId) {
+  await gqlRequest(
+    apiUrl,
+    `mutation MarkPreparing($orderId: ID!) {
+      markOrderPreparing(orderId: $orderId) { _id status }
+    }`,
+    { orderId },
+    token,
+  );
+}
+
+module.exports = { login, getMyRestaurant, markOrderPreparing };

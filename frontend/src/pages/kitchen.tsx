@@ -103,21 +103,23 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
 
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography fontWeight={700} color={col?.color}>{formatMoney(order.totalAmount, currency)}</Typography>
-          {col?.next && (
+          {/* Status moves on its own (print → preparing, auto-serve at 20 min).
+              The only tap staff need is "Done" when they've served it early. */}
+          {order.status !== 'SERVED' ? (
             <Button
               size="small"
               variant="contained"
+              startIcon={<DoneAll sx={{ fontSize: 18 }} />}
               sx={{
-                bgcolor: col.color, color: '#000',
-                '&:hover': { bgcolor: col.color, filter: 'brightness(0.9)' },
-                fontWeight: 700, borderRadius: 2,
+                bgcolor: '#22C55E', color: '#000',
+                '&:hover': { bgcolor: '#22C55E', filter: 'brightness(0.92)' },
+                fontWeight: 800, borderRadius: 2,
               }}
-              onClick={() => onUpdate(order._id, col.next!)}
+              onClick={() => onUpdate(order._id, 'SERVED')}
             >
-              {col.nextLabel}
+              Done
             </Button>
-          )}
-          {order.status === 'SERVED' && (
+          ) : (
             <DoneAll sx={{ color: '#22C55E' }} />
           )}
         </Stack>
