@@ -143,7 +143,7 @@ const MenuPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Menyu boshqaruvi — RestoPlatform</title></Head>
+      <Head><title>Menyu boshqaruvi — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>

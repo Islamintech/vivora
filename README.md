@@ -1,4 +1,4 @@
-# 🍽 RestoPlatform — Restaurant Management System
+# 🍽 Vivora — Restaurant Management System
 
 Full-stack restaurant management platform with QR menus, real-time kitchen display, and analytics.
 

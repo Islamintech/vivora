@@ -90,7 +90,7 @@ const SettingsPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Settings — RestoPlatform</title></Head>
+      <Head><title>Settings — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 700 }}>
           <Box mb={4}>

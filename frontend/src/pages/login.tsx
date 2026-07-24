@@ -47,7 +47,7 @@ const LoginPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Kirish — RestoPlatform</title></Head>
+      <Head><title>Kirish — Vivora</title></Head>
       <Box
         sx={{
           minHeight: '100vh',
@@ -66,7 +66,7 @@ const LoginPage: NextPage = () => {
               fontWeight={800}
               sx={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
             >
-              RestoPlatform
+              Vivora
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={0.5}>
               Restoran boshqaruv tizimi

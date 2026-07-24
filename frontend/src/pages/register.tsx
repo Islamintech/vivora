@@ -58,7 +58,7 @@ const RegisterPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Hisob yaratish — RestoPlatform</title></Head>
+      <Head><title>Hisob yaratish — Vivora</title></Head>
       <Box
         sx={{
           minHeight: '100vh',
@@ -76,7 +76,7 @@ const RegisterPage: NextPage = () => {
               fontWeight={800}
               sx={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
             >
-              RestoPlatform
+              Vivora
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={0.5}>
               Restoraningizni aqlliroq boshqarishni boshlang

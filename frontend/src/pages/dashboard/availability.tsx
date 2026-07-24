@@ -109,7 +109,7 @@ const AvailabilityPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Availability — RestoPlatform</title></Head>
+      <Head><title>Availability — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>

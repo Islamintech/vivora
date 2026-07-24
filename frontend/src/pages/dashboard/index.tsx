@@ -64,7 +64,7 @@ const DashboardPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Boshqaruv paneli — RestoPlatform</title></Head>
+      <Head><title>Boshqaruv paneli — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Box mb={4}>

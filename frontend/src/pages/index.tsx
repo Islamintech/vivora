@@ -22,7 +22,7 @@ const features = [
 const Home: NextPage = () => {
   return (
     <>
-      <Head><title>RestoPlatform — Aqlli restoran boshqaruvi</title></Head>
+      <Head><title>Vivora — Aqlli restoran boshqaruvi</title></Head>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
 
         {/* Navbar */}
@@ -42,7 +42,7 @@ const Home: NextPage = () => {
                 fontWeight={800}
                 sx={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
               >
-                RestoPlatform
+                Vivora
               </Typography>
               <Stack direction="row" spacing={1.5}>
                 <Button component={NextLink} href="/login" variant="outlined" color="secondary" size="small">
@@ -186,7 +186,7 @@ const Home: NextPage = () => {
         {/* Footer */}
         <Box sx={{ py: 4, textAlign: 'center', borderTop: '1px solid', borderColor: 'divider' }}>
           <Typography variant="body2" color="text.secondary">
-            © {new Date().getFullYear()} RestoPlatform. Built with NestJS · GraphQL · Next.js · MongoDB
+            © {new Date().getFullYear()} Vivora. Built with NestJS · GraphQL · Next.js · MongoDB
           </Typography>
         </Box>
       </Box>

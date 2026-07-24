@@ -144,7 +144,7 @@ const AdminPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Super Admin — RestoPlatform</title></Head>
+      <Head><title>Super Admin — Vivora</title></Head>
       <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
 
         {/* Admin AppBar */}

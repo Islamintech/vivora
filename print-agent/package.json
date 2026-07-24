@@ -1,5 +1,5 @@
 {
-  "name": "restoplatform-print-agent",
+  "name": "vivora-print-agent",
   "version": "1.0.0",
   "description": "Runs at the restaurant, listens for new orders, and prints a kitchen ticket automatically.",
   "private": true,

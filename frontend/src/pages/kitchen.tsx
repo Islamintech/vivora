@@ -174,7 +174,7 @@ const KitchenPage: NextPage = () => {
   return (
     <ThemeProvider theme={kitchenTheme}>
       <CssBaseline />
-      <Head><title>Kitchen Display — RestoPlatform</title></Head>
+      <Head><title>Kitchen Display — Vivora</title></Head>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
 
         {/* Kitchen Header */}

@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           fontWeight={800}
           sx={{ background: 'linear-gradient(135deg, #F97316, #EA580C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
         >
-          RestoPlatform
+          Vivora
         </Typography>
       </Box>
 
@@ -178,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Keep page context visible on mobile once the drawer closes. */}
           {isMobile && (
             <Typography variant="h6" fontWeight={700} noWrap sx={{ fontSize: '1.05rem' }}>
-              {navItems.find((i) => i.href === router.pathname)?.label ?? 'RestoPlatform'}
+              {navItems.find((i) => i.href === router.pathname)?.label ?? 'Vivora'}
             </Typography>
           )}
           <Box sx={{ flex: 1 }} />

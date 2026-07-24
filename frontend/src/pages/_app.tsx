@@ -23,7 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         {/* Fonts live in _document (stylesheets don't belong in next/head). */}
         <meta name="viewport" content="initial-scale=1, width=device-width" />
-        <title>RestoPlatform</title>
+        <title>Vivora</title>
       </Head>
       <ApolloProvider client={client}>
         <ThemeProvider theme={theme}>

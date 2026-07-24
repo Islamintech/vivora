@@ -62,6 +62,15 @@ const en = {
   submit: 'Submit',
   thanks: 'Thank you for your feedback!',
   close: 'Close',
+  // Item detail sheet
+  popular: 'Popular',
+  allergens: 'Allergens',
+  quantity: 'Quantity',
+  itemNote: 'Note for the kitchen',
+  itemNoteHint: 'e.g. no onions, less spicy',
+  addToOrder: 'Add to order',
+  updateOrder: 'Update order',
+  removeItem: 'Remove',
 };
 
 export type UIStrings = typeof en;
@@ -111,6 +120,14 @@ const ko: UIStrings = {
   submit: '보내기',
   thanks: '소중한 의견 감사합니다!',
   close: '닫기',
+  popular: '인기',
+  allergens: '알레르기 유발 성분',
+  quantity: '수량',
+  itemNote: '주방에 남길 요청',
+  itemNoteHint: '예: 양파 빼주세요, 덜 맵게',
+  addToOrder: '주문에 담기',
+  updateOrder: '주문 수정',
+  removeItem: '빼기',
 };
 
 const ru: UIStrings = {
@@ -158,6 +175,14 @@ const ru: UIStrings = {
   submit: 'Отправить',
   thanks: 'Спасибо за ваш отзыв!',
   close: 'Закрыть',
+  popular: 'Популярное',
+  allergens: 'Аллергены',
+  quantity: 'Количество',
+  itemNote: 'Пожелание для кухни',
+  itemNoteHint: 'напр.: без лука, менее остро',
+  addToOrder: 'Добавить в заказ',
+  updateOrder: 'Обновить заказ',
+  removeItem: 'Убрать',
 };
 
 const uz: UIStrings = {
@@ -205,6 +230,14 @@ const uz: UIStrings = {
   submit: 'Yuborish',
   thanks: 'Fikringiz uchun rahmat!',
   close: 'Yopish',
+  popular: 'Ommabop',
+  allergens: 'Allergenlar',
+  quantity: 'Miqdori',
+  itemNote: 'Oshxona uchun izoh',
+  itemNoteHint: 'masalan: piyozsiz, kamroq achchiq',
+  addToOrder: 'Buyurtmaga qo‘shish',
+  updateOrder: 'Buyurtmani yangilash',
+  removeItem: 'Olib tashlash',
 };
 
 const dictionaries: Record<Lang, UIStrings> = { en, ko, ru, uz };

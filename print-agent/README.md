@@ -1,4 +1,4 @@
-# RestoPlatform Print Agent
+# Vivora Print Agent
 
 Prints a kitchen ticket automatically the moment a customer places an order by
 scanning the table's QR code. Runs on a Windows (or Mac/Linux) computer at the

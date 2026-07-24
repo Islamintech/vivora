@@ -299,7 +299,7 @@ const OrdersPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Buyurtmalar — RestoPlatform</title></Head>
+      <Head><title>Buyurtmalar — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Box mb={4}>
