@@ -43,7 +43,7 @@ const SettingsPage: NextPage = () => {
   }, [restaurant]);
 
   const [update, { loading }] = useMutation(UPDATE_RESTAURANT_MUTATION, {
-    onCompleted() { toast.success('Settings saved!'); },
+    onCompleted() { toast.success('Sozlamalar saqlandi!'); },
     onError(e) { toast.error(e.message); },
   });
 
@@ -69,20 +69,20 @@ const SettingsPage: NextPage = () => {
     e.target.value = ''; // allow re-selecting the same file
     if (!file) return;
     if (!cloudinaryConfigured) {
-      toast.error('Image upload is not configured yet.');
+      toast.error('Rasm yuklash hali sozlanmagan.');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Logo must be under 5 MB.');
+      toast.error('Logotip 5 MB dan kichik bo‘lishi kerak.');
       return;
     }
     setUploadingLogo(true);
     try {
       const url = await uploadImage(file);
       setForm((p) => ({ ...p, logo: url }));
-      toast.success('Logo uploaded — remember to save.');
+      toast.success('Logotip yuklandi — saqlashni unutmang.');
     } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
+      toast.error(err.message || 'Yuklab bo‘lmadi');
     } finally {
       setUploadingLogo(false);
     }
@@ -90,12 +90,12 @@ const SettingsPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Settings — Vivora</title></Head>
+      <Head><title>Sozlamalar — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 700 }}>
           <Box mb={4}>
-            <Typography variant="h4" fontWeight={800}>Restaurant Settings</Typography>
-            <Typography color="text.secondary">Manage your restaurant profile and preferences</Typography>
+            <Typography variant="h4" fontWeight={800}>Restoran sozlamalari</Typography>
+            <Typography color="text.secondary">Restoran profilingiz va sozlamalarni boshqaring</Typography>
           </Box>
 
           <Card sx={{ mb: 3 }}>
@@ -116,19 +116,19 @@ const SettingsPage: NextPage = () => {
 
               <Grid container spacing={2.5}>
                 <Grid item xs={12}>
-                  <TextField label="Restaurant Name" {...field('name')} fullWidth />
+                  <TextField label="Restoran nomi" {...field('name')} fullWidth />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField label="Description" {...field('description')} fullWidth multiline rows={2} />
+                  <TextField label="Tavsif" {...field('description')} fullWidth multiline rows={2} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField label="Address" {...field('address')} fullWidth />
+                  <TextField label="Manzil" {...field('address')} fullWidth />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField label="Phone" {...field('phone')} fullWidth />
+                  <TextField label="Telefon" {...field('phone')} fullWidth />
                 </Grid>
                 <Grid item xs={12} sm={8}>
-                  <Typography variant="body2" fontWeight={600} mb={1}>Logo</Typography>
+                  <Typography variant="body2" fontWeight={600} mb={1}>Logotip</Typography>
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Avatar
                       src={form.logo || undefined}
@@ -144,30 +144,30 @@ const SettingsPage: NextPage = () => {
                         startIcon={uploadingLogo ? <CircularProgress size={16} /> : <PhotoCamera />}
                         disabled={uploadingLogo}
                       >
-                        {form.logo ? 'Replace' : 'Upload logo'}
+                        {form.logo ? 'Almashtirish' : 'Logotip yuklash'}
                         <input hidden type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" onChange={handleLogoFile} />
                       </Button>
                       {form.logo && (
                         <Button color="error" startIcon={<Delete />} onClick={() => setForm((p) => ({ ...p, logo: '' }))}>
-                          Remove
+                          O‘chirish
                         </Button>
                       )}
                     </Stack>
                   </Stack>
                   <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-                    PNG or SVG recommended, up to 5 MB.
+                    PNG yoki SVG tavsiya etiladi, 5 MB gacha.
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <TextField label="Currency" {...field('currency')} fullWidth placeholder="KRW" helperText="ISO code: KRW (₩), USD, EUR…" />
+                  <TextField label="Valyuta" {...field('currency')} fullWidth placeholder="KRW" helperText="ISO kod: KRW (₩), USD, EUR…" />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    label="Telegram staff chat ID"
+                    label="Telegram xodimlar chat ID"
                     {...field('telegramChatId')}
                     fullWidth
                     placeholder="e.g. -1001234567890"
-                    helperText="Add the platform bot to your staff Telegram group, then paste the group's chat ID here to receive new-order alerts."
+                    helperText="Platforma botini xodimlar Telegram guruhiga qo‘shing, so‘ng guruh chat ID sini shu yerga joylashtiring."
                   />
                 </Grid>
               </Grid>
@@ -179,7 +179,7 @@ const SettingsPage: NextPage = () => {
                 disabled={loading}
                 onClick={handleSave}
               >
-                {loading ? 'Saving…' : 'Save Settings'}
+                {loading ? 'Saqlanmoqda…' : 'Saqlash'}
               </Button>
             </CardContent>
           </Card>
@@ -191,9 +191,9 @@ const SettingsPage: NextPage = () => {
                   <Print />
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" fontWeight={700}>Kitchen ticket printing</Typography>
+                  <Typography variant="h6" fontWeight={700}>Oshxona cheki chop etish</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Auto-print a ticket to your kitchen printer when a customer places an order
+                    Mijoz buyurtma berganda oshxona printeridan chek chiqadi
                   </Typography>
                 </Box>
               </Stack>
@@ -208,13 +208,13 @@ const SettingsPage: NextPage = () => {
                     onChange={(e) => setForm((p) => ({ ...p, printerEnabled: e.target.checked }))}
                   />
                 }
-                label="Enable auto-printing"
+                label="Avtomatik chop etishni yoqish"
               />
 
               <Grid container spacing={2.5}>
                 <Grid item xs={12} sm={8}>
                   <TextField
-                    label="Printer IP address"
+                    label="Printer IP manzili"
                     {...field('printerIp')}
                     fullWidth
                     placeholder="e.g. 192.168.1.50"
@@ -231,15 +231,15 @@ const SettingsPage: NextPage = () => {
               </Grid>
 
               <Alert severity="info" sx={{ mt: 2.5, borderRadius: 2 }}>
-                This only tells the print agent where your printer is — you still need to install the
-                small print-agent program on a computer at the restaurant, on the same network as the
-                printer. See <strong>print-agent/README.md</strong> for setup steps.
+                Bu faqat print-agentga printeringiz qayerdaligini bildiradi — restoran kompyuteriga,
+                printer bilan bir tarmoqda, kichik print-agent dasturini o‘rnatishingiz kerak.
+                Sozlash bo‘yicha <strong>print-agent/README.md</strong> ga qarang.
               </Alert>
             </CardContent>
           </Card>
 
           <Alert severity="info" sx={{ borderRadius: 2 }}>
-            Your restaurant's public menu URL is:{' '}
+            Restoraningizning ommaviy menyu havolasi:{' '}
             <strong>{process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/{restaurant?.slug}/[table-number]</strong>
           </Alert>
         </Box>

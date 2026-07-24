@@ -26,9 +26,9 @@ import { Order, OrderStatus } from '@/types';
 dayjs.extend(relativeTime);
 
 const STATUS_COLUMNS: { status: OrderStatus; label: string; color: string; next?: OrderStatus; nextLabel?: string }[] = [
-  { status: 'PENDING', label: '🟡 New Orders', color: '#F59E0B', next: 'PREPARING', nextLabel: 'Start Cooking' },
-  { status: 'PREPARING', label: '🔵 Preparing', color: '#3B82F6', next: 'READY', nextLabel: 'Mark Ready' },
-  { status: 'READY', label: '🟢 Ready to Serve', color: '#22C55E', next: 'SERVED', nextLabel: 'Mark Served' },
+  { status: 'PENDING', label: '🟡 Yangi buyurtmalar', color: '#F59E0B', next: 'PREPARING', nextLabel: 'Boshlash' },
+  { status: 'PREPARING', label: '🔵 Tayyorlanmoqda', color: '#3B82F6', next: 'READY', nextLabel: 'Tayyor' },
+  { status: 'READY', label: '🟢 Berishga tayyor', color: '#22C55E', next: 'SERVED', nextLabel: 'Berildi' },
 ];
 
 function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, status: OrderStatus) => void }) {
@@ -65,7 +65,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
             <Avatar sx={{ width: 32, height: 32, bgcolor: `${col?.color}20`, fontSize: '0.8rem', fontWeight: 800 }}>
               {order.tableNumber}
             </Avatar>
-            <Typography fontWeight={700} color="white">Table {order.tableNumber}</Typography>
+            <Typography fontWeight={700} color="white">{order.tableNumber}-stol</Typography>
             {order.orderType === 'TAKE_OUT' && (
               <Chip
                 label="🥡 TAKE-OUT"
@@ -96,7 +96,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
 
         {order.customerNote && (
           <Box sx={{ p: 1.5, bgcolor: '#252535', borderRadius: 1.5, mb: 2 }}>
-            <Typography variant="caption" color="grey.400">Note: </Typography>
+            <Typography variant="caption" color="grey.400">Izoh: </Typography>
             <Typography variant="body2" color="warning.light">{order.customerNote}</Typography>
           </Box>
         )}
@@ -117,7 +117,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
               }}
               onClick={() => onUpdate(order._id, 'SERVED')}
             >
-              Done
+              Berildi
             </Button>
           ) : (
             <DoneAll sx={{ color: '#22C55E' }} />
@@ -152,7 +152,7 @@ const KitchenPage: NextPage = () => {
     onData({ data }) {
       const order = data.data?.orderCreated;
       if (order) {
-        toast.success(`🍽 New order! Table ${order.tableNumber}`, { duration: 5000 });
+        toast.success(`🍽 Yangi buyurtma! ${order.tableNumber}-stol`, { duration: 5000 });
         refetch();
       }
     },
@@ -176,7 +176,7 @@ const KitchenPage: NextPage = () => {
   return (
     <ThemeProvider theme={kitchenTheme}>
       <CssBaseline />
-      <Head><title>Kitchen Display — Vivora</title></Head>
+      <Head><title>Oshxona ekrani — Vivora</title></Head>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
 
         {/* Kitchen Header */}
@@ -189,10 +189,10 @@ const KitchenPage: NextPage = () => {
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h6" fontWeight={800} noWrap sx={{ color: 'white', lineHeight: 1.2 }}>
-                {restaurant?.name || 'Kitchen Display'}
+                {restaurant?.name || 'Oshxona ekrani'}
               </Typography>
               {restaurant?.name && (
-                <Typography variant="caption" sx={{ color: 'grey.500' }}>Kitchen Display</Typography>
+                <Typography variant="caption" sx={{ color: 'grey.500' }}>Oshxona ekrani</Typography>
               )}
             </Box>
             <Stack direction="row" spacing={2} alignItems="center">
@@ -256,7 +256,7 @@ const KitchenPage: NextPage = () => {
                   >
                     <LocalDining sx={{ color: '#2A2A3E', fontSize: 40, mb: 1 }} />
                     <Typography variant="body2" color="grey.700">
-                      {col.status === 'PENDING' ? 'No new orders' : 'All clear'}
+                      {col.status === 'PENDING' ? 'Yangi buyurtma yo‘q' : 'Hammasi toza'}
                     </Typography>
                   </Box>
                 )}

@@ -49,13 +49,13 @@ const AnalyticsPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Analytics — Vivora</title></Head>
+      <Head><title>Tahlil — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
             <Box>
-              <Typography variant="h4" fontWeight={800}>Analytics</Typography>
-              <Typography color="text.secondary">Revenue, orders, and performance insights</Typography>
+              <Typography variant="h4" fontWeight={800}>Tahlil</Typography>
+              <Typography color="text.secondary">Daromad, buyurtmalar va samaradorlik</Typography>
             </Box>
             <ToggleButtonGroup value={period} exclusive onChange={(_, v) => v && setPeriod(v)} size="small">
               {PERIODS.map((p) => <ToggleButton key={p.key} value={p.key}>{p.label}</ToggleButton>)}
@@ -67,10 +67,10 @@ const AnalyticsPage: NextPage = () => {
           {/* KPI Cards */}
           <Grid container spacing={3} mb={4}>
             {[
-              { label: 'Total Revenue', value: formatMoney(analytics?.totalRevenue ?? 0, currency), icon: <TrendingUp />, color: 'success' },
-              { label: 'Total Orders', value: analytics?.totalOrders ?? 0, icon: <ShoppingBag />, color: 'primary' },
-              { label: 'Avg Order Value', value: formatMoney(analytics?.averageOrderValue ?? 0, currency), icon: <TableRestaurant />, color: 'info' },
-              { label: 'Orders Served', value: analytics?.servedOrders ?? 0, icon: <Star />, color: 'warning' },
+              { label: 'Umumiy daromad', value: formatMoney(analytics?.totalRevenue ?? 0, currency), icon: <TrendingUp />, color: 'success' },
+              { label: 'Umumiy buyurtmalar', value: analytics?.totalOrders ?? 0, icon: <ShoppingBag />, color: 'primary' },
+              { label: 'O‘rtacha buyurtma', value: formatMoney(analytics?.averageOrderValue ?? 0, currency), icon: <TableRestaurant />, color: 'info' },
+              { label: 'Berilgan buyurtmalar', value: analytics?.servedOrders ?? 0, icon: <Star />, color: 'warning' },
             ].map((kpi) => (
               <Grid item xs={12} sm={6} md={3} key={kpi.label}>
                 <Card>
@@ -95,7 +95,7 @@ const AnalyticsPage: NextPage = () => {
             <Grid item xs={12} md={8}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" fontWeight={700} mb={3}>Revenue Over Time</Typography>
+                  <Typography variant="h6" fontWeight={700} mb={3}>Vaqt bo‘yicha daromad</Typography>
                   {analytics?.dailyRevenue?.length ? (
                     <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: 180, overflowX: 'auto', pb: 1 }}>
                       {analytics.dailyRevenue.map((day: any) => (
@@ -120,7 +120,7 @@ const AnalyticsPage: NextPage = () => {
                     </Box>
                   ) : (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
-                      <Typography color="text.secondary">No revenue data for this period</Typography>
+                      <Typography color="text.secondary">Bu davr uchun daromad ma’lumoti yo‘q</Typography>
                     </Box>
                   )}
                 </CardContent>
@@ -131,7 +131,7 @@ const AnalyticsPage: NextPage = () => {
             <Grid item xs={12} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent>
-                  <Typography variant="h6" fontWeight={700} mb={2}>🔥 Top Items</Typography>
+                  <Typography variant="h6" fontWeight={700} mb={2}>🔥 Mashhur taomlar</Typography>
                   <Stack spacing={2}>
                     {(analytics?.popularItems ?? []).slice(0, 8).map((item: any, i: number) => (
                       <Box key={item.menuItemId}>
@@ -152,7 +152,7 @@ const AnalyticsPage: NextPage = () => {
                       </Box>
                     ))}
                     {!analytics?.popularItems?.length && (
-                      <Typography variant="body2" color="text.secondary">No data yet</Typography>
+                      <Typography variant="body2" color="text.secondary">Hali ma’lumot yo‘q</Typography>
                     )}
                   </Stack>
                 </CardContent>
@@ -163,7 +163,7 @@ const AnalyticsPage: NextPage = () => {
             <Grid item xs={12}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" fontWeight={700} mb={2}>📊 Table Turnover</Typography>
+                  <Typography variant="h6" fontWeight={700} mb={2}>📊 Stollar aylanmasi</Typography>
                   <Box sx={{ overflowX: 'auto' }}>
                     <Stack direction="row" spacing={2} sx={{ minWidth: 'max-content' }}>
                       {(analytics?.tableTurnover ?? []).map((table: any) => (
@@ -177,7 +177,7 @@ const AnalyticsPage: NextPage = () => {
                         </Card>
                       ))}
                       {!analytics?.tableTurnover?.length && (
-                        <Typography variant="body2" color="text.secondary">No table data yet</Typography>
+                        <Typography variant="body2" color="text.secondary">Hali stol ma’lumoti yo‘q</Typography>
                       )}
                     </Stack>
                   </Box>

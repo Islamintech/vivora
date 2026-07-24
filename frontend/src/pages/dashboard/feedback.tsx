@@ -26,12 +26,12 @@ const FeedbackPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Feedback — Vivora</title></Head>
+      <Head><title>Mijozlar fikri — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Box mb={4}>
-            <Typography variant="h4" fontWeight={800}>Customer Feedback</Typography>
-            <Typography color="text.secondary">Reviews and ratings from your guests</Typography>
+            <Typography variant="h4" fontWeight={800}>Mijozlar fikri</Typography>
+            <Typography color="text.secondary">Mehmonlaringizdan sharh va baholar</Typography>
           </Box>
 
           {loading && <LinearProgress sx={{ mb: 3 }} />}
@@ -49,7 +49,7 @@ const FeedbackPage: NextPage = () => {
                       <Typography key={s} sx={{ color: s <= Math.round(summary?.averageRating ?? 0) ? '#F59E0B' : '#E2E8F0', fontSize: 24 }}>★</Typography>
                     ))}
                   </Stack>
-                  <Typography color="text.secondary">{summary?.totalCount ?? 0} reviews</Typography>
+                  <Typography color="text.secondary">{summary?.totalCount ?? 0} ta sharh</Typography>
 
                   <Box mt={3}>
                     {ratingCounts.map(({ rating, count }) => (
@@ -98,8 +98,8 @@ const FeedbackPage: NextPage = () => {
                 ))}
                 {!summary?.recent?.length && (
                   <Card sx={{ textAlign: 'center', py: 8 }}>
-                    <Typography variant="h6" color="text.secondary">No feedback yet</Typography>
-                    <Typography variant="body2" color="text.secondary">Customer feedback will appear here after orders</Typography>
+                    <Typography variant="h6" color="text.secondary">Hali fikr yo‘q</Typography>
+                    <Typography variant="body2" color="text.secondary">Mijoz fikrlari buyurtmalardan so‘ng shu yerda paydo bo‘ladi</Typography>
                   </Card>
                 )}
               </Stack>

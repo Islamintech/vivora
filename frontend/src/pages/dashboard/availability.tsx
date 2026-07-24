@@ -33,8 +33,8 @@ const ItemRow = ({ item, onSave }: {
         <Stack direction="row" spacing={1} alignItems="center">
           <Typography fontWeight={600} noWrap>{item.name}</Typography>
           {soldOut
-            ? <Chip label="Sold out" size="small" color="error" />
-            : <Chip label="Available" size="small" color="success" variant="outlined" />}
+            ? <Chip label="Tugagan" size="small" color="error" />
+            : <Chip label="Mavjud" size="small" color="success" variant="outlined" />}
         </Stack>
       </Box>
 
@@ -48,7 +48,7 @@ const ItemRow = ({ item, onSave }: {
             onChange={(e) => onSave({ itemId: item._id, isAvailable: e.target.checked })}
           />
         }
-        label={<Typography variant="caption">In stock</Typography>}
+        label={<Typography variant="caption">Omborda</Typography>}
       />
 
       {/* Quantity tracking */}
@@ -60,7 +60,7 @@ const ItemRow = ({ item, onSave }: {
             onChange={(e) => onSave({ itemId: item._id, trackQuantity: e.target.checked })}
           />
         }
-        label={<Typography variant="caption">Track qty</Typography>}
+        label={<Typography variant="caption">Miqdorni kuzatish</Typography>}
       />
 
       {item.trackQuantity && (
@@ -72,14 +72,14 @@ const ItemRow = ({ item, onSave }: {
             onChange={(e) => setQty(e.target.value)}
             sx={{ width: 100 }}
             inputProps={{ min: 0 }}
-            label="Remaining"
+            label="Qolgan"
           />
           <Button
             size="small"
             variant="contained"
             onClick={() => onSave({ itemId: item._id, quantity: parseInt(qty, 10) || 0 })}
           >
-            Set
+            O‘rnatish
           </Button>
         </Stack>
       )}
@@ -109,19 +109,19 @@ const AvailabilityPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Availability — Vivora</title></Head>
+      <Head><title>Mavjudlik — Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
             <Box>
-              <Typography variant="h4" fontWeight={800}>Food Availability</Typography>
+              <Typography variant="h4" fontWeight={800}>Taomlar mavjudligi</Typography>
               <Typography color="text.secondary">
                 Kitchen check — mark what's available and set prepared quantities for the day
               </Typography>
             </Box>
             <Stack direction="row" spacing={1}>
               <Chip icon={<CheckCircle />} label={`${items.length - soldOutCount} available`} color="success" variant="outlined" />
-              <Chip label={`${soldOutCount} sold out`} color={soldOutCount ? 'error' : 'default'} variant="outlined" />
+              <Chip label={`${soldOutCount} ta tugagan`} color={soldOutCount ? 'error' : 'default'} variant="outlined" />
             </Stack>
           </Stack>
 
@@ -129,8 +129,8 @@ const AvailabilityPage: NextPage = () => {
 
           {items.length === 0 && !loading && (
             <Card sx={{ textAlign: 'center', py: 8 }}>
-              <Typography variant="h6" color="text.secondary">No menu items yet</Typography>
-              <Typography variant="body2" color="text.secondary">Add dishes under Menu first.</Typography>
+              <Typography variant="h6" color="text.secondary">Hali taomlar yo‘q</Typography>
+              <Typography variant="body2" color="text.secondary">Avval Menyu bo‘limida taom qo‘shing.</Typography>
             </Card>
           )}
 
