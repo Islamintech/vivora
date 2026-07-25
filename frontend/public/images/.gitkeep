@@ -1,0 +1,4 @@
+Keeps this directory in git so the Docker build's `COPY /app/public` works.
+Git does not commit empty directories; without this file the folder exists
+locally but not in a fresh clone, and the image build fails.
+Drop uploaded assets (logos, phone frames) here - they serve from /images/.
