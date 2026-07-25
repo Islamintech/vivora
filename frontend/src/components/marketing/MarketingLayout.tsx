@@ -37,7 +37,8 @@ const footerCols = [
 
 // Shared sticky navbar. Desktop shows inline links; on phones/tablets they
 // collapse into a right-side drawer so every page (and login) stays reachable.
-export function MarketingNav() {
+// `dark` renders the variant used on the dark landing page.
+export function MarketingNav({ dark = false }: { dark?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -46,48 +47,68 @@ export function MarketingNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const c = dark
+    ? {
+        barBg: 'rgba(10,13,20,0.72)', barBorder: 'rgba(255,255,255,0.08)',
+        brand: '#fff', link: '#9AA3B2', linkHover: '#fff',
+        loginColor: '#E7EBF2', loginBg: 'transparent', loginBorder: '1.5px solid rgba(255,255,255,0.18)',
+        loginHoverBorder: 'rgba(255,255,255,0.35)', loginHoverBg: 'rgba(255,255,255,0.06)',
+        drawerBg: '#0E1219', drawerText: '#E7EBF2', drawerHoverBg: 'rgba(249,115,22,0.1)',
+        divider: 'rgba(255,255,255,0.1)', shadow: '0 8px 24px rgba(0,0,0,0.4)',
+        grad: 'linear-gradient(90deg, #F97316, #FB923C)', glow: 'rgba(249,115,22,0.35)',
+      }
+    : {
+        barBg: 'rgba(255,248,242,0.7)', barBorder: 'rgba(140,113,100,0.1)',
+        brand: PRIMARY, link: ON_VAR, linkHover: PRIMARY,
+        loginColor: PRIMARY, loginBg: SURFACE, loginBorder: '2px solid rgba(157,67,0,0.2)',
+        loginHoverBorder: 'rgba(157,67,0,0.4)', loginHoverBg: 'rgba(157,67,0,0.05)',
+        drawerBg: SURFACE, drawerText: ON_SURFACE, drawerHoverBg: 'rgba(157,67,0,0.06)',
+        divider: 'rgba(140,113,100,0.15)', shadow: '0 8px 24px rgba(157,67,0,0.06)',
+        grad: GRAD, glow: 'rgba(157,67,0,0.3)',
+      };
+
   return (
-    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50, bgcolor: 'rgba(255,248,242,0.7)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(140,113,100,0.1)', transition: 'all .3s', py: scrolled ? 1 : 2, boxShadow: scrolled ? '0 8px 24px rgba(157,67,0,0.06)' : 'none' }}>
+    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50, bgcolor: c.barBg, backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.barBorder}`, transition: 'all .3s', py: scrolled ? 1 : 2, boxShadow: scrolled ? c.shadow : 'none' }}>
       <Container maxWidth="xl">
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Stack component={NextLink} href="/" direction="row" alignItems="center" spacing={1} sx={{ textDecoration: 'none', '&:hover .lg': { transform: 'rotate(6deg)' } }}>
-            <Box className="lg" sx={{ width: 40, height: 40, borderRadius: 3, background: `linear-gradient(135deg, ${PRIMARY}, ${ORANGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 18px rgba(157,67,0,0.3)', transition: 'transform .3s' }}>
+            <Box className="lg" sx={{ width: 40, height: 40, borderRadius: 3, background: `linear-gradient(135deg, ${PRIMARY}, ${ORANGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: `0 8px 18px ${c.glow}`, transition: 'transform .3s' }}>
               <Restaurant />
             </Box>
-            <Typography sx={{ fontSize: 24, fontWeight: 800, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
+            <Typography sx={{ fontSize: 24, fontWeight: 800, color: c.brand, letterSpacing: '-0.02em' }}>Vivora</Typography>
           </Stack>
           <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
             {navLinks.map((l) => (
-              <Typography key={l.label} component={NextLink} href={l.href} sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l.label}</Typography>
+              <Typography key={l.label} component={NextLink} href={l.href} sx={{ fontSize: 14, fontWeight: 600, color: c.link, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: c.linkHover } }}>{l.label}</Typography>
             ))}
           </Stack>
           <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center">
-            <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, color: PRIMARY, bgcolor: SURFACE, border: '2px solid rgba(157,67,0,0.2)', '&:hover': { borderColor: 'rgba(157,67,0,0.4)', bgcolor: 'rgba(157,67,0,0.05)' } })}>Kirish</Button>
-            <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: GRAD, boxShadow: '0 10px 20px rgba(157,67,0,0.3)', '&:hover': { boxShadow: '0 15px 30px rgba(157,67,0,0.4)', transform: 'translateY(-2px)' } })}>Bepul boshlash</Button>
-            <IconButton aria-label="Menyuni ochish" onClick={() => setOpen(true)} sx={{ display: { md: 'none' }, color: PRIMARY }}>
+            <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, color: c.loginColor, bgcolor: c.loginBg, border: c.loginBorder, '&:hover': { borderColor: c.loginHoverBorder, bgcolor: c.loginHoverBg } })}>Kirish</Button>
+            <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: c.grad, boxShadow: `0 10px 20px ${c.glow}`, '&:hover': { boxShadow: `0 15px 30px ${c.glow}`, transform: 'translateY(-2px)' } })}>Bepul boshlash</Button>
+            <IconButton aria-label="Menyuni ochish" onClick={() => setOpen(true)} sx={{ display: { md: 'none' }, color: dark ? '#fff' : PRIMARY }}>
               <MenuIcon />
             </IconButton>
           </Stack>
         </Stack>
       </Container>
 
-      <Drawer anchor="right" open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { width: 300, maxWidth: '85vw', bgcolor: SURFACE, p: 3 } }}>
+      <Drawer anchor="right" open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { width: 300, maxWidth: '85vw', bgcolor: c.drawerBg, p: 3 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography sx={{ fontSize: 20, fontWeight: 800, color: PRIMARY }}>Vivora</Typography>
-          <IconButton aria-label="Menyuni yopish" onClick={() => setOpen(false)}><Close /></IconButton>
+          <Typography sx={{ fontSize: 20, fontWeight: 800, color: dark ? '#fff' : PRIMARY }}>Vivora</Typography>
+          <IconButton aria-label="Menyuni yopish" onClick={() => setOpen(false)} sx={{ color: dark ? '#9AA3B2' : undefined }}><Close /></IconButton>
         </Stack>
         <Stack spacing={0.5}>
           {navLinks.map((l) => (
             <Typography key={l.label} component={NextLink} href={l.href} onClick={() => setOpen(false)}
-              sx={{ fontSize: 16, fontWeight: 700, color: ON_SURFACE, textDecoration: 'none', py: 1.5, px: 1.5, borderRadius: 2, '&:hover': { bgcolor: 'rgba(157,67,0,0.06)', color: PRIMARY } }}>
+              sx={{ fontSize: 16, fontWeight: 700, color: c.drawerText, textDecoration: 'none', py: 1.5, px: 1.5, borderRadius: 2, '&:hover': { bgcolor: c.drawerHoverBg, color: dark ? '#FB923C' : PRIMARY } }}>
               {l.label}
             </Typography>
           ))}
         </Stack>
-        <Divider sx={{ my: 3, borderColor: 'rgba(140,113,100,0.15)' }} />
+        <Divider sx={{ my: 3, borderColor: c.divider }} />
         <Stack spacing={1.5}>
-          <Button component={NextLink} href="/login" onClick={() => setOpen(false)} sx={pill({ color: PRIMARY, bgcolor: SURFACE, border: '2px solid rgba(157,67,0,0.2)' })}>Kirish</Button>
-          <Button component={NextLink} href="/register" onClick={() => setOpen(false)} sx={pill({ color: '#fff', background: GRAD })}>Bepul boshlash</Button>
+          <Button component={NextLink} href="/login" onClick={() => setOpen(false)} sx={pill({ color: c.loginColor, bgcolor: 'transparent', border: c.loginBorder })}>Kirish</Button>
+          <Button component={NextLink} href="/register" onClick={() => setOpen(false)} sx={pill({ color: '#fff', background: c.grad })}>Bepul boshlash</Button>
         </Stack>
       </Drawer>
     </Box>
