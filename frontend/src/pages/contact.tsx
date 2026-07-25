@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import { useState } from 'react';
 import { Box, Container, Typography, Button, Stack, Grid, TextField, Snackbar, Alert } from '@mui/material';
-import { Email, Chat, Send, HelpOutline } from '@mui/icons-material';
+import { Email, Chat, Phone, Send, HelpOutline } from '@mui/icons-material';
 import MarketingLayout, {
   PRIMARY, ON_SURFACE, ON_VAR, SC_LOW, GRAD, pill,
 } from '@/components/marketing/MarketingLayout';
@@ -9,6 +9,7 @@ import MarketingLayout, {
 const channels = [
   { icon: <Email />, title: 'Email', value: 'vivora.support@gmail.com', href: 'mailto:vivora.support@gmail.com' },
   { icon: <Chat />, title: 'Telegram', value: '@vivora_support', href: 'https://t.me/vivora_support' },
+  { icon: <Phone />, title: 'Telefon', value: '+82 10 7361 8117', href: 'tel:+821073618117' },
 ];
 
 const quickAnswers = [
