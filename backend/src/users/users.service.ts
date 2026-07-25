@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
@@ -68,16 +68,41 @@ export class UsersService {
 
   async seedSuperAdmin() {
     const email = process.env.SUPER_ADMIN_EMAIL || 'admin@platform.com';
+    const password = process.env.SUPER_ADMIN_PASSWORD;
+    const isProd = process.env.NODE_ENV === 'production';
+    const log = new Logger('SuperAdmin');
+
     const existing = await this.findByEmail(email);
-    if (existing) return;
+    if (existing) {
+      // The configured address may already belong to a restaurant owner, in
+      // which case no super admin is created from it. Saying so out loud
+      // matters: the deployment would otherwise look fine while the only
+      // super admin is still whatever was seeded first.
+      if (existing.role !== UserRole.SUPER_ADMIN) {
+        log.error(
+          `SUPER_ADMIN_EMAIL (${email}) already belongs to a ${existing.role} account, ` +
+            'so no super admin was created. Use a different address.',
+        );
+      }
+      return;
+    }
+
+    if (isProd && !password) {
+      // Never quietly stand up a production admin on a password that is
+      // published in this repository.
+      throw new Error(
+        'SUPER_ADMIN_PASSWORD must be set in production - refusing to create ' +
+          'the super admin with the default password.',
+      );
+    }
 
     await this.create({
       name: process.env.SUPER_ADMIN_NAME || 'Platform Admin',
       email,
-      password: process.env.SUPER_ADMIN_PASSWORD || 'Admin@123456',
+      password: password || 'Admin@123456',
       role: UserRole.SUPER_ADMIN,
     });
 
-    console.log(`✅ Super admin created: ${email}`);
+    log.log(`Super admin created: ${email}`);
   }
 }
