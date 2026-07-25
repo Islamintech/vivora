@@ -306,8 +306,8 @@ const Home: NextPage = () => {
               </Typography>
 
               <Typography sx={{ animation: `${fadeUp} .7s ${bounce} .16s both`, fontSize: 'clamp(1rem, 1.4vw, 1.2rem)', color: MUTED, maxWidth: 640, mx: 'auto', lineHeight: 1.7, mb: 4.5 }}>
-                Mijoz skanerlaydi, buyurtma oshxonaga tushadi, chek avtomatik chiqadi,
-                daromad esa jonli grafikda ko&apos;rinadi. Ofitsiant chaqirish shart emas.
+                Mijoz stoldagi QR orqali o&apos;zi buyurtma beradi. Buyurtma darhol oshxonaga
+                tushadi, chek avtomatik chiqadi — ofitsiant kutish shart emas.
               </Typography>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ animation: `${fadeUp} .7s ${bounce} .24s both`, mb: { xs: 6, md: 8 } }}>
