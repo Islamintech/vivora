@@ -91,9 +91,9 @@ const kds = [
 ];
 
 const footerCols = [
-  { h: 'Mahsulot', links: ['Xizmatlar', 'Narxlar', 'Yangiliklar', 'API Hujjatlari'] },
-  { h: 'Kompaniya', links: ['Biz haqimizda', 'Karyera', 'Blog', "Bog'lanish"] },
-  { h: 'Huquqiy', links: ['Maxfiylik siyosati', 'Foydalanish shartlari', 'Cookie siyosati'] },
+  { h: 'Mahsulot', links: [['Xizmatlar', '/'], ['Narxlar', '/pricing'], ['Yangiliklar', '#'], ['API Hujjatlari', '#']] },
+  { h: 'Kompaniya', links: [['Biz haqimizda', '/about'], ['Karyera', '#'], ['Blog', '#'], ["Bog'lanish", '/contact']] },
+  { h: 'Huquqiy', links: [['Maxfiylik siyosati', '#'], ['Foydalanish shartlari', '#'], ['Cookie siyosati', '#']] },
 ];
 
 const Home: NextPage = () => {
@@ -134,8 +134,8 @@ const Home: NextPage = () => {
                 <Typography sx={{ fontSize: 24, fontWeight: 800, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
               </Stack>
               <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
-                {['Xizmatlar', 'Narxlar', 'Biz haqimizda'].map((l) => (
-                  <Typography key={l} component="a" href="#" sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
+                {[['Xizmatlar', '/'], ['Narxlar', '/pricing'], ['Biz haqimizda', '/about']].map(([l, href]) => (
+                  <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
                 ))}
               </Stack>
               <Stack direction="row" spacing={2} alignItems="center">
@@ -486,8 +486,8 @@ const Home: NextPage = () => {
                     <Grid item xs={6} sm={4} key={col.h}>
                       <Typography sx={{ fontSize: 10, fontWeight: 700, color: PRIMARY, mb: 2, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{col.h}</Typography>
                       <Stack spacing={1.5}>
-                        {col.links.map((l) => (
-                          <Typography key={l} component="a" href="#" sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
+                        {col.links.map(([l, href]) => (
+                          <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
                         ))}
                       </Stack>
                     </Grid>
