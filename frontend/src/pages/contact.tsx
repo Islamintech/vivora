@@ -8,7 +8,7 @@ import MarketingLayout, {
 
 const channels = [
   { icon: <Email />, title: 'Email', value: 'salom@vivora.kr' },
-  { icon: <Chat />, title: 'Telegram', value: '@vivora_support' },
+  { icon: <Chat />, title: 'Telegram', value: '@vivora_support', href: 'https://t.me/vivora_support' },
 ];
 
 const quickAnswers = [
@@ -56,7 +56,12 @@ const Contact: NextPage = () => {
           <Grid item xs={12} md={5}>
             <Stack spacing={2}>
               {channels.map((c) => (
-                <Stack key={c.title} direction="row" spacing={2} alignItems="center" sx={{ bgcolor: '#fff', borderRadius: '1.25rem', p: 2.5, border: '1px solid rgba(140,113,100,0.14)', transition: 'transform .25s, box-shadow .25s', '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 12px 28px rgba(157,67,0,0.1)' } }}>
+                <Stack
+                  key={c.title}
+                  direction="row" spacing={2} alignItems="center"
+                  {...(c.href ? { component: 'a', href: c.href, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  sx={{ bgcolor: '#fff', borderRadius: '1.25rem', p: 2.5, border: '1px solid rgba(140,113,100,0.14)', textDecoration: 'none', cursor: c.href ? 'pointer' : 'default', transition: 'transform .25s, box-shadow .25s', '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 12px 28px rgba(157,67,0,0.1)' } }}
+                >
                   <Box sx={{ width: 48, height: 48, borderRadius: 2.5, bgcolor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(157,67,0,0.18)', color: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.icon}</Box>
                   <Box>
                     <Typography sx={{ fontSize: 12, color: ON_VAR }}>{c.title}</Typography>

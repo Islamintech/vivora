@@ -134,8 +134,12 @@ export default function MarketingLayout({ children, title }: { children: ReactNo
                 </Stack>
                 <Typography sx={{ fontSize: 16, color: ON_VAR, mb: 3, lineHeight: 1.6, maxWidth: 300 }}>Restoranlar uchun innovatsion boshqaruv tizimi. Xizmat sifatini oshiring va daromadingizni ko&apos;paytiring.</Typography>
                 <Stack direction="row" spacing={1.5}>
-                  {[<Public key="1" />, <Chat key="2" />, <Email key="3" />].map((ic, i) => (
-                    <Box key={i} component="a" href="#" sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#fff', border: '1px solid rgba(140,113,100,0.1)', color: ON_VAR, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '&:hover': { bgcolor: PRIMARY, color: '#fff', transform: 'translateY(-4px)' } }}>{ic}</Box>
+                  {[
+                    { ic: <Public key="1" />, href: '/' },
+                    { ic: <Chat key="2" />, href: 'https://t.me/vivora_support' },
+                    { ic: <Email key="3" />, href: '/contact' },
+                  ].map((s, i) => (
+                    <Box key={i} component="a" href={s.href} {...(s.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#fff', border: '1px solid rgba(140,113,100,0.1)', color: ON_VAR, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '&:hover': { bgcolor: PRIMARY, color: '#fff', transform: 'translateY(-4px)' } }}>{s.ic}</Box>
                   ))}
                 </Stack>
               </Grid>

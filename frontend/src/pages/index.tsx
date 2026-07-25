@@ -524,8 +524,12 @@ const Home: NextPage = () => {
                   Restoranlar uchun innovatsion boshqaruv tizimi. Xizmat sifatini oshiring va daromadingizni ko&apos;paytiring.
                 </Typography>
                 <Stack direction="row" spacing={1.5}>
-                  {[<Public key="1" />, <Chat key="2" />, <Email key="3" />].map((ic, i) => (
-                    <Box key={i} component="a" href="#" sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: '#fff', border: `1px solid ${BORDER}`, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '& svg': { fontSize: 18 }, '&:hover': { color: '#fff', bgcolor: PRIMARY, transform: 'translateY(-3px)' } }}>{ic}</Box>
+                  {[
+                    { ic: <Public key="1" />, href: '/' },
+                    { ic: <Chat key="2" />, href: 'https://t.me/vivora_support' },
+                    { ic: <Email key="3" />, href: '/contact' },
+                  ].map((s, i) => (
+                    <Box key={i} component="a" href={s.href} {...(s.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: '#fff', border: `1px solid ${BORDER}`, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '& svg': { fontSize: 18 }, '&:hover': { color: '#fff', bgcolor: PRIMARY, transform: 'translateY(-3px)' } }}>{s.ic}</Box>
                   ))}
                 </Stack>
               </Grid>
