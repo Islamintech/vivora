@@ -8,13 +8,13 @@ import {
   Accordion, AccordionSummary, AccordionDetails,
 } from '@mui/material';
 import {
-  Restaurant, QrCodeScanner, TouchApp, Whatshot, BarChart, QrCode2,
-  Print, Language, Notifications, ExpandMore, Public, Chat,
-  Email, VerifiedUser, Security, Kitchen, Bolt,
+  QrCodeScanner, TouchApp, Whatshot, BarChart, QrCode2,
+  Print, Language, Notifications, ExpandMore, Kitchen, Bolt,
 } from '@mui/icons-material';
-import { MarketingNav } from '@/components/marketing/MarketingLayout';
+import { MarketingNav, MarketingFooter } from '@/components/marketing/MarketingLayout';
+import { useMarketingT } from '@/lib/marketing-i18n';
 
-// ── Warm Material-3 palette (same layout as the dark draft, light colors) ──
+// ── Warm Material-3 palette ──
 const BG = '#fff8f2';
 const BG2 = '#fbf2e8';
 const CARD = '#ffffff';
@@ -59,40 +59,10 @@ function Reveal({ children, delay = 0, sx }: any) {
   );
 }
 
-const metrics = [
-  { n: '40%', l: 'Tezroq xizmat' },
-  { n: '~0', l: 'Buyurtma xatosi' },
-  { n: '4 til', l: 'UZ · EN · RU · KO' },
-  { n: '24/7', l: 'Jonli kuzatuv' },
-];
-
-const steps = [
-  { icon: <QrCodeScanner />, title: 'Skanerlash', desc: 'Mijoz stoldagi QR-kodni telefon kamerasida skanerlaydi - ilova o‘rnatish shart emas.' },
-  { icon: <TouchApp />, title: 'Buyurtma berish', desc: 'Raqamli menyudan taomlarni tanlab, bir tugma bilan buyurtma yuboradi.' },
-  { icon: <Whatshot />, title: 'Tayyorlanishi', desc: 'Buyurtma bir zumda oshxona ekranida paydo bo‘ladi va chek avtomatik chiqadi.' },
-];
-
-const features = [
-  { icon: <QrCode2 />, title: 'QR menyu', desc: 'Har bir stol uchun alohida QR-kod. Menyu har doim yangi - chop etish xarajatisiz.' },
-  { icon: <Kitchen />, title: 'Oshxona ekrani', desc: 'Buyurtmalar real vaqtda oshxona monitoriga tushadi va holati avtomatik yangilanadi.' },
-  { icon: <Print />, title: 'Avtomatik chek', desc: 'Buyurtma tushishi bilan oshxona printeridan chek chiqadi. SAM4S, Sewoo va boshqalar.' },
-  { icon: <BarChart />, title: 'Daromad tahlili', desc: 'Kunlik, haftalik va oylik daromad, eng ko‘p sotilgan taomlar, stollar samaradorligi.' },
-  { icon: <Language />, title: '4 tilda menyu', desc: 'Mijoz o‘z tilini tanlaydi: o‘zbek, ingliz, rus yoki koreys. Xodim aralashuvisiz.' },
-  { icon: <Notifications />, title: 'Telegram xabarlar', desc: 'Yangi buyurtma haqida xodimlarga darhol Telegram orqali xabar boradi.' },
-];
-
-const faqs = [
-  { q: 'Mijozga alohida ilova kerakmi?', a: "Yo'q. Mijoz telefon kamerasi bilan stoldagi QR kodni skanerlaydi va menyu to'g'ridan-to'g'ri brauzerda ochiladi - hech narsa o'rnatmaydi." },
-  { q: 'Chek printeri shartmi?', a: "Ixtiyoriy. Printer bo'lsa, buyurtma tushishi bilan oshxona cheki avtomatik chiqadi. Bo'lmasa, buyurtmalar oshxona ekranida ko'rinadi." },
-  { q: 'Qancha turadi?', a: "Bepul boshlashingiz mumkin, bank kartasi shart emas. Oylik to'lov - Vivora orqali o'tgan savdoning atigi 0.3% miqdorida." },
-  { q: "Qaysi tillarni qo'llab-quvvatlaydi?", a: "Mijozlar menyusi o'zbek, ingliz, rus va koreys tillarida ko'rsatiladi. Mijoz skanerlaganda o'z tilini tanlaydi." },
-  { q: "Ma'lumotlar xavfsizmi?", a: "Ha. Barcha ma'lumotlar shifrlangan ulanish orqali uzatiladi va xavfsiz saqlanadi." },
-];
-
-const footerCols = [
-  { h: 'Mahsulot', links: [['Xizmatlar', '/'], ['Narxlar', '/pricing'], ['Yangiliklar', '#'], ['API Hujjatlari', '#']] },
-  { h: 'Kompaniya', links: [['Biz haqimizda', '/about'], ['Karyera', '#'], ['Blog', '#'], ["Bog'lanish", '/contact']] },
-  { h: 'Huquqiy', links: [['Maxfiylik siyosati', '#'], ['Foydalanish shartlari', '#'], ['Cookie siyosati', '#']] },
+const STEP_ICONS = [<QrCodeScanner key="0" />, <TouchApp key="1" />, <Whatshot key="2" />];
+const FEATURE_ICONS = [
+  <QrCode2 key="0" />, <Kitchen key="1" />, <Print key="2" />,
+  <BarChart key="3" />, <Language key="4" />, <Notifications key="5" />,
 ];
 
 // Mini status chip used inside the dashboard mockup.
@@ -100,7 +70,8 @@ const MockChip = ({ label, color, bg }: { label: string; color: string; bg: stri
   <Box sx={{ px: 1, py: 0.25, borderRadius: 99, fontSize: 9.5, fontWeight: 700, color, bgcolor: bg, whiteSpace: 'nowrap' }}>{label}</Box>
 );
 
-/** CSS-built dashboard preview inside a browser frame, with a soft warm glow. */
+/** CSS-built dashboard preview inside a browser frame, with a soft warm glow.
+    Depicts the real product UI, so its labels stay as the product ships (Uzbek). */
 function DashboardMock() {
   const bars = [42, 58, 38, 72, 64, 96, 80];
   const orders = [
@@ -199,7 +170,7 @@ function DashboardMock() {
   );
 }
 
-/** Light phone preview of the customer menu. */
+/** Light phone preview of the customer menu (product UI, stays as shipped). */
 function PhoneMock() {
   const items = [
     { n: 'Palov', p: '₩12 000', best: true },
@@ -274,9 +245,12 @@ function KitchenMock() {
 }
 
 const Home: NextPage = () => {
+  const { t } = useMarketingT();
+  const h = t.home;
+
   return (
     <>
-      <Head><title>Vivora | Modern Restoran Boshqaruvi</title></Head>
+      <Head><title>Vivora | QR Menu</title></Head>
       <Box sx={{ bgcolor: BG, color: TEXT, overflowX: 'hidden', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
 
         <MarketingNav />
@@ -291,30 +265,29 @@ const Home: NextPage = () => {
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ mb: 3 }}>
                   <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.75, borderRadius: 99, border: '1px solid rgba(157,67,0,0.25)', bgcolor: 'rgba(249,115,22,0.07)' }}>
                     <Bolt sx={{ fontSize: 15, color: PRIMARY }} />
-                    <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: PRIMARY }}>Restoranlar uchun zamonaviy boshqaruv tizimi</Typography>
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: PRIMARY }}>{h.badge}</Typography>
                   </Box>
                 </Stack>
               </Box>
 
               <Typography component="h1" sx={{ animation: `${fadeUp} .7s ${bounce} .08s both`, fontSize: 'clamp(2.3rem, 6vw, 4.4rem)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.06, mb: 3 }}>
-                Restoraningiz uchun{' '}
+                {h.h1pre}
                 <Box component="span" sx={{ background: GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  QR menyu
+                  {h.h1grad}
                 </Box>
-                <br />va buyurtma tizimi
+                {h.h1post1}<br />{h.h1post2}
               </Typography>
 
               <Typography sx={{ animation: `${fadeUp} .7s ${bounce} .16s both`, fontSize: 'clamp(1rem, 1.4vw, 1.2rem)', color: MUTED, maxWidth: 640, mx: 'auto', lineHeight: 1.7, mb: 4.5 }}>
-                Mijoz stoldagi QR orqali o&apos;zi buyurtma beradi. Buyurtma darhol oshxonaga
-                tushadi, chek avtomatik chiqadi - ofitsiant kutish shart emas.
+                {h.sub}
               </Typography>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ animation: `${fadeUp} .7s ${bounce} .24s both`, mb: { xs: 6, md: 8 } }}>
                 <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: GRAD, boxShadow: `0 14px 34px ${GLOW}`, '&:hover': { boxShadow: `0 18px 44px ${GLOW}`, transform: 'translateY(-2px)' } })}>
-                  Bepul boshlash
+                  {h.start}
                 </Button>
                 <Button component={NextLink} href="/login" sx={pill({ color: PRIMARY, bgcolor: '#fff', border: '1px solid rgba(140,113,100,0.2)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', '&:hover': { bgcolor: '#fff', borderColor: 'rgba(157,67,0,0.4)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' } })}>
-                  Demoni ko&apos;rish
+                  {h.demo}
                 </Button>
               </Stack>
 
@@ -325,9 +298,9 @@ const Home: NextPage = () => {
 
               {/* Stat row */}
               <Grid container spacing={2} sx={{ mt: { xs: 3, md: 5 }, maxWidth: 860, mx: 'auto' }}>
-                {metrics.map((m, i) => (
+                {h.metrics.map((m, i) => (
                   <Grid item xs={6} md={3} key={m.l}>
-                    <Box sx={{ animation: `${fadeUp} .7s ${bounce} ${0.45 + i * 0.08}s both`, p: 2.25, borderRadius: 3, bgcolor: CARD, border: `1px solid ${BORDER}`, textAlign: 'center', boxShadow: '0 6px 18px rgba(157,67,0,0.06)' }}>
+                    <Box sx={{ animation: `${fadeUp} .7s ${bounce} ${0.45 + i * 0.08}s both`, p: 2.25, borderRadius: 3, bgcolor: CARD, border: `1px solid ${BORDER}`, textAlign: 'center', boxShadow: '0 6px 18px rgba(157,67,0,0.06)', height: '100%' }}>
                       <Typography sx={{ fontSize: 26, fontWeight: 800, background: GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{m.n}</Typography>
                       <Typography sx={{ fontSize: 12.5, color: MUTED, fontWeight: 600 }}>{m.l}</Typography>
                     </Box>
@@ -341,19 +314,19 @@ const Home: NextPage = () => {
           <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: BG2, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
             <Container maxWidth="lg">
               <Reveal sx={{ textAlign: 'center', mb: { xs: 5, md: 8 } }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Qanday ishlaydi</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>{h.howEyebrow}</Typography>
                 <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.6rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                  Uch qadam - tayyor
+                  {h.howTitle}
                 </Typography>
               </Reveal>
               <Grid container spacing={3}>
-                {steps.map((s, i) => (
+                {h.steps.map((s, i) => (
                   <Grid item xs={12} md={4} key={s.title}>
                     <Reveal delay={i * 0.12} sx={{ height: '100%' }}>
                       <Box sx={{ position: 'relative', height: '100%', p: 3.5, borderRadius: 4, bgcolor: CARD, border: `1px solid ${BORDER}`, transition: 'transform .25s, box-shadow .25s', '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 20px 44px rgba(157,67,0,0.12)' } }}>
                         <Typography sx={{ position: 'absolute', top: 14, right: 20, fontSize: 52, fontWeight: 800, color: 'rgba(157,67,0,0.07)', lineHeight: 1 }}>{i + 1}</Typography>
                         <Box sx={{ width: 52, height: 52, borderRadius: 3, bgcolor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(157,67,0,0.2)', color: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2.5 }}>
-                          {s.icon}
+                          {STEP_ICONS[i]}
                         </Box>
                         <Typography sx={{ fontSize: 19, fontWeight: 800, mb: 1 }}>{s.title}</Typography>
                         <Typography sx={{ fontSize: 14.5, color: MUTED, lineHeight: 1.65 }}>{s.desc}</Typography>
@@ -370,17 +343,15 @@ const Home: NextPage = () => {
             <Grid container spacing={{ xs: 5, md: 8 }} alignItems="center">
               <Grid item xs={12} md={6}>
                 <Reveal>
-                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Mijoz tajribasi</Typography>
-                  <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2 }}>
-                    Ilovasiz. Kutishsiz.<br />O&apos;z tilida.
+                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>{h.custEyebrow}</Typography>
+                  <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2, whiteSpace: 'pre-line' }}>
+                    {h.custTitle}
                   </Typography>
                   <Typography sx={{ fontSize: 16, color: MUTED, lineHeight: 1.7, mb: 3, maxWidth: 460 }}>
-                    Mijoz QR-ni skanerlagach menyu brauzerda ochiladi - 4 tildan birini tanlaydi,
-                    buyurtma beradi va holatini jonli kuzatadi. Eng ko&apos;p sotilayotgan taomlar
-                    avtomatik «Xit» belgisi bilan tavsiya qilinadi.
+                    {h.custDesc}
                   </Typography>
                   <Stack spacing={1.25}>
-                    {['Menyu 4 tilda: UZ · EN · RU · KO', 'Buyurtma holati jonli ko‘rinadi', 'Bir stolda bir nechta buyurtma - bitta hisob'].map((b) => (
+                    {h.custBullets.map((b) => (
                       <Stack key={b} direction="row" spacing={1.25} alignItems="center">
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: GRAD, flexShrink: 0 }} />
                         <Typography sx={{ fontSize: 14.5, color: TEXT, fontWeight: 500 }}>{b}</Typography>
@@ -404,17 +375,15 @@ const Home: NextPage = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Reveal>
-                    <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Oshxona</Typography>
-                    <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2 }}>
-                      Buyurtma tushdi -<br />chek chiqdi
+                    <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>{h.kitEyebrow}</Typography>
+                    <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2, whiteSpace: 'pre-line' }}>
+                      {h.kitTitle}
                     </Typography>
                     <Typography sx={{ fontSize: 16, color: MUTED, lineHeight: 1.7, mb: 3, maxWidth: 460 }}>
-                      Har bir buyurtma bir zumda oshxona ekraniga tushadi va printerdan chek chiqadi.
-                      Holatlar avtomatik almashadi - xodimlar ekran bosishga vaqt sarflamaydi.
-                      Yangi buyurtma haqida Telegram orqali ham xabar boradi.
+                      {h.kitDesc}
                     </Typography>
                     <Stack spacing={1.25}>
-                      {['ESC/POS printerlar bilan ishlaydi (SAM4S, Sewoo…)', 'Holatlar avtomatik: chek chiqdi → tayyorlanmoqda', 'Taom tugasa - menyuda avtomatik «tugadi»'].map((b) => (
+                      {h.kitBullets.map((b) => (
                         <Stack key={b} direction="row" spacing={1.25} alignItems="center">
                           <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: GRAD, flexShrink: 0 }} />
                           <Typography sx={{ fontSize: 14.5, color: TEXT, fontWeight: 500 }}>{b}</Typography>
@@ -430,21 +399,21 @@ const Home: NextPage = () => {
           {/* ── Features grid ── */}
           <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
             <Reveal sx={{ textAlign: 'center', mb: { xs: 5, md: 7 } }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Imkoniyatlar</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>{h.featEyebrow}</Typography>
               <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.6rem)', fontWeight: 800, letterSpacing: '-0.02em', mb: 1.5 }}>
-                Bitta tizim - butun restoran
+                {h.featTitle}
               </Typography>
               <Typography sx={{ fontSize: 16, color: MUTED, maxWidth: 560, mx: 'auto' }}>
-                Mijoz telefonidan oshxonagacha, oshxonadan hisobotgacha - hammasi bog&apos;langan.
+                {h.featSub}
               </Typography>
             </Reveal>
             <Grid container spacing={2.5}>
-              {features.map((f, i) => (
+              {h.features.map((f, i) => (
                 <Grid item xs={12} sm={6} md={4} key={f.title}>
                   <Reveal delay={(i % 3) * 0.1} sx={{ height: '100%' }}>
                     <Box sx={{ height: '100%', p: 3, borderRadius: 4, bgcolor: CARD, border: `1px solid ${BORDER}`, transition: 'transform .25s, box-shadow .25s, border-color .25s', '&:hover': { transform: 'translateY(-5px)', borderColor: 'rgba(157,67,0,0.3)', boxShadow: '0 16px 36px rgba(157,67,0,0.1)' } }}>
                       <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(157,67,0,0.18)', color: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, '& svg': { fontSize: 22 } }}>
-                        {f.icon}
+                        {FEATURE_ICONS[i]}
                       </Box>
                       <Typography sx={{ fontSize: 16.5, fontWeight: 800, mb: 0.75 }}>{f.title}</Typography>
                       <Typography sx={{ fontSize: 14, color: MUTED, lineHeight: 1.65 }}>{f.desc}</Typography>
@@ -459,13 +428,13 @@ const Home: NextPage = () => {
           <Box sx={{ bgcolor: BG2, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
             <Container maxWidth="md" sx={{ py: { xs: 8, md: 12 } }}>
               <Reveal sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Savol-javob</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>{h.faqEyebrow}</Typography>
                 <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                  Ko&apos;p beriladigan savollar
+                  {h.faqTitle}
                 </Typography>
               </Reveal>
               <Reveal>
-                {faqs.map((f) => (
+                {h.faqs.map((f) => (
                   <Accordion key={f.q} disableGutters elevation={0} sx={{
                     bgcolor: CARD, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: '14px !important',
                     mb: 1.5, '&:before': { display: 'none' },
@@ -490,18 +459,17 @@ const Home: NextPage = () => {
                 <Box sx={{ position: 'absolute', top: '-40%', left: '-10%', width: '55%', height: '160%', border: '50px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
                 <Box sx={{ position: 'absolute', bottom: '-50%', right: '-8%', width: '48%', height: '150%', border: '34px solid rgba(255,255,255,0.07)', borderRadius: '50%' }} />
                 <Typography sx={{ position: 'relative', fontSize: 'clamp(1.7rem, 3.6vw, 2.7rem)', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff', mb: 2 }}>
-                  Bugun boshlang - 10 daqiqada tayyor
+                  {h.ctaTitle}
                 </Typography>
                 <Typography sx={{ position: 'relative', fontSize: 16.5, color: 'rgba(255,255,255,0.9)', mb: 4, maxWidth: 560, mx: 'auto', lineHeight: 1.6 }}>
-                  Ro&apos;yxatdan o&apos;ting, menyuni kiriting, QR-kodlarni chop eting.
-                  Bank kartasi shart emas.
+                  {h.ctaSub}
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ position: 'relative' }}>
                   <Button component={NextLink} href="/register" sx={pill({ bgcolor: '#fff', color: '#B45309', boxShadow: '0 14px 30px rgba(0,0,0,0.25)', '&:hover': { bgcolor: '#FFF7ED' } })}>
-                    Bepul boshlash
+                    {h.start}
                   </Button>
                   <Button component={NextLink} href="/contact" sx={pill({ color: '#fff', border: '2px solid rgba(255,255,255,0.35)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: '#fff' } })}>
-                    Mutaxassis bilan gaplashish
+                    {h.ctaTalk}
                   </Button>
                 </Stack>
               </Box>
@@ -509,60 +477,7 @@ const Home: NextPage = () => {
           </Container>
         </Box>
 
-        {/* ── Footer ── */}
-        <Box component="footer" sx={{ borderTop: `1px solid ${BORDER}`, py: { xs: 6, md: 9 }, bgcolor: 'rgba(234,225,215,0.5)' }}>
-          <Container maxWidth="lg">
-            <Grid container spacing={4}>
-              <Grid item xs={12} lg={4}>
-                <Stack direction="row" alignItems="center" spacing={1} mb={2.5}>
-                  <Box sx={{ width: 36, height: 36, borderRadius: 2.5, background: GRAD, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Restaurant sx={{ fontSize: 18 }} />
-                  </Box>
-                  <Typography sx={{ fontSize: 20, fontWeight: 800, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
-                </Stack>
-                <Typography sx={{ fontSize: 14.5, color: MUTED, mb: 3, lineHeight: 1.65, maxWidth: 300 }}>
-                  Restoranlar uchun innovatsion boshqaruv tizimi. Xizmat sifatini oshiring va daromadingizni ko&apos;paytiring.
-                </Typography>
-                <Stack direction="row" spacing={1.5}>
-                  {[
-                    { ic: <Public key="1" />, href: '/' },
-                    { ic: <Chat key="2" />, href: 'https://t.me/vivora_support' },
-                    { ic: <Email key="3" />, href: '/contact' },
-                  ].map((s, i) => (
-                    <Box key={i} component="a" href={s.href} {...(s.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: '#fff', border: `1px solid ${BORDER}`, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '& svg': { fontSize: 18 }, '&:hover': { color: '#fff', bgcolor: PRIMARY, transform: 'translateY(-3px)' } }}>{s.ic}</Box>
-                  ))}
-                </Stack>
-              </Grid>
-              <Grid item xs={12} lg={8}>
-                <Grid container spacing={4}>
-                  {footerCols.map((col) => (
-                    <Grid item xs={6} sm={4} key={col.h}>
-                      <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: PRIMARY, mb: 2, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{col.h}</Typography>
-                      <Stack spacing={1.5}>
-                        {col.links.map(([l, href]) => (
-                          <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 500, color: MUTED, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: PRIMARY } }}>{l}</Typography>
-                        ))}
-                      </Stack>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-            </Grid>
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={2} sx={{ mt: { xs: 5, md: 7 }, pt: 4, borderTop: `1px solid ${BORDER}` }}>
-              <Typography sx={{ fontSize: 12.5, color: MUTED }}>© {new Date().getFullYear()} Vivora Technologies. Barcha huquqlar himoyalangan.</Typography>
-              <Stack direction="row" spacing={2}>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: '#fff', borderRadius: 99, border: `1px solid ${BORDER}` }}>
-                  <VerifiedUser sx={{ fontSize: 15, color: '#16A34A' }} />
-                  <Typography sx={{ fontSize: 11, fontWeight: 600, color: MUTED }}>Xavfsiz to&apos;lovlar</Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: '#fff', borderRadius: 99, border: `1px solid ${BORDER}` }}>
-                  <Security sx={{ fontSize: 15, color: '#2563EB' }} />
-                  <Typography sx={{ fontSize: 11, fontWeight: 600, color: MUTED }}>Shifrlangan ma&apos;lumotlar</Typography>
-                </Stack>
-              </Stack>
-            </Stack>
-          </Container>
-        </Box>
+        <MarketingFooter />
       </Box>
     </>
   );

@@ -1,8 +1,16 @@
 import Head from 'next/head';
 import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState, ReactNode } from 'react';
-import { Box, Container, Typography, Button, Stack, Grid, IconButton, Drawer, Divider } from '@mui/material';
-import { Restaurant, Public, Chat, Email, VerifiedUser, Security, Menu as MenuIcon, Close } from '@mui/icons-material';
+import {
+  Box, Container, Typography, Button, Stack, Grid, IconButton, Drawer,
+  Divider, Menu, MenuItem,
+} from '@mui/material';
+import {
+  Restaurant, Public, Chat, Email, VerifiedUser, Security,
+  Menu as MenuIcon, Close, ExpandMore,
+} from '@mui/icons-material';
+import { useMarketingT, MARKETING_LOCALES, MLocale } from '@/lib/marketing-i18n';
 
 // ── Shared warm Material-3 palette ──
 export const PRIMARY = '#9d4300';
@@ -22,25 +30,61 @@ export const pill = (extra: any = {}) => ({
   fontSize: 14, boxShadow: 'none', ...extra,
 });
 
-const navLinks = [
-  { label: 'Xizmatlar', href: '/' },
-  { label: 'Narxlar', href: '/pricing' },
-  { label: 'Biz haqimizda', href: '/about' },
-  { label: 'Bog‘lanish', href: '/contact' },
-];
+// Locale-aware nav links, built from the active dictionary.
+function useNavLinks() {
+  const { t } = useMarketingT();
+  return [
+    { label: t.nav.features, href: '/' },
+    { label: t.nav.pricing, href: '/pricing' },
+    { label: t.nav.about, href: '/about' },
+    { label: t.nav.contact, href: '/contact' },
+  ];
+}
 
-const footerCols = [
-  { h: 'Mahsulot', links: [['Xizmatlar', '/'], ['Narxlar', '/pricing'], ['Yangiliklar', '#'], ['API Hujjatlari', '#']] },
-  { h: 'Kompaniya', links: [['Biz haqimizda', '/about'], ['Karyera', '#'], ['Blog', '#'], ["Bog'lanish", '/contact']] },
-  { h: 'Huquqiy', links: [['Maxfiylik siyosati', '#'], ['Foydalanish shartlari', '#'], ['Cookie siyosati', '#']] },
-];
+/** Flag button + menu that switches the Next.js locale in place. */
+function LanguageSwitcher({ color }: { color: string }) {
+  const router = useRouter();
+  const { locale } = useMarketingT();
+  const [anchor, setAnchor] = useState<null | HTMLElement>(null);
+  const current = MARKETING_LOCALES.find((l) => l.code === locale) ?? MARKETING_LOCALES[0];
+
+  const switchTo = (code: MLocale) => {
+    setAnchor(null);
+    // Remember the choice so Next's locale detection doesn't fight it later.
+    document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000`;
+    router.push(router.asPath, undefined, { locale: code });
+  };
+
+  return (
+    <>
+      <Button
+        onClick={(e) => setAnchor(e.currentTarget)}
+        endIcon={<ExpandMore sx={{ fontSize: 16 }} />}
+        sx={{ minWidth: 0, px: 1.25, py: 0.75, borderRadius: 99, fontWeight: 700, fontSize: 13, textTransform: 'none', color }}
+        aria-label="Language"
+      >
+        {current.flag} {current.code.toUpperCase()}
+      </Button>
+      <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+        {MARKETING_LOCALES.map((l) => (
+          <MenuItem key={l.code} selected={l.code === locale} onClick={() => switchTo(l.code)} sx={{ fontSize: 14, fontWeight: 600, gap: 1 }}>
+            {l.flag} {l.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+}
 
 // Shared sticky navbar. Desktop shows inline links; on phones/tablets they
 // collapse into a right-side drawer so every page (and login) stays reachable.
-// `dark` renders the variant used on the dark landing page.
+// `dark` renders the variant used on dark pages.
 export function MarketingNav({ dark = false }: { dark?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { t, locale } = useMarketingT();
+  const router = useRouter();
+  const navLinks = useNavLinks();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
@@ -67,6 +111,11 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
         grad: GRAD, glow: 'rgba(157,67,0,0.3)',
       };
 
+  const switchLocale = (code: MLocale) => {
+    document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000`;
+    router.push(router.asPath, undefined, { locale: code });
+  };
+
   return (
     <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50, bgcolor: c.barBg, backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.barBorder}`, transition: 'all .3s', py: scrolled ? 1 : 2, boxShadow: scrolled ? c.shadow : 'none' }}>
       <Container maxWidth="xl">
@@ -79,13 +128,16 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
           </Stack>
           <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
             {navLinks.map((l) => (
-              <Typography key={l.label} component={NextLink} href={l.href} sx={{ fontSize: 14, fontWeight: 600, color: c.link, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: c.linkHover } }}>{l.label}</Typography>
+              <Typography key={l.href} component={NextLink} href={l.href} sx={{ fontSize: 14, fontWeight: 600, color: c.link, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: c.linkHover } }}>{l.label}</Typography>
             ))}
           </Stack>
-          <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center">
-            <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, color: c.loginColor, bgcolor: c.loginBg, border: c.loginBorder, '&:hover': { borderColor: c.loginHoverBorder, bgcolor: c.loginHoverBg } })}>Kirish</Button>
-            <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: c.grad, boxShadow: `0 10px 20px ${c.glow}`, '&:hover': { boxShadow: `0 15px 30px ${c.glow}`, transform: 'translateY(-2px)' } })}>Bepul boshlash</Button>
-            <IconButton aria-label="Menyuni ochish" onClick={() => setOpen(true)} sx={{ display: { md: 'none' }, color: dark ? '#fff' : PRIMARY }}>
+          <Stack direction="row" spacing={{ xs: 0.5, sm: 1.5 }} alignItems="center">
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <LanguageSwitcher color={c.link} />
+            </Box>
+            <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, color: c.loginColor, bgcolor: c.loginBg, border: c.loginBorder, '&:hover': { borderColor: c.loginHoverBorder, bgcolor: c.loginHoverBg } })}>{t.nav.login}</Button>
+            <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: c.grad, boxShadow: `0 10px 20px ${c.glow}`, '&:hover': { boxShadow: `0 15px 30px ${c.glow}`, transform: 'translateY(-2px)' } })}>{t.nav.start}</Button>
+            <IconButton aria-label="Menu" onClick={() => setOpen(true)} sx={{ display: { md: 'none' }, color: dark ? '#fff' : PRIMARY }}>
               <MenuIcon />
             </IconButton>
           </Stack>
@@ -95,22 +147,101 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
       <Drawer anchor="right" open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { width: 300, maxWidth: '85vw', bgcolor: c.drawerBg, p: 3 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography sx={{ fontSize: 20, fontWeight: 800, color: dark ? '#fff' : PRIMARY }}>Vivora</Typography>
-          <IconButton aria-label="Menyuni yopish" onClick={() => setOpen(false)} sx={{ color: dark ? '#9AA3B2' : undefined }}><Close /></IconButton>
+          <IconButton aria-label="Close" onClick={() => setOpen(false)} sx={{ color: dark ? '#9AA3B2' : undefined }}><Close /></IconButton>
         </Stack>
         <Stack spacing={0.5}>
           {navLinks.map((l) => (
-            <Typography key={l.label} component={NextLink} href={l.href} onClick={() => setOpen(false)}
+            <Typography key={l.href} component={NextLink} href={l.href} onClick={() => setOpen(false)}
               sx={{ fontSize: 16, fontWeight: 700, color: c.drawerText, textDecoration: 'none', py: 1.5, px: 1.5, borderRadius: 2, '&:hover': { bgcolor: c.drawerHoverBg, color: dark ? '#FB923C' : PRIMARY } }}>
               {l.label}
             </Typography>
           ))}
         </Stack>
         <Divider sx={{ my: 3, borderColor: c.divider }} />
+        {/* Language row */}
+        <Stack direction="row" spacing={1} mb={3} flexWrap="wrap" useFlexGap>
+          {MARKETING_LOCALES.map((l) => (
+            <Button
+              key={l.code}
+              onClick={() => { setOpen(false); switchLocale(l.code); }}
+              sx={{
+                minWidth: 0, px: 1.5, py: 0.75, borderRadius: 99, fontWeight: 700, fontSize: 13, textTransform: 'none',
+                color: l.code === locale ? '#fff' : c.drawerText,
+                background: l.code === locale ? c.grad : 'transparent',
+                border: l.code === locale ? 'none' : `1px solid ${c.divider}`,
+              }}
+            >
+              {l.flag} {l.code.toUpperCase()}
+            </Button>
+          ))}
+        </Stack>
         <Stack spacing={1.5}>
-          <Button component={NextLink} href="/login" onClick={() => setOpen(false)} sx={pill({ color: c.loginColor, bgcolor: 'transparent', border: c.loginBorder })}>Kirish</Button>
-          <Button component={NextLink} href="/register" onClick={() => setOpen(false)} sx={pill({ color: '#fff', background: c.grad })}>Bepul boshlash</Button>
+          <Button component={NextLink} href="/login" onClick={() => setOpen(false)} sx={pill({ color: c.loginColor, bgcolor: 'transparent', border: c.loginBorder })}>{t.nav.login}</Button>
+          <Button component={NextLink} href="/register" onClick={() => setOpen(false)} sx={pill({ color: '#fff', background: c.grad })}>{t.nav.start}</Button>
         </Stack>
       </Drawer>
+    </Box>
+  );
+}
+
+// Locale-aware footer, shared between MarketingLayout and the landing page.
+export function MarketingFooter() {
+  const { t } = useMarketingT();
+  const footerCols = [
+    { h: t.footer.product, links: [[t.nav.features, '/'], [t.nav.pricing, '/pricing'], [t.footer.news, '#'], [t.footer.api, '#']] },
+    { h: t.footer.company, links: [[t.nav.about, '/about'], [t.footer.careers, '#'], [t.footer.blog, '#'], [t.nav.contact, '/contact']] },
+    { h: t.footer.legal, links: [[t.footer.privacy, '#'], [t.footer.terms, '#'], [t.footer.cookies, '#']] },
+  ];
+
+  return (
+    <Box component="footer" sx={{ bgcolor: 'rgba(234,225,215,0.5)', py: { xs: 6, md: 9 }, borderTop: '1px solid rgba(140,113,100,0.1)' }}>
+      <Container maxWidth="xl">
+        <Grid container spacing={4}>
+          <Grid item xs={12} lg={4}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={3}>
+              <Box sx={{ width: 36, height: 36, borderRadius: 2.5, bgcolor: PRIMARY, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}><Restaurant sx={{ fontSize: 18 }} /></Box>
+              <Typography sx={{ fontSize: 20, fontWeight: 700, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
+            </Stack>
+            <Typography sx={{ fontSize: 15, color: ON_VAR, mb: 3, lineHeight: 1.6, maxWidth: 300 }}>{t.footer.desc}</Typography>
+            <Stack direction="row" spacing={1.5}>
+              {[
+                { ic: <Public key="1" />, href: '/' },
+                { ic: <Chat key="2" />, href: 'https://t.me/vivora_support' },
+                { ic: <Email key="3" />, href: '/contact' },
+              ].map((s, i) => (
+                <Box key={i} component="a" href={s.href} {...(s.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#fff', border: '1px solid rgba(140,113,100,0.1)', color: ON_VAR, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '&:hover': { bgcolor: PRIMARY, color: '#fff', transform: 'translateY(-4px)' } }}>{s.ic}</Box>
+              ))}
+            </Stack>
+          </Grid>
+          <Grid item xs={12} lg={8}>
+            <Grid container spacing={4}>
+              {footerCols.map((col) => (
+                <Grid item xs={6} sm={4} key={col.h}>
+                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: PRIMARY, mb: 2, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{col.h}</Typography>
+                  <Stack spacing={1.5}>
+                    {col.links.map(([l, href]) => (
+                      <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
+                    ))}
+                  </Stack>
+                </Grid>
+              ))}
+            </Grid>
+          </Grid>
+        </Grid>
+        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={2} sx={{ mt: { xs: 5, md: 8 }, pt: 4, borderTop: '1px solid rgba(140,113,100,0.1)' }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 600, color: ON_VAR }}>© {new Date().getFullYear()} Vivora Technologies. {t.footer.rights}</Typography>
+          <Stack direction="row" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: SURFACE, borderRadius: 99, border: '1px solid rgba(140,113,100,0.1)' }}>
+              <VerifiedUser sx={{ fontSize: 16, color: '#16A34A' }} />
+              <Typography sx={{ fontSize: 11, fontWeight: 600, color: ON_VAR }}>{t.footer.securePay}</Typography>
+            </Stack>
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: SURFACE, borderRadius: 99, border: '1px solid rgba(140,113,100,0.1)' }}>
+              <Security sx={{ fontSize: 16, color: '#2563EB' }} />
+              <Typography sx={{ fontSize: 11, fontWeight: 600, color: ON_VAR }}>{t.footer.encrypted}</Typography>
+            </Stack>
+          </Stack>
+        </Stack>
+      </Container>
     </Box>
   );
 }
@@ -122,57 +253,7 @@ export default function MarketingLayout({ children, title }: { children: ReactNo
       <Box sx={{ bgcolor: SURFACE, color: ON_SURFACE, overflowX: 'hidden', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
         <MarketingNav />
         <Box component="main">{children}</Box>
-
-        {/* Footer */}
-        <Box component="footer" sx={{ bgcolor: 'rgba(234,225,215,0.5)', py: 10, borderTop: '1px solid rgba(140,113,100,0.1)' }}>
-          <Container maxWidth="xl">
-            <Grid container spacing={4}>
-              <Grid item xs={12} lg={4}>
-                <Stack direction="row" alignItems="center" spacing={1} mb={3}>
-                  <Box sx={{ width: 36, height: 36, borderRadius: 2.5, bgcolor: PRIMARY, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}><Restaurant sx={{ fontSize: 18 }} /></Box>
-                  <Typography sx={{ fontSize: 20, fontWeight: 700, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
-                </Stack>
-                <Typography sx={{ fontSize: 16, color: ON_VAR, mb: 3, lineHeight: 1.6, maxWidth: 300 }}>Restoranlar uchun innovatsion boshqaruv tizimi. Xizmat sifatini oshiring va daromadingizni ko&apos;paytiring.</Typography>
-                <Stack direction="row" spacing={1.5}>
-                  {[
-                    { ic: <Public key="1" />, href: '/' },
-                    { ic: <Chat key="2" />, href: 'https://t.me/vivora_support' },
-                    { ic: <Email key="3" />, href: '/contact' },
-                  ].map((s, i) => (
-                    <Box key={i} component="a" href={s.href} {...(s.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#fff', border: '1px solid rgba(140,113,100,0.1)', color: ON_VAR, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '&:hover': { bgcolor: PRIMARY, color: '#fff', transform: 'translateY(-4px)' } }}>{s.ic}</Box>
-                  ))}
-                </Stack>
-              </Grid>
-              <Grid item xs={12} lg={8}>
-                <Grid container spacing={4}>
-                  {footerCols.map((col) => (
-                    <Grid item xs={6} sm={4} key={col.h}>
-                      <Typography sx={{ fontSize: 10, fontWeight: 700, color: PRIMARY, mb: 2, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{col.h}</Typography>
-                      <Stack spacing={1.5}>
-                        {col.links.map(([l, href]) => (
-                          <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
-                        ))}
-                      </Stack>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-            </Grid>
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={2} sx={{ mt: 8, pt: 4, borderTop: '1px solid rgba(140,113,100,0.1)' }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: ON_VAR }}>© {new Date().getFullYear()} Vivora Technologies. Barcha huquqlar himoyalangan.</Typography>
-              <Stack direction="row" spacing={2}>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: SURFACE, borderRadius: 99, border: '1px solid rgba(140,113,100,0.1)' }}>
-                  <VerifiedUser sx={{ fontSize: 16, color: '#16A34A' }} />
-                  <Typography sx={{ fontSize: 11, fontWeight: 600, color: ON_VAR }}>PCI DSS Sertifikatlangan</Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: SURFACE, borderRadius: 99, border: '1px solid rgba(140,113,100,0.1)' }}>
-                  <Security sx={{ fontSize: 16, color: '#2563EB' }} />
-                  <Typography sx={{ fontSize: 11, fontWeight: 600, color: ON_VAR }}>Data Encryption</Typography>
-                </Stack>
-              </Stack>
-            </Stack>
-          </Container>
-        </Box>
+        <MarketingFooter />
       </Box>
     </>
   );
