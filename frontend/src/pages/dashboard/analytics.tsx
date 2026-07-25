@@ -132,7 +132,28 @@ const AnalyticsPage: NextPage = () => {
               <Typography variant="h4" fontWeight={800}>Tahlil</Typography>
               <Typography color="text.secondary">Daromad, buyurtmalar va samaradorlik</Typography>
             </Box>
-            <ToggleButtonGroup value={view} exclusive onChange={(_, v) => v && setView(v)} size="small">
+            {/* Segmented control: the selected side is a filled pill so the
+                active period is obvious at a glance. */}
+            <ToggleButtonGroup
+              value={view}
+              exclusive
+              onChange={(_, v) => v && setView(v)}
+              sx={{
+                bgcolor: 'grey.100', borderRadius: 99, p: 0.5, gap: 0.5,
+                border: '1px solid', borderColor: 'divider',
+                '& .MuiToggleButtonGroup-grouped': {
+                  border: 0, borderRadius: '99px !important',
+                  px: 2.75, py: 0.85, fontSize: 14, fontWeight: 700,
+                  textTransform: 'none', color: 'text.secondary',
+                  '&:hover': { bgcolor: 'action.hover' },
+                  '&.Mui-selected': {
+                    bgcolor: 'primary.main', color: '#fff',
+                    boxShadow: '0 2px 8px rgba(249,115,22,0.35)',
+                    '&:hover': { bgcolor: 'primary.dark' },
+                  },
+                },
+              }}
+            >
               <ToggleButton value="week">Hafta</ToggleButton>
               <ToggleButton value="month">Oy</ToggleButton>
             </ToggleButtonGroup>
