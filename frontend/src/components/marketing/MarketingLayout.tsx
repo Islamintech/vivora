@@ -108,7 +108,7 @@ function Flag({ code, w = 20 }: { code: MLocale; w?: number }) {
 }
 
 /** Flag button + menu that switches the Next.js locale in place. */
-function LanguageSwitcher({ color }: { color: string }) {
+function LanguageSwitcher({ color, dark = false }: { color: string; dark?: boolean }) {
   const router = useRouter();
   const { locale } = useMarketingT();
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
@@ -124,16 +124,32 @@ function LanguageSwitcher({ color }: { color: string }) {
     <>
       <Button
         onClick={(e) => setAnchor(e.currentTarget)}
-        endIcon={<ExpandMore sx={{ fontSize: 16 }} />}
-        sx={{ minWidth: 0, px: 1.25, py: 0.75, borderRadius: 99, fontWeight: 700, fontSize: 13, textTransform: 'none', color, gap: 0.75 }}
+        endIcon={<ExpandMore sx={{ fontSize: 18 }} />}
+        sx={{
+          minWidth: 0, px: 1.75, py: 1.1, borderRadius: 99, fontWeight: 700, fontSize: 14,
+          textTransform: 'none', color, gap: 0.9,
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.14)' : 'rgba(140,113,100,0.18)'}`,
+          transition: 'background .2s, border-color .2s',
+          '&:hover': {
+            bgcolor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(157,67,0,0.06)',
+            borderColor: dark ? 'rgba(255,255,255,0.28)' : 'rgba(157,67,0,0.35)',
+          },
+        }}
         aria-label="Language"
       >
-        <Flag code={locale} /> {locale.toUpperCase()}
+        <Flag code={locale} w={22} /> {locale.toUpperCase()}
       </Button>
-      <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+      <Menu
+        anchorEl={anchor}
+        open={!!anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{ sx: { mt: 1, borderRadius: 3, minWidth: 190, boxShadow: '0 16px 40px rgba(0,0,0,0.14)' } }}
+      >
         {MARKETING_LOCALES.map((l) => (
-          <MenuItem key={l.code} selected={l.code === locale} onClick={() => switchTo(l.code)} sx={{ fontSize: 14, fontWeight: 600, gap: 1.25 }}>
-            <Flag code={l.code} /> {l.label}
+          <MenuItem key={l.code} selected={l.code === locale} onClick={() => switchTo(l.code)} sx={{ fontSize: 14.5, fontWeight: 600, gap: 1.5, py: 1.2 }}>
+            <Flag code={l.code} w={22} /> {l.label}
           </MenuItem>
         ))}
       </Menu>
@@ -182,27 +198,52 @@ export function MarketingNav({ dark = false }: { dark?: boolean }) {
   };
 
   return (
-    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50, bgcolor: c.barBg, backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.barBorder}`, transition: 'all .3s', py: scrolled ? 1 : 2, boxShadow: scrolled ? c.shadow : 'none' }}>
+    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 50, bgcolor: scrolled ? c.barBg : 'transparent', backdropFilter: scrolled ? 'blur(14px)' : 'none', borderBottom: `1px solid ${scrolled ? c.barBorder : 'transparent'}`, transition: 'all .3s', py: scrolled ? 1.5 : 2.5, boxShadow: scrolled ? c.shadow : 'none' }}>
       <Container maxWidth="xl">
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Stack component={NextLink} href="/" direction="row" alignItems="center" spacing={1} sx={{ textDecoration: 'none', '&:hover .lg': { transform: 'rotate(6deg)' } }}>
-            <Box className="lg" sx={{ width: 40, height: 40, borderRadius: 3, background: `linear-gradient(135deg, ${PRIMARY}, ${ORANGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: `0 8px 18px ${c.glow}`, transition: 'transform .3s' }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+          {/* Brand */}
+          <Stack component={NextLink} href="/" direction="row" alignItems="center" spacing={1.5} sx={{ textDecoration: 'none', flexShrink: 0, '&:hover .lg': { transform: 'rotate(-6deg) scale(1.05)' } }}>
+            <Box className="lg" sx={{ width: { xs: 42, md: 50 }, height: { xs: 42, md: 50 }, borderRadius: '14px', background: `linear-gradient(135deg, ${PRIMARY}, ${ORANGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: `0 10px 22px ${c.glow}`, transition: 'transform .35s cubic-bezier(0.34,1.4,0.64,1)', '& svg': { fontSize: { xs: 22, md: 27 } } }}>
               <Restaurant />
             </Box>
-            <Typography sx={{ fontSize: 24, fontWeight: 800, color: c.brand, letterSpacing: '-0.02em' }}>Vivora</Typography>
+            <Typography sx={{ fontSize: { xs: 24, md: 29 }, fontWeight: 800, color: c.brand, letterSpacing: '-0.03em' }}>Vivora</Typography>
           </Stack>
-          <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
-            {navLinks.map((l) => (
-              <Typography key={l.href} component={NextLink} href={l.href} sx={{ fontSize: 14, fontWeight: 600, color: c.link, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: c.linkHover } }}>{l.label}</Typography>
-            ))}
+
+          {/* Links */}
+          <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
+            {navLinks.map((l) => {
+              const active = router.pathname === l.href;
+              return (
+                <Typography
+                  key={l.href}
+                  component={NextLink}
+                  href={l.href}
+                  sx={{
+                    position: 'relative', fontSize: 15.5, fontWeight: 700, textDecoration: 'none',
+                    color: active ? c.linkHover : c.link, px: 2, py: 1.1, borderRadius: 99,
+                    transition: 'color .2s, background .2s',
+                    '&:hover': { color: c.linkHover, bgcolor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(157,67,0,0.06)' },
+                    '&::after': {
+                      content: '""', position: 'absolute', left: '50%', bottom: 4, transform: 'translateX(-50%)',
+                      width: active ? 18 : 0, height: 3, borderRadius: 99, background: c.grad, transition: 'width .25s',
+                    },
+                    '&:hover::after': { width: 18 },
+                  }}
+                >
+                  {l.label}
+                </Typography>
+              );
+            })}
           </Stack>
-          <Stack direction="row" spacing={{ xs: 0.5, sm: 1.5 }} alignItems="center">
+
+          {/* Actions */}
+          <Stack direction="row" spacing={{ xs: 0.5, sm: 1.5 }} alignItems="center" sx={{ flexShrink: 0 }}>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <LanguageSwitcher color={c.link} />
+              <LanguageSwitcher color={c.link} dark={dark} />
             </Box>
-            <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, color: c.loginColor, bgcolor: c.loginBg, border: c.loginBorder, '&:hover': { borderColor: c.loginHoverBorder, bgcolor: c.loginHoverBg } })}>{t.nav.login}</Button>
-            <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: c.grad, boxShadow: `0 10px 20px ${c.glow}`, '&:hover': { boxShadow: `0 15px 30px ${c.glow}`, transform: 'translateY(-2px)' } })}>{t.nav.start}</Button>
-            <IconButton aria-label="Menu" onClick={() => setOpen(true)} sx={{ display: { md: 'none' }, color: dark ? '#fff' : PRIMARY }}>
+            <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, px: 3, py: 1.4, fontSize: 15, color: c.loginColor, bgcolor: c.loginBg, border: c.loginBorder, '&:hover': { borderColor: c.loginHoverBorder, bgcolor: c.loginHoverBg } })}>{t.nav.login}</Button>
+            <Button component={NextLink} href="/register" sx={pill({ px: { xs: 2.5, md: 3.5 }, py: 1.4, fontSize: 15, color: '#fff', background: c.grad, boxShadow: `0 10px 22px ${c.glow}`, transition: 'transform .2s, box-shadow .2s', '&:hover': { boxShadow: `0 16px 32px ${c.glow}`, transform: 'translateY(-2px)' } })}>{t.nav.start}</Button>
+            <IconButton aria-label="Menu" onClick={() => setOpen(true)} sx={{ display: { md: 'none' }, color: dark ? '#fff' : PRIMARY, border: `1px solid ${c.divider}`, borderRadius: 2.5, p: 1.1 }}>
               <MenuIcon />
             </IconButton>
           </Stack>
