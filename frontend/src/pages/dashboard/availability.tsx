@@ -116,11 +116,11 @@ const AvailabilityPage: NextPage = () => {
             <Box>
               <Typography variant="h4" fontWeight={800}>Taomlar mavjudligi</Typography>
               <Typography color="text.secondary">
-                Kitchen check — mark what's available and set prepared quantities for the day
+                Kunlik tekshiruv — mavjud taomlarni belgilang va tayyorlangan miqdorni kiriting
               </Typography>
             </Box>
             <Stack direction="row" spacing={1}>
-              <Chip icon={<CheckCircle />} label={`${items.length - soldOutCount} available`} color="success" variant="outlined" />
+              <Chip icon={<CheckCircle />} label={`${items.length - soldOutCount} ta mavjud`} color="success" variant="outlined" />
               <Chip label={`${soldOutCount} ta tugagan`} color={soldOutCount ? 'error' : 'default'} variant="outlined" />
             </Stack>
           </Stack>

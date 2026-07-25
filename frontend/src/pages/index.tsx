@@ -13,6 +13,7 @@ import {
   CheckCircle, RadioButtonUnchecked, Speed, Public, Chat, Email,
   VerifiedUser, Security, Kitchen, TrendingUp, ExpandMore,
 } from '@mui/icons-material';
+import { MarketingNav } from '@/components/marketing/MarketingLayout';
 
 // ── Material-3 warm palette (from the reference design) ──
 const PRIMARY = '#9d4300';
@@ -97,13 +98,6 @@ const footerCols = [
 ];
 
 const Home: NextPage = () => {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
   const pill = (extra: any = {}) => ({
     borderRadius: 99, fontWeight: 700, textTransform: 'none', px: 3, py: 1.25,
     fontSize: 14, boxShadow: 'none', ...extra,
@@ -114,37 +108,8 @@ const Home: NextPage = () => {
       <Head><title>Vivora | Modern Restoran Boshqaruvi</title></Head>
       <Box sx={{ bgcolor: SURFACE, color: ON_SURFACE, overflowX: 'hidden', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
 
-        {/* ── Navbar ── */}
-        <Box
-          component="header"
-          sx={{
-            position: 'sticky', top: 0, zIndex: 50,
-            bgcolor: 'rgba(255,248,242,0.7)', backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(140,113,100,0.1)',
-            transition: 'all .3s', py: scrolled ? 1 : 2,
-            boxShadow: scrolled ? '0 8px 24px rgba(157,67,0,0.06)' : 'none',
-          }}
-        >
-          <Container maxWidth="xl">
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ '&:hover .lg': { transform: 'rotate(6deg)' } }}>
-                <Box className="lg" sx={{ width: 40, height: 40, borderRadius: 3, background: `linear-gradient(135deg, ${PRIMARY}, ${ORANGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 8px 18px rgba(157,67,0,0.3)', transition: 'transform .3s' }}>
-                  <Restaurant />
-                </Box>
-                <Typography sx={{ fontSize: 24, fontWeight: 800, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
-              </Stack>
-              <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
-                {[['Xizmatlar', '/'], ['Narxlar', '/pricing'], ['Biz haqimizda', '/about']].map(([l, href]) => (
-                  <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 600, color: ON_VAR, textDecoration: 'none', '&:hover': { color: PRIMARY } }}>{l}</Typography>
-                ))}
-              </Stack>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Button component={NextLink} href="/login" sx={pill({ display: { xs: 'none', sm: 'inline-flex' }, color: PRIMARY, bgcolor: SURFACE, border: '2px solid rgba(157,67,0,0.2)', '&:hover': { borderColor: 'rgba(157,67,0,0.4)', bgcolor: 'rgba(157,67,0,0.05)' } })}>Kirish</Button>
-                <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: GRAD, boxShadow: '0 10px 20px rgba(157,67,0,0.3)', '&:hover': { boxShadow: '0 15px 30px rgba(157,67,0,0.4)', transform: 'translateY(-2px)' } })}>Bepul boshlash</Button>
-              </Stack>
-            </Stack>
-          </Container>
-        </Box>
+        {/* ── Navbar (shared with marketing pages, incl. mobile drawer) ── */}
+        <MarketingNav />
 
         <Box component="main">
           {/* ── Hero ── */}

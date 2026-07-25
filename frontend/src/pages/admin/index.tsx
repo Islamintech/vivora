@@ -7,7 +7,7 @@ import {
   Avatar, Table, TableHead, TableRow, TableCell, TableBody,
   Tab, Tabs, LinearProgress, AppBar, Toolbar, Alert, Badge,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  IconButton, MenuItem, Divider, Tooltip,
+  IconButton, MenuItem, Divider, Tooltip, useMediaQuery, useTheme,
 } from '@mui/material';
 import {
   Store, People, ShoppingBag, TrendingUp, AdminPanelSettings,
@@ -60,6 +60,8 @@ const AdminPage: NextPage = () => {
   const { logout } = useAuthStore();
   const router = useRouter();
   const [tab, setTab] = useState(0);
+  // Restaurant drill-down holds stats + tables — full-screen on phones.
+  const fullScreenDialog = useMediaQuery(useTheme().breakpoints.down('sm'));
 
   const { data: statsData, loading: statsLoading } = useQuery(PLATFORM_STATS_QUERY, { skip: !user });
   const { data: restData, loading: restLoading, refetch: refetchRests } = useQuery(ADMIN_RESTAURANTS_QUERY, { skip: !user });
@@ -729,7 +731,7 @@ const AdminPage: NextPage = () => {
       </Dialog>
 
       {/* Restaurant drill-down dialog */}
-      <Dialog open={!!detailId} onClose={() => setDetailId(null)} fullWidth maxWidth="md">
+      <Dialog open={!!detailId} onClose={() => setDetailId(null)} fullWidth maxWidth="md" fullScreen={fullScreenDialog}>
         {detailLoading && <LinearProgress />}
         {detail && (
           <>

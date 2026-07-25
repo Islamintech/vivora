@@ -7,6 +7,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   IconButton, Switch, FormControlLabel, Avatar, CircularProgress,
   Accordion, AccordionSummary, AccordionDetails, Tooltip,
+  useMediaQuery, useTheme,
 } from '@mui/material';
 import {
   Add, Edit, Delete, ExpandMore, DragIndicator,
@@ -28,6 +29,8 @@ import { uploadImage, cloudinaryConfigured } from '@/lib/cloudinary';
 const MenuPage: NextPage = () => {
   const { user } = useRequireAuth();
   const currency = useCurrency();
+  // The item form is tall — go full-screen on phones so it scrolls naturally.
+  const fullScreenDialog = useMediaQuery(useTheme().breakpoints.down('sm'));
 
   const { data: catData, refetch: refetchCats } = useQuery(CATEGORIES_QUERY, { skip: !user });
   const { data: itemData, refetch: refetchItems } = useQuery(MENU_ITEMS_QUERY, { skip: !user });
@@ -271,7 +274,7 @@ const MenuPage: NextPage = () => {
         </Dialog>
 
         {/* Item Dialog */}
-        <Dialog open={!!itemDialog} onClose={() => setItemDialog(null)} fullWidth maxWidth="sm">
+        <Dialog open={!!itemDialog} onClose={() => setItemDialog(null)} fullWidth maxWidth="sm" fullScreen={fullScreenDialog}>
           <DialogTitle fontWeight={700}>{itemDialog === 'edit' ? 'Taomni tahrirlash' : 'Yangi taom'}</DialogTitle>
           <DialogContent>
             <Stack spacing={2.5} mt={1}>
@@ -290,7 +293,7 @@ const MenuPage: NextPage = () => {
                 rows={2}
               />
               <TextField
-                label="Narxi ($)"
+                label="Narxi"
                 type="number"
                 value={itemForm.price}
                 onChange={(e) => setItemForm((p) => ({ ...p, price: e.target.value }))}

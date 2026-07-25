@@ -173,7 +173,7 @@ const AnalyticsPage: NextPage = () => {
                           <Typography variant="h6" fontWeight={700} color="primary" mt={1}>
                             {formatMoney(table.totalRevenue, currency)}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">{table.totalOrders} orders</Typography>
+                          <Typography variant="caption" color="text.secondary">{table.totalOrders} ta buyurtma</Typography>
                         </Card>
                       ))}
                       {!analytics?.tableTurnover?.length && (
