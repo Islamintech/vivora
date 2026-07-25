@@ -99,8 +99,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Brand */}
-      <Box sx={{ px: 3, py: 3 }}>
+      {/* Brand - a Toolbar so its height (and the divider below it) lines up
+          exactly with the AppBar's toolbar across the top of the page. */}
+      <Toolbar sx={{ px: 3 }}>
         <Typography
           variant="h6"
           fontWeight={800}
@@ -108,7 +109,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         >
           Vivora
         </Typography>
-      </Box>
+      </Toolbar>
 
       <Divider />
 
@@ -169,7 +170,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AppBar
         position="fixed"
         elevation={0}
-        sx={{ width: { md: `calc(100% - ${DRAWER_WIDTH}px)` }, ml: { md: `${DRAWER_WIDTH}px` } }}
+        sx={{
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` }, ml: { md: `${DRAWER_WIDTH}px` },
+          // Same 1px divider as under the sidebar brand, so the two line up
+          // into one continuous rule across the top.
+          boxShadow: 'none', borderBottom: '1px solid', borderColor: 'divider',
+        }}
       >
         <Toolbar>
           {isMobile && (
