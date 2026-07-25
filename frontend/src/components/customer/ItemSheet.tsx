@@ -84,9 +84,11 @@ export default function ItemSheet({
         <Box sx={{ p: 2.5, pb: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
             <Typography variant="h6" fontWeight={800} sx={{ flex: 1 }}>{item.name}</Typography>
-            {item.isPopular && (
+            {item.isBestSeller ? (
+              <Chip label={`🔥 ${t.bestSeller}`} size="small" sx={{ fontWeight: 800, bgcolor: '#FFF1E4', color: '#C2410C' }} />
+            ) : item.isPopular ? (
               <Chip icon={<Star sx={{ fontSize: 14 }} />} label={t.popular} size="small" color="warning" variant="outlined" />
-            )}
+            ) : null}
           </Stack>
 
           <Typography variant="h6" fontWeight={800} color="primary" mb={1.5}>

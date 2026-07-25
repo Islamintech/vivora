@@ -5,6 +5,7 @@ import { MenuItem, MenuItemSchema } from './schemas/menu.schema';
 import { MenuService } from './menu.service';
 import { MenuResolver } from './menu.resolver';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
       { name: MenuItem.name, schema: MenuItemSchema },
     ]),
     RestaurantsModule,
+    AnalyticsModule,
   ],
   providers: [MenuService, MenuResolver],
   exports: [MenuService],

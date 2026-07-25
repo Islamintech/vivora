@@ -10,6 +10,34 @@ export class AnalyticsService {
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
   ) {}
 
+  /**
+   * The restaurant's best-selling menu item ids over the trailing window.
+   * Used to auto-badge "best seller" items on the public customer menu, so
+   * recommendations follow real sales instead of a manually ticked flag.
+   */
+  async topSellingItemIds(
+    restaurantId: string,
+    days = 30,
+    limit = 5,
+  ): Promise<string[]> {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const rows = await this.orderModel.aggregate([
+      {
+        $match: {
+          // restaurantId is stored as a plain string — match the string
+          restaurantId,
+          status: { $ne: OrderStatus.CANCELLED },
+          createdAt: { $gte: since },
+        },
+      },
+      { $unwind: '$items' },
+      { $group: { _id: '$items.menuItemId', sold: { $sum: '$items.quantity' } } },
+      { $sort: { sold: -1 } },
+      { $limit: limit },
+    ]);
+    return rows.map((r) => String(r._id));
+  }
+
   async getOverview(restaurantId: string, startDate: Date, endDate: Date) {
     if (!Types.ObjectId.isValid(restaurantId)) {
       throw new BadRequestException('Invalid restaurant id');

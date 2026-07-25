@@ -46,6 +46,8 @@ export interface MenuItem {
   tags: string[];
   isAvailable: boolean;
   isPopular: boolean;
+  /** Computed server-side from the last 30 days of sales (public menu only). */
+  isBestSeller?: boolean;
   trackQuantity: boolean;
   quantity: number;
 }

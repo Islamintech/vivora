@@ -194,6 +194,7 @@ type MenuItemModel {
   description: String
   imageUrl: String
   isAvailable: Boolean!
+  isBestSeller: Boolean
   isPopular: Boolean!
   name: String!
   price: Float!

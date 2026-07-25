@@ -13,6 +13,7 @@ import {
 import { GqlAuthGuard } from '../common/guards';
 import { CurrentUser } from '../common/decorators';
 import { RestaurantsService } from '../restaurants/restaurants.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @ObjectType()
 class PublicMenuSection {
@@ -28,6 +29,7 @@ export class MenuResolver {
   constructor(
     private menuService: MenuService,
     private restaurantsService: RestaurantsService,
+    private analyticsService: AnalyticsService,
   ) {}
 
   // Public query — no auth required
@@ -37,7 +39,20 @@ export class MenuResolver {
   ) {
     // Only approved/active restaurants expose their menu to customers.
     await this.restaurantsService.assertServable(restaurantId);
-    return this.menuService.getPublicMenu(restaurantId);
+    const [sections, topIds] = await Promise.all([
+      this.menuService.getPublicMenu(restaurantId),
+      // Sales-based recommendations: the true top sellers of the last 30 days
+      // get a "best seller" badge, independent of the owner's manual flag.
+      this.analyticsService.topSellingItemIds(restaurantId, 30, 5),
+    ]);
+    const top = new Set(topIds);
+    return sections.map((s) => ({
+      category: s.category,
+      items: s.items.map((it) => ({
+        ...it.toObject(),
+        isBestSeller: top.has(it._id.toString()),
+      })),
+    }));
   }
 
   @Query(() => [MenuCategoryModel])

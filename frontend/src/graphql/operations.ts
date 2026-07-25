@@ -97,7 +97,7 @@ export const PUBLIC_MENU_QUERY = gql`
         name
       }
       items {
-        _id price imageUrl isAvailable isPopular allergens tags
+        _id price imageUrl isAvailable isPopular isBestSeller allergens tags
         trackQuantity quantity
         name
         description

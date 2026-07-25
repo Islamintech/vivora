@@ -517,7 +517,15 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                               <Typography fontWeight={700} fontSize="0.98rem" noWrap sx={{ minWidth: 0 }}>
                                 {item.name}
                               </Typography>
-                              {item.isPopular && <Star sx={{ fontSize: 15, color: '#F59E0B', flexShrink: 0 }} />}
+                              {item.isBestSeller ? (
+                                <Chip
+                                  label={`🔥 ${t.bestSeller}`}
+                                  size="small"
+                                  sx={{ height: 20, fontSize: '0.66rem', fontWeight: 800, bgcolor: '#FFF1E4', color: '#C2410C', flexShrink: 0 }}
+                                />
+                              ) : item.isPopular ? (
+                                <Star sx={{ fontSize: 15, color: '#F59E0B', flexShrink: 0 }} />
+                              ) : null}
                             </Stack>
                             {desc && (
                               <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

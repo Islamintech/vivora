@@ -59,6 +59,10 @@ export class MenuItemModel {
 
   @Field(() => Int)
   quantity: number;
+
+  // Computed on the public menu from the last 30 days of orders — not stored.
+  @Field({ nullable: true })
+  isBestSeller?: boolean;
 }
 
 // --- DTOs ---
