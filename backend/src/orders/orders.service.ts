@@ -338,8 +338,14 @@ export class OrdersService {
   ): Promise<OrderDocument[]> {
     const filter: any = { restaurantId };
     if (status) filter.status = status;
-    // The kitchen board asks for unpaid only, so settled orders drop off it.
-    if (unpaidOnly) filter.isPaid = { $ne: true };
+    // The kitchen board asks for unpaid only: settled orders drop off it, and
+    // so do rejected ones — a cancelled order is never awaiting payment, and
+    // leaving them in would let old rejects crowd out live orders under the
+    // row limit.
+    if (unpaidOnly) {
+      filter.isPaid = { $ne: true };
+      if (!status) filter.status = { $ne: OrderStatus.CANCELLED };
+    }
     return this.orderModel
       .find(filter)
       .sort({ createdAt: -1 })
