@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddItemsToOrderInput {
+  items: [OrderItemInput!]!
+  orderId: ID!
+}
+
 input AddOrderToSessionInput {
   items: [OrderItemInput!]!
   note: String
@@ -208,6 +213,7 @@ type MenuItemModel {
 }
 
 type Mutation {
+  addItemsToOrder(input: AddItemsToOrderInput!): OrderModel!
   addOrderToSession(input: AddOrderToSessionInput!): OrderModel!
   addStaff(input: AddStaffInput!): UserModel!
   adminResetUserPassword(newPassword: String!, userId: ID!): Boolean!

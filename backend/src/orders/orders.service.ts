@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { PubSub } from 'graphql-subscriptions';
 import { Order, OrderDocument } from './schemas/order.schema';
 import {
+  AddItemsToOrderInput,
   AddOrderToSessionInput,
   OrderItemInput,
   PlaceOrderInput,
@@ -269,6 +270,45 @@ export class OrdersService {
       restaurantId: order.restaurantId.toString(),
     });
 
+    return order;
+  }
+
+  /**
+   * Append items to an order already on the board (a guest asked for
+   * something extra after ordering). Stock is reserved exactly as for a new
+   * order, and the total grows so staff still collect one payment.
+   */
+  async addItemsToOrder(
+    restaurantId: string,
+    input: AddItemsToOrderInput,
+  ): Promise<OrderDocument> {
+    const orderId = input.orderId.toString();
+    const order = await this.orderModel.findOne({ _id: orderId, restaurantId });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.isPaid) {
+      throw new BadRequestException('This order is already paid');
+    }
+    if (order.status === OrderStatus.CANCELLED) {
+      throw new BadRequestException('This order was cancelled');
+    }
+
+    const { resolvedItems, totalAmount, rollbackReservations } =
+      await this.resolveAndReserveItems(restaurantId, input.items);
+
+    try {
+      order.items.push(...resolvedItems);
+      order.totalAmount += totalAmount;
+      order.markModified('items');
+      await order.save();
+    } catch (err) {
+      await rollbackReservations();
+      throw err;
+    }
+
+    await this.pubSub.publish(ORDER_STATUS_UPDATED, {
+      orderStatusUpdated: order,
+      restaurantId: order.restaurantId.toString(),
+    });
     return order;
   }
 

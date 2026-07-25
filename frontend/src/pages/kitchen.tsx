@@ -5,9 +5,12 @@ import { useQuery, useMutation, useSubscription } from '@apollo/client';
 import {
   Box, Card, CardContent, Typography, Stack, Chip, Button,
   ThemeProvider, CssBaseline, AppBar, Toolbar, Avatar, Badge, Divider,
+  Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete,
+  TextField, IconButton,
 } from '@mui/material';
 import {
   Kitchen, Notifications, LocalDining, Check, Close, DoneAll, Payments,
+  PlaylistAdd, Add, Remove,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
@@ -15,13 +18,14 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { kitchenTheme } from '@/theme';
 import {
   ORDERS_QUERY, UPDATE_ORDER_STATUS_MUTATION, MARK_ORDER_PAID_MUTATION,
+  ADD_ITEMS_TO_ORDER_MUTATION, MENU_ITEMS_QUERY,
   ORDER_CREATED_SUBSCRIPTION, ORDER_STATUS_UPDATED_SUBSCRIPTION,
   MY_RESTAURANT_QUERY,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCurrency } from '@/hooks/useCurrency';
 import { formatMoney } from '@/lib/money';
-import { Order, OrderStatus } from '@/types';
+import { MenuItem, Order, OrderStatus } from '@/types';
 
 dayjs.extend(relativeTime);
 
@@ -38,6 +42,7 @@ type Actions = {
   onReject: (id: string) => void;
   onDone: (id: string) => void;
   onPaid: (id: string) => void;
+  onAddItems: (order: Order) => void;
 };
 
 function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
@@ -141,13 +146,24 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
         )}
 
         {order.status === 'SERVED' && (
-          <Button
-            fullWidth size="small" variant="contained" startIcon={<Payments />}
-            onClick={() => actions.onPaid(order._id)}
-            sx={{ bgcolor: '#22C55E', color: '#04210F', fontWeight: 800, borderRadius: 2, '&:hover': { bgcolor: '#16A34A' } }}
-          >
-            To‘landi
-          </Button>
+          <Stack spacing={1}>
+            {/* Guest asked for something extra after ordering - it joins this
+                same bill rather than becoming a second one to collect. */}
+            <Button
+              fullWidth size="small" variant="outlined" startIcon={<PlaylistAdd />}
+              onClick={() => actions.onAddItems(order)}
+              sx={{ color: '#93C5FD', borderColor: '#1E3A8A', fontWeight: 700, borderRadius: 2, '&:hover': { borderColor: '#3B82F6', bgcolor: 'rgba(59,130,246,0.08)' } }}
+            >
+              Ovqat qo‘shish
+            </Button>
+            <Button
+              fullWidth size="small" variant="contained" startIcon={<Payments />}
+              onClick={() => actions.onPaid(order._id)}
+              sx={{ bgcolor: '#22C55E', color: '#04210F', fontWeight: 800, borderRadius: 2, '&:hover': { bgcolor: '#16A34A' } }}
+            >
+              To‘landi
+            </Button>
+          </Stack>
         )}
       </CardContent>
     </Card>
@@ -181,6 +197,40 @@ const KitchenPage: NextPage = () => {
   // Collected during this shift, tracked locally as staff tap "To'landi" so
   // the header updates instantly.
   const [collected, setCollected] = useState(0);
+
+  // "Ovqat qo'shish": append verbally-requested items to an existing bill.
+  const [addTarget, setAddTarget] = useState<Order | null>(null);
+  const [pick, setPick] = useState<{ menuItemId: string; name: string; price: number; quantity: number }[]>([]);
+
+  const { data: menuData } = useQuery(MENU_ITEMS_QUERY, { skip: !user });
+  const menuItems: MenuItem[] = (menuData?.menuItems ?? []).filter((m: MenuItem) => m.isAvailable);
+
+  const [addItems, { loading: addingItems }] = useMutation(ADD_ITEMS_TO_ORDER_MUTATION, {
+    onCompleted() {
+      toast.success('Hisobga qo‘shildi');
+      setAddTarget(null);
+      setPick([]);
+      refetch();
+    },
+    onError(e) { toast.error(e.message); },
+  });
+
+  const pickTotal = pick.reduce((s, c) => s + c.price * c.quantity, 0);
+
+  const addPick = (item: MenuItem | null) => {
+    if (!item) return;
+    setPick((prev) => {
+      const found = prev.find((c) => c.menuItemId === item._id);
+      if (found) return prev.map((c) => (c.menuItemId === item._id ? { ...c, quantity: c.quantity + 1 } : c));
+      return [...prev, { menuItemId: item._id, name: item.name, price: item.price, quantity: 1 }];
+    });
+  };
+
+  const bumpPick = (menuItemId: string, delta: number) =>
+    setPick((prev) =>
+      prev.map((c) => (c.menuItemId === menuItemId ? { ...c, quantity: c.quantity + delta } : c))
+        .filter((c) => c.quantity > 0),
+    );
 
   useSubscription(ORDER_CREATED_SUBSCRIPTION, {
     variables: { restaurantId },
@@ -221,6 +271,7 @@ const KitchenPage: NextPage = () => {
       if (order) setCollected((c) => c + order.totalAmount);
       markPaid({ variables: { orderId: id } });
     },
+    onAddItems: (order) => { setPick([]); setAddTarget(order); },
   };
 
   if (!user) return null;
@@ -312,6 +363,74 @@ const KitchenPage: NextPage = () => {
             );
           })}
         </Box>
+
+        {/* Add items to an existing bill */}
+        <Dialog open={!!addTarget} onClose={() => setAddTarget(null)} maxWidth="xs" fullWidth>
+          <DialogTitle fontWeight={800}>
+            {addTarget?.tableNumber}-stol - ovqat qo‘shish
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Mijoz og‘zaki so‘ragan taomni shu hisobga qo‘shing - u bitta to‘lovda hisoblanadi.
+            </Typography>
+            <Autocomplete
+              options={menuItems}
+              getOptionLabel={(o) => `${o.name} - ${formatMoney(o.price, currency)}`}
+              value={null}
+              blurOnSelect
+              onChange={(_, item) => addPick(item)}
+              renderInput={(params) => <TextField {...params} label="Taom tanlang" autoFocus />}
+              sx={{ mb: 2 }}
+            />
+            <Stack spacing={1}>
+              {pick.map((item) => (
+                <Stack key={item.menuItemId} direction="row" alignItems="center" spacing={1}>
+                  <Typography variant="body2" fontWeight={600} sx={{ flex: 1, minWidth: 0 }} noWrap>{item.name}</Typography>
+                  <IconButton size="small" onClick={() => bumpPick(item.menuItemId, -1)}><Remove fontSize="small" /></IconButton>
+                  <Typography fontWeight={700} sx={{ minWidth: 20, textAlign: 'center' }}>{item.quantity}</Typography>
+                  <IconButton size="small" onClick={() => bumpPick(item.menuItemId, 1)}><Add fontSize="small" /></IconButton>
+                  <Typography variant="body2" fontWeight={700} sx={{ minWidth: 68, textAlign: 'right' }}>
+                    {formatMoney(item.price * item.quantity, currency)}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+            {pick.length > 0 && (
+              <>
+                <Divider sx={{ my: 1.5 }} />
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography fontWeight={700}>Qo‘shiladi</Typography>
+                  <Typography fontWeight={800} color="primary">{formatMoney(pickTotal, currency)}</Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" mt={0.5}>
+                  <Typography variant="body2" color="text.secondary">Yangi jami</Typography>
+                  <Typography variant="body2" fontWeight={700}>
+                    {formatMoney((addTarget?.totalAmount ?? 0) + pickTotal, currency)}
+                  </Typography>
+                </Stack>
+              </>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setAddTarget(null)}>Bekor qilish</Button>
+            <Button
+              variant="contained"
+              disabled={addingItems || !pick.length}
+              onClick={() =>
+                addTarget && addItems({
+                  variables: {
+                    input: {
+                      orderId: addTarget._id,
+                      items: pick.map((c) => ({ menuItemId: c.menuItemId, quantity: c.quantity })),
+                    },
+                  },
+                })
+              }
+            >
+              Qo‘shish
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ThemeProvider>
   );

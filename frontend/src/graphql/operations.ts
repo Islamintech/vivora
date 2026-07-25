@@ -222,6 +222,15 @@ export const ORDERS_QUERY = gql`
   }
 `;
 
+export const ADD_ITEMS_TO_ORDER_MUTATION = gql`
+  mutation AddItemsToOrder($input: AddItemsToOrderInput!) {
+    addItemsToOrder(input: $input) {
+      _id totalAmount
+      items { menuItemId name quantity price notes }
+    }
+  }
+`;
+
 export const MARK_ORDER_PAID_MUTATION = gql`
   mutation MarkOrderPaid($orderId: ID!) {
     markOrderPaid(orderId: $orderId) {

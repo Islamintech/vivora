@@ -155,6 +155,21 @@ export class AddOrderToSessionInput {
   note?: string;
 }
 
+// Staff append a verbally-requested item to an order that's already on the
+// board, so the guest still settles a single bill.
+@InputType()
+export class AddItemsToOrderInput {
+  @Field(() => ID)
+  orderId: any;
+
+  @Field(() => [OrderItemInput])
+  @ArrayMinSize(1)
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemInput)
+  items: OrderItemInput[];
+}
+
 @InputType()
 export class UpdateOrderStatusInput {
   @Field(() => ID)

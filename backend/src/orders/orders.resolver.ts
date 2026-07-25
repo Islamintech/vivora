@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PubSub } from 'graphql-subscriptions';
 import { OrdersService } from './orders.service';
 import {
+  AddItemsToOrderInput,
   AddOrderToSessionInput,
   OrderModel,
   PlaceOrderInput,
@@ -59,6 +60,16 @@ export class OrdersResolver {
       Math.min(Math.max(limit || 50, 1), 200),
       unpaidOnly ?? false,
     );
+  }
+
+  /** Staff add a verbally-requested item to an order already on the board. */
+  @Mutation(() => OrderModel)
+  @UseGuards(GqlAuthGuard)
+  async addItemsToOrder(
+    @Args('input') input: AddItemsToOrderInput,
+    @CurrentUser() user: any,
+  ): Promise<OrderModel> {
+    return this.ordersService.addItemsToOrder(user.restaurantId?.toString(), input);
   }
 
   /** Staff collected payment - removes the order from the kitchen board. */
