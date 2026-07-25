@@ -361,7 +361,20 @@ const Home: NextPage = () => {
                 </Reveal>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Reveal delay={0.15}><PhoneMock /></Reveal>
+                <Reveal delay={0.15}>
+                  {/* Real restaurant photo with the phone mockup overlapping it */}
+                  <Box sx={{ position: 'relative', pb: { xs: 0, md: 5 } }}>
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80&auto=format&fit=crop"
+                      alt="Restoran"
+                      sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 470, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)' }}
+                    />
+                    <Box sx={{ position: { xs: 'static', md: 'absolute' }, bottom: { md: 0 }, left: { md: -28 }, width: { md: 265 } }}>
+                      <PhoneMock />
+                    </Box>
+                  </Box>
+                </Reveal>
               </Grid>
             </Grid>
           </Container>
@@ -371,7 +384,20 @@ const Home: NextPage = () => {
             <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
               <Grid container spacing={{ xs: 5, md: 8 }} alignItems="center" direction={{ xs: 'column-reverse', md: 'row' }}>
                 <Grid item xs={12} md={6} sx={{ width: '100%' }}>
-                  <Reveal delay={0.15}><KitchenMock /></Reveal>
+                  <Reveal delay={0.15}>
+                    {/* Working-kitchen photo with the kitchen board overlapping it */}
+                    <Box>
+                      <Box
+                        component="img"
+                        src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=900&q=80&auto=format&fit=crop"
+                        alt="Oshxona"
+                        sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 300, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)' }}
+                      />
+                      <Box sx={{ mt: { xs: 0, md: -8 }, px: { xs: 0, md: 3 } }}>
+                        <KitchenMock />
+                      </Box>
+                    </Box>
+                  </Reveal>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Reveal>
