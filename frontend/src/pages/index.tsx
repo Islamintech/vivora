@@ -238,22 +238,21 @@ function PhoneMock() {
   );
 }
 
-/** Mini kitchen-display preview — intentionally dark, like the real screen. */
+/** Mini kitchen-display preview, light like the rest of the page. */
 function KitchenMock() {
-  const K = { bg: '#12151f', card: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.1)', text: '#F2F5F9', muted: '#9AA3B2' };
   const cols = [
-    { h: 'Yangi', c: '#FBBF24', cards: ['5-stol · 2 taom', '9-stol · 1 taom'] },
-    { h: 'Tayyorlanmoqda', c: '#60A5FA', cards: ['12-stol · 3 taom'] },
-    { h: 'Tayyor', c: '#4ADE80', cards: ['3-stol · 2 taom'] },
+    { h: 'Yangi', c: '#B45309', bar: '#F59E0B', cards: ['5-stol · 2 taom', '9-stol · 1 taom'] },
+    { h: 'Tayyorlanmoqda', c: '#1D4ED8', bar: '#60A5FA', cards: ['12-stol · 3 taom'] },
+    { h: 'Tayyor', c: '#15803D', bar: '#4ADE80', cards: ['3-stol · 2 taom'] },
   ];
   return (
     <Box sx={{ position: 'relative' }}>
       <Box sx={{ position: 'absolute', inset: '-8%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(28px)' }} />
-      <Box sx={{ position: 'relative', borderRadius: '16px', border: `1px solid rgba(0,0,0,0.2)`, bgcolor: K.bg, p: { xs: 1.5, sm: 2 }, boxShadow: '0 30px 70px rgba(157,67,0,0.2)' }}>
+      <Box sx={{ position: 'relative', borderRadius: '16px', border: `1px solid ${BORDER}`, bgcolor: '#fff', p: { xs: 1.5, sm: 2 }, boxShadow: '0 30px 70px rgba(157,67,0,0.16)' }}>
         <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-          <Kitchen sx={{ fontSize: 16, color: ORANGE_L }} />
-          <Box sx={{ fontSize: 12, fontWeight: 800, color: K.text }}>Oshxona ekrani</Box>
-          <Box sx={{ ml: 'auto', width: 7, height: 7, borderRadius: '50%', bgcolor: '#4ADE80', animation: `${pulse} 2s infinite` }} />
+          <Kitchen sx={{ fontSize: 16, color: PRIMARY }} />
+          <Box sx={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Oshxona ekrani</Box>
+          <Box sx={{ ml: 'auto', width: 7, height: 7, borderRadius: '50%', bgcolor: '#22C55E', animation: `${pulse} 2s infinite` }} />
         </Stack>
         <Grid container spacing={1}>
           {cols.map((col) => (
@@ -261,7 +260,7 @@ function KitchenMock() {
               <Box sx={{ fontSize: 9, fontWeight: 800, color: col.c, mb: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{col.h}</Box>
               <Stack spacing={0.75}>
                 {col.cards.map((card) => (
-                  <Box key={card} sx={{ p: 1, borderRadius: 2, bgcolor: K.card, border: `1px solid ${K.border}`, borderLeft: `2.5px solid ${col.c}`, fontSize: 9.5, fontWeight: 700, color: K.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <Box key={card} sx={{ p: 1, borderRadius: 2, bgcolor: CARD2, border: `1px solid ${BORDER}`, borderLeft: `2.5px solid ${col.bar}`, fontSize: 9.5, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {card}
                   </Box>
                 ))}
