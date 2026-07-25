@@ -71,7 +71,7 @@ const TablesPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Stollar va QR — Vivora</title></Head>
+      <Head><title>Stollar va QR - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
@@ -213,7 +213,7 @@ const TablesPage: NextPage = () => {
 
         {/* QR Zoom Dialog */}
         <Dialog open={!!qrDialog} onClose={() => setQrDialog(null)} maxWidth="xs" fullWidth>
-          <DialogTitle fontWeight={700}>{qrDialog?.name} — QR kod</DialogTitle>
+          <DialogTitle fontWeight={700}>{qrDialog?.name} - QR kod</DialogTitle>
           <DialogContent sx={{ textAlign: 'center' }}>
             {qrDialog?.qrCodeDataUrl && (
               <Box

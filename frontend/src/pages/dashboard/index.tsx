@@ -64,7 +64,7 @@ const DashboardPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Boshqaruv paneli — Vivora</title></Head>
+      <Head><title>Boshqaruv paneli - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Box mb={4}>
@@ -109,7 +109,7 @@ const DashboardPage: NextPage = () => {
             <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 label="Mijozlar bahosi"
-                value={feedbackSummary ? `${feedbackSummary.averageRating.toFixed(1)} ★` : '—'}
+                value={feedbackSummary ? `${feedbackSummary.averageRating.toFixed(1)} ★` : '-'}
                 icon={<Star />}
                 color="warning"
                 sub={`${feedbackSummary?.totalCount ?? 0} ta sharh`}

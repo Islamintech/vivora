@@ -47,7 +47,7 @@ const LoginPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Kirish — Vivora</title></Head>
+      <Head><title>Kirish - Vivora</title></Head>
       <Box
         sx={{
           minHeight: '100vh',

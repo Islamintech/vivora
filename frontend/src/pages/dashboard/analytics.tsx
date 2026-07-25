@@ -126,7 +126,7 @@ const AnalyticsPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Tahlil — Vivora</title></Head>
+      <Head><title>Tahlil - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
@@ -278,7 +278,7 @@ const AnalyticsPage: NextPage = () => {
                                     {isBest ? '👑 ' : ''}{day.date.date()}
                                   </Typography>
                                   <Typography variant="caption" sx={{ fontSize: '0.6rem', fontWeight: 700, color: isBest ? '#92400E' : day.revenue > 0 ? '#C2410C' : 'text.disabled', display: 'block' }}>
-                                    {day.revenue > 0 ? compactNum(day.revenue) : isFuture ? '' : '—'}
+                                    {day.revenue > 0 ? compactNum(day.revenue) : isFuture ? '' : '-'}
                                   </Typography>
                                 </Box>
                               </Tooltip>
@@ -303,7 +303,7 @@ const AnalyticsPage: NextPage = () => {
                           {view === 'week'
                             ? WEEKDAY_NAMES[mondayIndex(bestDay.date)]
                             : `${bestDay.date.date()}-${MONTHS[bestDay.date.month()].toLowerCase()}`}
-                          {' — '}{formatMoney(bestDay.revenue, currency)}
+                          {' - '}{formatMoney(bestDay.revenue, currency)}
                           <Typography component="span" variant="caption" color="text.secondary"> · {bestDay.orders} ta buyurtma</Typography>
                         </Typography>
                       </Box>

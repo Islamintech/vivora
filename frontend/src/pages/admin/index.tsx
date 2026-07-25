@@ -39,7 +39,7 @@ const APPROVAL_META: Record<RestaurantStatus, { label: string; color: 'success' 
   REJECTED: { label: 'Rad etilgan', color: 'error' },
 };
 
-// Super-admin panel stays in English — keep its own English status labels
+// Super-admin panel stays in English - keep its own English status labels
 // (the shared statusLabel map is localized to Uzbek for the owner/customer UI).
 const statusLabel: Record<OrderStatus, string> = {
   PENDING: 'Kutilmoqda',
@@ -60,7 +60,7 @@ const AdminPage: NextPage = () => {
   const { logout } = useAuthStore();
   const router = useRouter();
   const [tab, setTab] = useState(0);
-  // Restaurant drill-down holds stats + tables — full-screen on phones.
+  // Restaurant drill-down holds stats + tables - full-screen on phones.
   const fullScreenDialog = useMediaQuery(useTheme().breakpoints.down('sm'));
 
   const { data: statsData, loading: statsLoading } = useQuery(PLATFORM_STATS_QUERY, { skip: !user });
@@ -166,7 +166,7 @@ const AdminPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Super admin — Vivora</title></Head>
+      <Head><title>Super admin - Vivora</title></Head>
       <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
 
         {/* Admin AppBar */}
@@ -469,7 +469,7 @@ const AdminPage: NextPage = () => {
               </Box>
             )}
 
-            {/* Approvals Tab — pending restaurants with full profile to review */}
+            {/* Approvals Tab - pending restaurants with full profile to review */}
             {tab === 3 && (
               <Box sx={{ p: { xs: 2, md: 3 } }}>
                 {pendingLoading && <LinearProgress sx={{ mb: 2 }} />}
@@ -491,9 +491,9 @@ const AdminPage: NextPage = () => {
                               </Box>
                             </Stack>
                             <Stack spacing={0.5} sx={{ pl: 0.5 }}>
-                              <Typography variant="body2"><strong>Tavsif:</strong> {r.description || <em>— ko‘rsatilmagan —</em>}</Typography>
-                              <Typography variant="body2"><strong>Manzil:</strong> {r.address || <em>— ko‘rsatilmagan —</em>}</Typography>
-                              <Typography variant="body2"><strong>Telefon:</strong> {r.phone || <em>— ko‘rsatilmagan —</em>}</Typography>
+                              <Typography variant="body2"><strong>Tavsif:</strong> {r.description || <em>- ko‘rsatilmagan -</em>}</Typography>
+                              <Typography variant="body2"><strong>Manzil:</strong> {r.address || <em>- ko‘rsatilmagan -</em>}</Typography>
+                              <Typography variant="body2"><strong>Telefon:</strong> {r.phone || <em>- ko‘rsatilmagan -</em>}</Typography>
                             </Stack>
                           </Grid>
                           <Grid item xs={12} md={4}>
@@ -531,7 +531,7 @@ const AdminPage: NextPage = () => {
               </Box>
             )}
 
-            {/* Users Tab — all accounts across restaurants */}
+            {/* Users Tab - all accounts across restaurants */}
             {tab === 4 && (
               <Box sx={{ overflowX: 'auto' }}>
                 {usersLoading && <LinearProgress />}
@@ -566,7 +566,7 @@ const AdminPage: NextPage = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" color={u.restaurantName ? 'text.primary' : 'text.disabled'}>
-                              {u.restaurantName ?? '—'}
+                              {u.restaurantName ?? '-'}
                             </Typography>
                           </TableCell>
                           <TableCell>
@@ -603,7 +603,7 @@ const AdminPage: NextPage = () => {
               </Box>
             )}
 
-            {/* Analytics Tab — platform trends over time */}
+            {/* Analytics Tab - platform trends over time */}
             {tab === 5 && (
               <Box sx={{ p: { xs: 2, md: 3 } }}>
                 {trendsLoading && <LinearProgress sx={{ mb: 2 }} />}
@@ -611,7 +611,7 @@ const AdminPage: NextPage = () => {
               </Box>
             )}
 
-            {/* Billing Tab — service-fee invoices */}
+            {/* Billing Tab - service-fee invoices */}
             {tab === 6 && (
               <Box>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1.5} sx={{ p: 2 }}>
@@ -707,7 +707,7 @@ const AdminPage: NextPage = () => {
 
       {/* Reset password dialog */}
       <Dialog open={!!pwTarget} onClose={() => setPwTarget(null)} fullWidth maxWidth="xs">
-        <DialogTitle>Parolni tiklash — {pwTarget?.name}</DialogTitle>
+        <DialogTitle>Parolni tiklash - {pwTarget?.name}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" mb={2}>
             Bu hisob uchun yangi parol o‘rnating. Uni egasiga xavfsiz yetkazing; u kirgach o‘zgartira oladi.
@@ -778,9 +778,9 @@ const AdminPage: NextPage = () => {
               {/* Profile */}
               <Typography variant="subtitle2" fontWeight={700} mb={1}>Profil</Typography>
               <Stack spacing={0.5} mb={3}>
-                <Typography variant="body2"><strong>Tavsif:</strong> {detail.description || <em>— ko‘rsatilmagan —</em>}</Typography>
-                <Typography variant="body2"><strong>Manzil:</strong> {detail.address || <em>— ko‘rsatilmagan —</em>}</Typography>
-                <Typography variant="body2"><strong>Telefon:</strong> {detail.phone || <em>— ko‘rsatilmagan —</em>}</Typography>
+                <Typography variant="body2"><strong>Tavsif:</strong> {detail.description || <em>- ko‘rsatilmagan -</em>}</Typography>
+                <Typography variant="body2"><strong>Manzil:</strong> {detail.address || <em>- ko‘rsatilmagan -</em>}</Typography>
+                <Typography variant="body2"><strong>Telefon:</strong> {detail.phone || <em>- ko‘rsatilmagan -</em>}</Typography>
                 {detail.status === 'REJECTED' && detail.rejectionReason && (
                   <Typography variant="body2" color="error"><strong>Rad sababi:</strong> {detail.rejectionReason}</Typography>
                 )}

@@ -1,6 +1,6 @@
 // Lightweight customer-facing translations. No i18n library: the customer app
 // has a small, fixed string set, and shipping one keeps the QR-scan bundle
-// small. Menu item names/descriptions are NOT translated — they render exactly
+// small. Menu item names/descriptions are NOT translated - they render exactly
 // as the restaurant owner entered them.
 
 export type Lang = 'ko' | 'en' | 'ru' | 'uz';

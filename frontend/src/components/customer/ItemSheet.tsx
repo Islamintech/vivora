@@ -23,7 +23,7 @@ interface Props {
 
 /**
  * Full detail view for one dish, opened by tapping its card. This is where the
- * larger image, description, allergens and the per-item kitchen note live —
+ * larger image, description, allergens and the per-item kitchen note live -
  * the card itself stays compact and scannable.
  */
 export default function ItemSheet({

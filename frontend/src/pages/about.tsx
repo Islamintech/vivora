@@ -7,10 +7,10 @@ import MarketingLayout, {
 } from '@/components/marketing/MarketingLayout';
 
 const values = [
-  { icon: <Bolt />, title: 'Soddalik', desc: 'Murakkab tizimlar emas — restoran egasi bir necha daqiqada ishga tushira oladigan vositalar.' },
+  { icon: <Bolt />, title: 'Soddalik', desc: 'Murakkab tizimlar emas - restoran egasi bir necha daqiqada ishga tushira oladigan vositalar.' },
   { icon: <Favorite />, title: 'Mijoz tajribasi', desc: 'Mehmon kutmasdan, o‘z tilida, qulay tarzda buyurtma beradi. Har bir tafsilot shu maqsadga xizmat qiladi.' },
   { icon: <Insights />, title: 'Ma’lumotga asoslangan', desc: 'Real vaqtdagi tahlil bilan egalar to‘g‘ri qarorlar qabul qiladi va daromadni oshiradi.' },
-  { icon: <Public />, title: 'Hamma uchun', desc: '4 tilli menyu bilan har qanday mijozga — mahalliy yoki chet ellik — bir xil qulaylik.' },
+  { icon: <Public />, title: 'Hamma uchun', desc: '4 tilli menyu bilan har qanday mijozga - mahalliy yoki chet ellik - bir xil qulaylik.' },
 ];
 
 const metrics = [
@@ -21,7 +21,7 @@ const metrics = [
 ];
 
 const About: NextPage = () => (
-  <MarketingLayout title="Biz haqimizda — Vivora">
+  <MarketingLayout title="Biz haqimizda - Vivora">
     {/* Hero */}
     <Container maxWidth="lg" sx={{ pt: { xs: 8, md: 12 }, pb: { xs: 6, md: 8 }, textAlign: 'center' }}>
       <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>
@@ -35,13 +35,13 @@ const About: NextPage = () => (
         {' '}olib chiqamiz
       </Typography>
       <Typography sx={{ fontSize: 'clamp(1.05rem, 1.4vw, 1.3rem)', color: ON_VAR, maxWidth: 700, mx: 'auto', lineHeight: 1.7 }}>
-        Vivora — restoran egalari uchun yaratilgan zamonaviy boshqaruv tizimi. Biz oshxonadan
-        stolgacha bo‘lgan har bir bosqichni soddalashtiramiz, toki siz eng muhim narsaga — mazali
-        taom va yaxshi xizmatga — e‘tibor bera olasiz.
+        Vivora - restoran egalari uchun yaratilgan zamonaviy boshqaruv tizimi. Biz oshxonadan
+        stolgacha bo‘lgan har bir bosqichni soddalashtiramiz, toki siz eng muhim narsaga - mazali
+        taom va yaxshi xizmatga - e‘tibor bera olasiz.
       </Typography>
     </Container>
 
-    {/* Metrics band — orange gradient, same family as the pricing card */}
+    {/* Metrics band - orange gradient, same family as the pricing card */}
     <Container maxWidth="lg" sx={{ pb: { xs: 8, md: 12 } }}>
       <Box sx={{ position: 'relative', overflow: 'hidden', borderRadius: '2rem', background: 'linear-gradient(135deg, #B45309, #EA580C 55%, #F97316)', p: { xs: 3, md: 5 }, boxShadow: '0 30px 60px rgba(157,67,0,0.25)' }}>
         <Box sx={{ position: 'absolute', top: '-40%', left: '-10%', width: '55%', height: '160%', border: '40px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
@@ -70,15 +70,15 @@ const About: NextPage = () => (
           </Typography>
           <Typography sx={{ fontSize: 'clamp(1.7rem, 3vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.02em', mb: 2 }}>Nima uchun Vivora?</Typography>
           <Typography sx={{ fontSize: 17, color: ON_VAR, lineHeight: 1.75, mb: 2 }}>
-            Ko‘pchilik restoranlar 2–3 xodim bilan ishlaydi — buyurtma qabul qilish, oshxona,
+            Ko‘pchilik restoranlar 2–3 xodim bilan ishlaydi - buyurtma qabul qilish, oshxona,
             hisob-kitob. Bu vaqtida xato va kutishlarni keltirib chiqaradi.
           </Typography>
           <Typography sx={{ fontSize: 17, color: ON_VAR, lineHeight: 1.75, mb: 3 }}>
             Vivora buyurtmani mijoz telefoniga, oshxona ekraniga va chekka avtomatik ulaydi.
-            Xodimlar band bo‘lsa ham, tizim o‘zi harakatlanadi — hech narsa unutilmaydi.
+            Xodimlar band bo‘lsa ham, tizim o‘zi harakatlanadi - hech narsa unutilmaydi.
           </Typography>
           <Stack spacing={1.25}>
-            {['Mijoz o‘zi buyurtma beradi — xodim kutish shart emas', 'Holatlar avtomatik almashadi, ekran bosish minimal', 'To‘lov faqat savdodan: 0.3%, yashirin to‘lovlarsiz'].map((b) => (
+            {['Mijoz o‘zi buyurtma beradi - xodim kutish shart emas', 'Holatlar avtomatik almashadi, ekran bosish minimal', 'To‘lov faqat savdodan: 0.3%, yashirin to‘lovlarsiz'].map((b) => (
               <Stack key={b} direction="row" spacing={1.25} alignItems="center">
                 <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: GRAD, flexShrink: 0 }} />
                 <Typography sx={{ fontSize: 14.5, color: ON_SURFACE, fontWeight: 500 }}>{b}</Typography>
@@ -113,7 +113,7 @@ const About: NextPage = () => (
       </Container>
     </Box>
 
-    {/* CTA — same band as the landing page */}
+    {/* CTA - same band as the landing page */}
     <Container maxWidth="lg" sx={{ py: { xs: 10, md: 14 } }}>
       <Box sx={{ position: 'relative', overflow: 'hidden', borderRadius: 5, p: { xs: 4, md: 8 }, textAlign: 'center', background: 'linear-gradient(135deg, #B45309, #EA580C 55%, #F97316)' }}>
         <Box sx={{ position: 'absolute', top: '-40%', left: '-10%', width: '55%', height: '160%', border: '50px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />

@@ -13,9 +13,9 @@ const channels = [
 ];
 
 const quickAnswers = [
-  { q: 'Demo kerakmi?', a: 'Yozing — sizga jonli demo ko‘rsatamiz yoki sinov hisobini ochib beramiz.' },
+  { q: 'Demo kerakmi?', a: 'Yozing - sizga jonli demo ko‘rsatamiz yoki sinov hisobini ochib beramiz.' },
   { q: 'Narx haqida savol?', a: 'Bitta reja: Vivora orqali o‘tgan oylik savdodan 0.3%. Boshlash bepul.' },
-  { q: 'Printer sozlash?', a: 'SAM4S/Sewoo printerlarni birga sozlab beramiz — o‘rnatish bo‘yicha yordam bepul.' },
+  { q: 'Printer sozlash?', a: 'SAM4S/Sewoo printerlarni birga sozlab beramiz - o‘rnatish bo‘yicha yordam bepul.' },
 ];
 
 const Contact: NextPage = () => {
@@ -29,13 +29,13 @@ const Contact: NextPage = () => {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    // No backend endpoint yet — acknowledge locally.
+    // No backend endpoint yet - acknowledge locally.
     setSent(true);
     setForm({ name: '', email: '', message: '' });
   };
 
   return (
-    <MarketingLayout title="Bog'lanish — Vivora">
+    <MarketingLayout title="Bog'lanish - Vivora">
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
         <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 9 } }}>
           <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>
@@ -48,7 +48,7 @@ const Contact: NextPage = () => {
             </Box>
           </Typography>
           <Typography sx={{ fontSize: 'clamp(1rem, 1.35vw, 1.2rem)', color: ON_VAR, maxWidth: 620, mx: 'auto' }}>
-            Savolingiz bormi yoki demo ko&apos;rmoqchimisiz? Yozing — tez orada javob beramiz.
+            Savolingiz bormi yoki demo ko&apos;rmoqchimisiz? Yozing - tez orada javob beramiz.
           </Typography>
         </Box>
 
@@ -106,7 +106,7 @@ const Contact: NextPage = () => {
 
       <Snackbar open={sent} autoHideDuration={5000} onClose={() => setSent(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert severity="success" onClose={() => setSent(false)} sx={{ borderRadius: 3 }}>
-          Rahmat! Xabaringiz qabul qilindi — tez orada bog&apos;lanamiz. 🙌
+          Rahmat! Xabaringiz qabul qilindi - tez orada bog&apos;lanamiz. 🙌
         </Alert>
       </Snackbar>
     </MarketingLayout>

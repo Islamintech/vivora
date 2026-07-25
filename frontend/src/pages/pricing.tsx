@@ -6,7 +6,7 @@ import MarketingLayout, {
   PRIMARY, ON_VAR, SURFACE, SC_LOW, GRAD, pill,
 } from '@/components/marketing/MarketingLayout';
 
-// Everything is included — the platform simply takes 0.3% of the order
+// Everything is included - the platform simply takes 0.3% of the order
 // revenue that goes through Vivora, billed monthly by bank transfer.
 const included = [
   'Cheksiz QR menyu va stollar',
@@ -21,12 +21,12 @@ const included = [
 
 const billingSteps = [
   { icon: <ReceiptLong />, title: 'Oy yakunlanadi', desc: 'Har oy boshida o‘tgan oydagi Vivora orqali o‘tgan savdoingizdan 0.3% hisoblanib, hisob-faktura shakllanadi.' },
-  { icon: <AccountBalance />, title: 'Bank o‘tkazmasi', desc: 'Boshqaruv panelidagi «To‘lov» sahifasida summa va bank rekvizitlari ko‘rinadi — oddiy o‘tkazma qilasiz.' },
-  { icon: <TaskAlt />, title: 'Tasdiqlanadi', desc: '«To‘ladim» tugmasini bosasiz, biz to‘lovni tekshirib tasdiqlaymiz. Bo‘ldi — keyingi oygacha hech narsa kerak emas.' },
+  { icon: <AccountBalance />, title: 'Bank o‘tkazmasi', desc: 'Boshqaruv panelidagi «To‘lov» sahifasida summa va bank rekvizitlari ko‘rinadi - oddiy o‘tkazma qilasiz.' },
+  { icon: <TaskAlt />, title: 'Tasdiqlanadi', desc: '«To‘ladim» tugmasini bosasiz, biz to‘lovni tekshirib tasdiqlaymiz. Bo‘ldi - keyingi oygacha hech narsa kerak emas.' },
 ];
 
 const faqs = [
-  { q: 'Nega foiz? Oylik fiksirlangan narx emasmi?', a: "Bu adolatliroq: savdo bo‘lmagan oyda hech narsa to‘lamaysiz. Tizim sizga qancha foyda keltirsa, to‘lov ham shunga mutanosib bo‘ladi — atigi 0.3%." },
+  { q: 'Nega foiz? Oylik fiksirlangan narx emasmi?', a: "Bu adolatliroq: savdo bo‘lmagan oyda hech narsa to‘lamaysiz. Tizim sizga qancha foyda keltirsa, to‘lov ham shunga mutanosib bo‘ladi - atigi 0.3%." },
   { q: '0.3% nimadan hisoblanadi?', a: "Faqat Vivora orqali qabul qilingan buyurtmalar summasidan. Masalan, oylik savdo ₩10 000 000 bo‘lsa, to‘lov ₩30 000 bo‘ladi. Bekor qilingan buyurtmalar hisobga kirmaydi." },
   { q: 'Qanday to‘layman?', a: "Har oy boshida boshqaruv panelidagi «To‘lov» sahifasida hisob-faktura paydo bo‘ladi: summa, davr va bizning bank kartamiz. Oddiy bank o‘tkazmasi qilasiz va «To‘ladim» tugmasini bosasiz." },
   { q: 'Shartnoma yoki majburiyat bormi?', a: "Yo‘q. Ro‘yxatdan o‘tish bepul, bank kartasi shart emas, istalgan vaqtda to‘xtatishingiz mumkin." },
@@ -34,7 +34,7 @@ const faqs = [
 ];
 
 const Pricing: NextPage = () => (
-  <MarketingLayout title="Narxlar — Vivora">
+  <MarketingLayout title="Narxlar - Vivora">
     {/* Hero */}
     <Container maxWidth="xl" sx={{ pt: { xs: 6, md: 10 }, pb: { xs: 4, md: 6 }, textAlign: 'center' }}>
       <Box sx={{ display: 'inline-flex', px: 2, py: 0.75, bgcolor: 'rgba(241,220,201,0.5)', borderRadius: 99, mb: 3 }}>
@@ -44,7 +44,7 @@ const Pricing: NextPage = () => (
         Bitta narx. Hammasi ichida.
       </Typography>
       <Typography sx={{ fontSize: 'clamp(1rem, 1.35vw, 1.2rem)', color: ON_VAR, maxWidth: 640, mx: 'auto' }}>
-        Reja tanlash shart emas — barcha imkoniyatlar har bir restoranga ochiq.
+        Reja tanlash shart emas - barcha imkoniyatlar har bir restoranga ochiq.
         Faqat Vivora orqali o&apos;tgan savdodan kichik foiz to&apos;laysiz.
       </Typography>
     </Container>

@@ -124,7 +124,7 @@ function OrderRow({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id
   );
 }
 
-// Phone/tablet layout for a single order — the 7-column table is unusable
+// Phone/tablet layout for a single order - the 7-column table is unusable
 // below ~900px, so each order becomes a self-contained card with the primary
 // action reachable without any horizontal scrolling.
 function OrderCardMobile({ order, onStatusUpdate }: { order: Order; onStatusUpdate: (id: string, status: OrderStatus) => void }) {
@@ -248,7 +248,7 @@ const OrdersPage: NextPage = () => {
     onError(e) { toast.error(e.message); },
   });
 
-  // "Add items" dialog: waiter took an order verbally — staff append it to the
+  // "Add items" dialog: waiter took an order verbally - staff append it to the
   // tab (recorded as SERVED) so the bill is right.
   const [addTarget, setAddTarget] = useState<TableSession | null>(null);
   const [pickItems, setPickItems] = useState<CartItem[]>([]);
@@ -299,7 +299,7 @@ const OrdersPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Buyurtmalar — Vivora</title></Head>
+      <Head><title>Buyurtmalar - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Box mb={4}>
@@ -349,7 +349,7 @@ const OrdersPage: NextPage = () => {
                               disabled={closing}
                               onClick={() => closeSession({ variables: { sessionId: session._id } })}
                             >
-                              To'landi — hisobni yopish
+                              To'landi - hisobni yopish
                             </Button>
                           </Stack>
                         </CardContent>
@@ -364,15 +364,15 @@ const OrdersPage: NextPage = () => {
           {/* Add-items dialog for an open tab */}
           <Dialog open={!!addTarget} onClose={() => setAddTarget(null)} maxWidth="xs" fullWidth>
             <DialogTitle fontWeight={800}>
-              {addTarget?.tableNumber}-stol — taom qo'shish
+              {addTarget?.tableNumber}-stol - taom qo'shish
             </DialogTitle>
             <DialogContent>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                Ofitsiant og'zaki qabul qilgan buyurtmani hisobga qo'shing — u "Berildi" holatida saqlanadi.
+                Ofitsiant og'zaki qabul qilgan buyurtmani hisobga qo'shing - u "Berildi" holatida saqlanadi.
               </Typography>
               <Autocomplete
                 options={menuItems}
-                getOptionLabel={(o) => `${o.name} — ${formatMoney(o.price, currency)}`}
+                getOptionLabel={(o) => `${o.name} - ${formatMoney(o.price, currency)}`}
                 value={null}
                 blurOnSelect
                 onChange={(_, item) => addPickItem(item)}

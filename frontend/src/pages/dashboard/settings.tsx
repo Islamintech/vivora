@@ -80,7 +80,7 @@ const SettingsPage: NextPage = () => {
     try {
       const url = await uploadImage(file);
       setForm((p) => ({ ...p, logo: url }));
-      toast.success('Logotip yuklandi — saqlashni unutmang.');
+      toast.success('Logotip yuklandi - saqlashni unutmang.');
     } catch (err: any) {
       toast.error(err.message || 'Yuklab bo‘lmadi');
     } finally {
@@ -90,7 +90,7 @@ const SettingsPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Sozlamalar — Vivora</title></Head>
+      <Head><title>Sozlamalar - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 700 }}>
           <Box mb={4}>
@@ -231,7 +231,7 @@ const SettingsPage: NextPage = () => {
               </Grid>
 
               <Alert severity="info" sx={{ mt: 2.5, borderRadius: 2 }}>
-                Bu faqat print-agentga printeringiz qayerdaligini bildiradi — restoran kompyuteriga,
+                Bu faqat print-agentga printeringiz qayerdaligini bildiradi - restoran kompyuteriga,
                 printer bilan bir tarmoqda, kichik print-agent dasturini o‘rnatishingiz kerak.
                 Sozlash bo‘yicha <strong>print-agent/README.md</strong> ga qarang.
               </Alert>

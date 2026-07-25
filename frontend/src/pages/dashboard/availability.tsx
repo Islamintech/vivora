@@ -109,14 +109,14 @@ const AvailabilityPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Mavjudlik — Vivora</title></Head>
+      <Head><title>Mavjudlik - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={2}>
             <Box>
               <Typography variant="h4" fontWeight={800}>Taomlar mavjudligi</Typography>
               <Typography color="text.secondary">
-                Kunlik tekshiruv — mavjud taomlarni belgilang va tayyorlangan miqdorni kiriting
+                Kunlik tekshiruv - mavjud taomlarni belgilang va tayyorlangan miqdorni kiriting
               </Typography>
             </Box>
             <Stack direction="row" spacing={1}>

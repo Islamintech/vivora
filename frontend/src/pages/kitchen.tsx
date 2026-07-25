@@ -176,7 +176,7 @@ const KitchenPage: NextPage = () => {
   return (
     <ThemeProvider theme={kitchenTheme}>
       <CssBaseline />
-      <Head><title>Oshxona ekrani — Vivora</title></Head>
+      <Head><title>Oshxona ekrani - Vivora</title></Head>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
 
         {/* Kitchen Header */}
@@ -206,7 +206,7 @@ const KitchenPage: NextPage = () => {
           </Toolbar>
         </AppBar>
 
-        {/* Columns — three equal columns on desktop; on phones/tablets they
+        {/* Columns - three equal columns on desktop; on phones/tablets they
             stay side-by-side as horizontal scroll-snap panes so kitchen staff
             can glance across statuses instead of scrolling past a whole list. */}
         <Box

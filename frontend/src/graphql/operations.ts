@@ -260,7 +260,7 @@ export const ORDER_STATUS_UPDATED_SUBSCRIPTION = gql`
 
 // ─── Table sessions (tabs) ────────────────────────────────────────────────────
 
-// Public — customer's running tab for the current visit.
+// Public - customer's running tab for the current visit.
 export const TABLE_SESSION_QUERY = gql`
   query TableSession($restaurantId: ID!, $tableNumber: Int!) {
     tableSession(restaurantId: $restaurantId, tableNumber: $tableNumber) {

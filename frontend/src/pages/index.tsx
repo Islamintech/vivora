@@ -67,13 +67,13 @@ const metrics = [
 ];
 
 const steps = [
-  { icon: <QrCodeScanner />, title: 'Skanerlash', desc: 'Mijoz stoldagi QR-kodni telefon kamerasida skanerlaydi — ilova o‘rnatish shart emas.' },
+  { icon: <QrCodeScanner />, title: 'Skanerlash', desc: 'Mijoz stoldagi QR-kodni telefon kamerasida skanerlaydi - ilova o‘rnatish shart emas.' },
   { icon: <TouchApp />, title: 'Buyurtma berish', desc: 'Raqamli menyudan taomlarni tanlab, bir tugma bilan buyurtma yuboradi.' },
   { icon: <Whatshot />, title: 'Tayyorlanishi', desc: 'Buyurtma bir zumda oshxona ekranida paydo bo‘ladi va chek avtomatik chiqadi.' },
 ];
 
 const features = [
-  { icon: <QrCode2 />, title: 'QR menyu', desc: 'Har bir stol uchun alohida QR-kod. Menyu har doim yangi — chop etish xarajatisiz.' },
+  { icon: <QrCode2 />, title: 'QR menyu', desc: 'Har bir stol uchun alohida QR-kod. Menyu har doim yangi - chop etish xarajatisiz.' },
   { icon: <Kitchen />, title: 'Oshxona ekrani', desc: 'Buyurtmalar real vaqtda oshxona monitoriga tushadi va holati avtomatik yangilanadi.' },
   { icon: <Print />, title: 'Avtomatik chek', desc: 'Buyurtma tushishi bilan oshxona printeridan chek chiqadi. SAM4S, Sewoo va boshqalar.' },
   { icon: <BarChart />, title: 'Daromad tahlili', desc: 'Kunlik, haftalik va oylik daromad, eng ko‘p sotilgan taomlar, stollar samaradorligi.' },
@@ -82,9 +82,9 @@ const features = [
 ];
 
 const faqs = [
-  { q: 'Mijozga alohida ilova kerakmi?', a: "Yo'q. Mijoz telefon kamerasi bilan stoldagi QR kodni skanerlaydi va menyu to'g'ridan-to'g'ri brauzerda ochiladi — hech narsa o'rnatmaydi." },
+  { q: 'Mijozga alohida ilova kerakmi?', a: "Yo'q. Mijoz telefon kamerasi bilan stoldagi QR kodni skanerlaydi va menyu to'g'ridan-to'g'ri brauzerda ochiladi - hech narsa o'rnatmaydi." },
   { q: 'Chek printeri shartmi?', a: "Ixtiyoriy. Printer bo'lsa, buyurtma tushishi bilan oshxona cheki avtomatik chiqadi. Bo'lmasa, buyurtmalar oshxona ekranida ko'rinadi." },
-  { q: 'Qancha turadi?', a: "Bepul boshlashingiz mumkin, bank kartasi shart emas. Oylik to'lov — Vivora orqali o'tgan savdoning atigi 0.3% miqdorida." },
+  { q: 'Qancha turadi?', a: "Bepul boshlashingiz mumkin, bank kartasi shart emas. Oylik to'lov - Vivora orqali o'tgan savdoning atigi 0.3% miqdorida." },
   { q: "Qaysi tillarni qo'llab-quvvatlaydi?", a: "Mijozlar menyusi o'zbek, ingliz, rus va koreys tillarida ko'rsatiladi. Mijoz skanerlaganda o'z tilini tanlaydi." },
   { q: "Ma'lumotlar xavfsizmi?", a: "Ha. Barcha ma'lumotlar shifrlangan ulanish orqali uzatiladi va xavfsiz saqlanadi." },
 ];
@@ -306,7 +306,7 @@ const Home: NextPage = () => {
 
               <Typography sx={{ animation: `${fadeUp} .7s ${bounce} .16s both`, fontSize: 'clamp(1rem, 1.4vw, 1.2rem)', color: MUTED, maxWidth: 640, mx: 'auto', lineHeight: 1.7, mb: 4.5 }}>
                 Mijoz stoldagi QR orqali o&apos;zi buyurtma beradi. Buyurtma darhol oshxonaga
-                tushadi, chek avtomatik chiqadi — ofitsiant kutish shart emas.
+                tushadi, chek avtomatik chiqadi - ofitsiant kutish shart emas.
               </Typography>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ animation: `${fadeUp} .7s ${bounce} .24s both`, mb: { xs: 6, md: 8 } }}>
@@ -343,7 +343,7 @@ const Home: NextPage = () => {
               <Reveal sx={{ textAlign: 'center', mb: { xs: 5, md: 8 } }}>
                 <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Qanday ishlaydi</Typography>
                 <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.6rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                  Uch qadam — tayyor
+                  Uch qadam - tayyor
                 </Typography>
               </Reveal>
               <Grid container spacing={3}>
@@ -375,12 +375,12 @@ const Home: NextPage = () => {
                     Ilovasiz. Kutishsiz.<br />O&apos;z tilida.
                   </Typography>
                   <Typography sx={{ fontSize: 16, color: MUTED, lineHeight: 1.7, mb: 3, maxWidth: 460 }}>
-                    Mijoz QR-ni skanerlagach menyu brauzerda ochiladi — 4 tildan birini tanlaydi,
+                    Mijoz QR-ni skanerlagach menyu brauzerda ochiladi - 4 tildan birini tanlaydi,
                     buyurtma beradi va holatini jonli kuzatadi. Eng ko&apos;p sotilayotgan taomlar
                     avtomatik «Xit» belgisi bilan tavsiya qilinadi.
                   </Typography>
                   <Stack spacing={1.25}>
-                    {['Menyu 4 tilda: UZ · EN · RU · KO', 'Buyurtma holati jonli ko‘rinadi', 'Bir stolda bir nechta buyurtma — bitta hisob'].map((b) => (
+                    {['Menyu 4 tilda: UZ · EN · RU · KO', 'Buyurtma holati jonli ko‘rinadi', 'Bir stolda bir nechta buyurtma - bitta hisob'].map((b) => (
                       <Stack key={b} direction="row" spacing={1.25} alignItems="center">
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: GRAD, flexShrink: 0 }} />
                         <Typography sx={{ fontSize: 14.5, color: TEXT, fontWeight: 500 }}>{b}</Typography>
@@ -406,15 +406,15 @@ const Home: NextPage = () => {
                   <Reveal>
                     <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Oshxona</Typography>
                     <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2 }}>
-                      Buyurtma tushdi —<br />chek chiqdi
+                      Buyurtma tushdi -<br />chek chiqdi
                     </Typography>
                     <Typography sx={{ fontSize: 16, color: MUTED, lineHeight: 1.7, mb: 3, maxWidth: 460 }}>
                       Har bir buyurtma bir zumda oshxona ekraniga tushadi va printerdan chek chiqadi.
-                      Holatlar avtomatik almashadi — xodimlar ekran bosishga vaqt sarflamaydi.
+                      Holatlar avtomatik almashadi - xodimlar ekran bosishga vaqt sarflamaydi.
                       Yangi buyurtma haqida Telegram orqali ham xabar boradi.
                     </Typography>
                     <Stack spacing={1.25}>
-                      {['ESC/POS printerlar bilan ishlaydi (SAM4S, Sewoo…)', 'Holatlar avtomatik: chek chiqdi → tayyorlanmoqda', 'Taom tugasa — menyuda avtomatik «tugadi»'].map((b) => (
+                      {['ESC/POS printerlar bilan ishlaydi (SAM4S, Sewoo…)', 'Holatlar avtomatik: chek chiqdi → tayyorlanmoqda', 'Taom tugasa - menyuda avtomatik «tugadi»'].map((b) => (
                         <Stack key={b} direction="row" spacing={1.25} alignItems="center">
                           <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: GRAD, flexShrink: 0 }} />
                           <Typography sx={{ fontSize: 14.5, color: TEXT, fontWeight: 500 }}>{b}</Typography>
@@ -432,10 +432,10 @@ const Home: NextPage = () => {
             <Reveal sx={{ textAlign: 'center', mb: { xs: 5, md: 7 } }}>
               <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Imkoniyatlar</Typography>
               <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.6rem)', fontWeight: 800, letterSpacing: '-0.02em', mb: 1.5 }}>
-                Bitta tizim — butun restoran
+                Bitta tizim - butun restoran
               </Typography>
               <Typography sx={{ fontSize: 16, color: MUTED, maxWidth: 560, mx: 'auto' }}>
-                Mijoz telefonidan oshxonagacha, oshxonadan hisobotgacha — hammasi bog&apos;langan.
+                Mijoz telefonidan oshxonagacha, oshxonadan hisobotgacha - hammasi bog&apos;langan.
               </Typography>
             </Reveal>
             <Grid container spacing={2.5}>
@@ -490,7 +490,7 @@ const Home: NextPage = () => {
                 <Box sx={{ position: 'absolute', top: '-40%', left: '-10%', width: '55%', height: '160%', border: '50px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
                 <Box sx={{ position: 'absolute', bottom: '-50%', right: '-8%', width: '48%', height: '150%', border: '34px solid rgba(255,255,255,0.07)', borderRadius: '50%' }} />
                 <Typography sx={{ position: 'relative', fontSize: 'clamp(1.7rem, 3.6vw, 2.7rem)', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff', mb: 2 }}>
-                  Bugun boshlang — 10 daqiqada tayyor
+                  Bugun boshlang - 10 daqiqada tayyor
                 </Typography>
                 <Typography sx={{ position: 'relative', fontSize: 16.5, color: 'rgba(255,255,255,0.9)', mb: 4, maxWidth: 560, mx: 'auto', lineHeight: 1.6 }}>
                   Ro&apos;yxatdan o&apos;ting, menyuni kiriting, QR-kodlarni chop eting.

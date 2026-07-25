@@ -45,7 +45,7 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
     }
 
     if (status === 429) {
-      message = 'Too many requests — please wait a moment and try again.';
+      message = 'Too many requests - please wait a moment and try again.';
     }
 
     const stack = exception instanceof Error ? exception.stack : undefined;

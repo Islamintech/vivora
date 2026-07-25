@@ -93,7 +93,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
       const raw = window.localStorage.getItem(prefsKey(slug, tableNumber));
       if (raw) setPrefs(JSON.parse(raw));
     } catch {
-      // Corrupt/blocked storage — just show the gate.
+      // Corrupt/blocked storage - just show the gate.
     }
     setPrefsLoaded(true);
   }, [slug, tableNumber]);
@@ -227,7 +227,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
     bump(item._id);
   };
 
-  // Set an exact quantity/note for one line — used by the detail sheet.
+  // Set an exact quantity/note for one line - used by the detail sheet.
   const setCartLine = (item: MenuItem, quantity: number, note: string) => {
     const q = Math.min(quantity, maxFor(item._id));
     setCart((prev) => {
@@ -319,7 +319,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
     );
   }
 
-  // Restaurant not available (pending approval, rejected, or suspended) — the
+  // Restaurant not available (pending approval, rejected, or suspended) - the
   // publicRestaurant query is rejected by the backend gate.
   if (restError && !restLoading) {
     return (
@@ -354,7 +354,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             pt: 4, pb: 6, px: 2.5, position: 'relative',
           }}
         >
-          {/* Language switcher — the gate sets it once, this allows changing it later. */}
+          {/* Language switcher - the gate sets it once, this allows changing it later. */}
           <IconButton
             onClick={(e) => setLangMenuAnchor(e.currentTarget)}
             aria-label={t.chooseLanguage}
@@ -395,7 +395,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           </Typography>
         </Box>
 
-        {/* Category pills — tapping scrolls to that section; the active pill
+        {/* Category pills - tapping scrolls to that section; the active pill
             follows the scroll position (scroll-spy). */}
         <Box
           ref={pillBarRef}
@@ -575,7 +575,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           ))}
         </Box>
 
-        {/* Floating cart + running tab buttons — slide up rather than pop in */}
+        {/* Floating cart + running tab buttons - slide up rather than pop in */}
         <Slide direction="up" in={cartCount > 0 || placedOrders.length > 0} mountOnEnter unmountOnExit>
           <Box sx={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, width: 'calc(100% - 32px)', maxWidth: 448 }}>
             <Stack direction="row" spacing={1.5}>
@@ -592,7 +592,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                     boxShadow: '0 8px 30px rgba(15,23,42,0.35)',
                   }}
                 >
-                  {cartCount > 0 ? fmt(tabTotal) : `${t.myOrders} — ${fmt(tabTotal)}`}
+                  {cartCount > 0 ? fmt(tabTotal) : `${t.myOrders} - ${fmt(tabTotal)}`}
                 </Button>
               )}
               {cartCount > 0 && (
@@ -604,7 +604,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                   sx={{ py: 1.8, borderRadius: 3, flex: 1, boxShadow: '0 8px 30px rgba(249,115,22,0.4)', fontSize: '1rem' }}
                   startIcon={<ShoppingCart />}
                 >
-                  {t.cart} ({cartCount}) — {fmt(cartTotal)}
+                  {t.cart} ({cartCount}) - {fmt(cartTotal)}
                 </Button>
               )}
             </Stack>
@@ -630,7 +630,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           }}
         />
 
-        {/* Running tab drawer — all orders this visit + grand total */}
+        {/* Running tab drawer - all orders this visit + grand total */}
         <Drawer anchor="bottom" open={tabOpen} onClose={() => setTabOpen(false)}
           PaperProps={{ sx: { borderRadius: '20px 20px 0 0', maxHeight: '80vh', maxWidth: 480, mx: 'auto' } }}>
           <Box sx={{ p: 2.5 }}>

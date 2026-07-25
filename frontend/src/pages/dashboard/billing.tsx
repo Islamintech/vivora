@@ -38,7 +38,7 @@ const BillingPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>To‘lov — Vivora</title></Head>
+      <Head><title>To‘lov - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900 }}>
           <Box mb={4}>
@@ -53,7 +53,7 @@ const BillingPage: NextPage = () => {
             <Card sx={{ background: 'linear-gradient(150deg, #1E293B, #0F172A)', color: 'white' }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="body2" sx={{ color: 'grey.400' }}>
-                  Joriy oy ({b?.currentPeriod}) — hisoblangan
+                  Joriy oy ({b?.currentPeriod}) - hisoblangan
                 </Typography>
                 <Typography variant="h3" fontWeight={900} mt={0.5}>
                   {formatMoney(b?.currentFee ?? 0, cur)}
@@ -81,7 +81,7 @@ const BillingPage: NextPage = () => {
                   <Box key={label} sx={{ mb: 1.5 }}>
                     <Typography variant="caption" color="text.secondary">{label}</Typography>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Typography fontWeight={700}>{value || '—'}</Typography>
+                      <Typography fontWeight={700}>{value || '-'}</Typography>
                       {value && (
                         <Tooltip title="Nusxa olish">
                           <Button size="small" startIcon={<ContentCopy sx={{ fontSize: 16 }} />} onClick={() => copy(String(value))} sx={{ minWidth: 0 }} />

@@ -26,7 +26,7 @@ const FeedbackPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Mijozlar fikri — Vivora</title></Head>
+      <Head><title>Mijozlar fikri - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Box mb={4}>
@@ -42,7 +42,7 @@ const FeedbackPage: NextPage = () => {
               <Card>
                 <CardContent sx={{ textAlign: 'center', py: 4 }}>
                   <Typography variant="h1" fontWeight={800} sx={{ lineHeight: 1 }}>
-                    {summary?.averageRating?.toFixed(1) ?? '—'}
+                    {summary?.averageRating?.toFixed(1) ?? '-'}
                   </Typography>
                   <Stack direction="row" justifyContent="center" spacing={0.5} my={1}>
                     {[1, 2, 3, 4, 5].map((s) => (

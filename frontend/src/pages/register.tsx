@@ -58,7 +58,7 @@ const RegisterPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Hisob yaratish — Vivora</title></Head>
+      <Head><title>Hisob yaratish - Vivora</title></Head>
       <Box
         sx={{
           minHeight: '100vh',

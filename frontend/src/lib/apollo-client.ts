@@ -36,7 +36,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
 
       if (code === 'UNAUTHENTICATED') {
         if (typeof window === 'undefined') return;
-        // On the auth pages a 401 just means wrong credentials — let the
+        // On the auth pages a 401 just means wrong credentials - let the
         // form handle it. Elsewhere it's an expired/invalid session: clear
         // everything and hard-redirect so no query keeps retrying.
         const onAuthPage = ['/login', '/register'].some((p) =>
@@ -66,7 +66,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   if (networkError) {
     // eslint-disable-next-line no-console
     console.error(`[Network] ${operation.operationName}:`, networkError);
-    toast.error('Network error — check your connection.');
+    toast.error('Network error - check your connection.');
   }
 });
 

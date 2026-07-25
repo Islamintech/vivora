@@ -29,7 +29,7 @@ import { uploadImage, cloudinaryConfigured } from '@/lib/cloudinary';
 const MenuPage: NextPage = () => {
   const { user } = useRequireAuth();
   const currency = useCurrency();
-  // The item form is tall — go full-screen on phones so it scrolls naturally.
+  // The item form is tall - go full-screen on phones so it scrolls naturally.
   const fullScreenDialog = useMediaQuery(useTheme().breakpoints.down('sm'));
 
   const { data: catData, refetch: refetchCats } = useQuery(CATEGORIES_QUERY, { skip: !user });
@@ -146,7 +146,7 @@ const MenuPage: NextPage = () => {
 
   return (
     <>
-      <Head><title>Menyu boshqaruvi — Vivora</title></Head>
+      <Head><title>Menyu boshqaruvi - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={4}>
