@@ -3,12 +3,12 @@ import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import {
-  Box, Card, CardContent, Typography, Stack, Grid, Avatar, Chip,
+  Box, Card, CardContent, Typography, Stack, Grid, Avatar,
   ToggleButton, ToggleButtonGroup, LinearProgress, IconButton, Tooltip,
 } from '@mui/material';
 import {
   TrendingUp, ShoppingBag, Star, TableRestaurant,
-  ChevronLeft, ChevronRight, EmojiEvents,
+  ChevronLeft, ChevronRight,
 } from '@mui/icons-material';
 import dayjs, { Dayjs } from 'dayjs';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -23,8 +23,6 @@ type View = 'week' | 'month';
 const WEEKDAYS = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
 const WEEKDAY_NAMES = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
 const MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
-
-const MEDALS = ['🥇', '🥈', '🥉', '4', '5'];
 
 // Monday-first weekday index (dayjs .day() is Sunday-first).
 const mondayIndex = (d: Dayjs) => (d.day() + 6) % 7;
@@ -204,26 +202,21 @@ const AnalyticsPage: NextPage = () => {
                             title={`${WEEKDAY_NAMES[mondayIndex(day.date)]}: ${formatMoney(day.revenue, currency)} · ${day.orders} ta buyurtma`}
                           >
                             <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', cursor: 'default' }}>
-                              {isBest && (
-                                <Typography sx={{ fontSize: 18, lineHeight: 1, mb: 0.25 }}>👑</Typography>
-                              )}
-                              <Typography variant="caption" sx={{ mb: 0.5, fontSize: '0.62rem', fontWeight: isBest ? 800 : 500, color: isBest ? '#B45309' : 'text.secondary', opacity: grown ? 1 : 0, transition: 'opacity .4s', transitionDelay: `${i * 60 + 300}ms`, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <Typography variant="caption" sx={{ mb: 0.5, fontSize: '0.62rem', fontWeight: isBest ? 700 : 500, color: isBest ? 'text.primary' : 'text.secondary', opacity: grown ? 1 : 0, transition: 'opacity .35s ease', transitionDelay: `${i * 45 + 220}ms`, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {compactNum(day.revenue)}
                               </Typography>
+                              {/* The peak day is marked by a deeper fill, not an ornament. */}
                               <Box
                                 sx={{
                                   width: '100%', maxWidth: 44,
-                                  height: grown ? `${target}px` : '6px',
-                                  background: isBest
-                                    ? 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)'
-                                    : 'linear-gradient(180deg, #F97316 0%, #EA580C 100%)',
-                                  borderRadius: '6px 6px 0 0',
-                                  transition: 'height .7s cubic-bezier(0.34, 1.3, 0.64, 1)',
-                                  transitionDelay: `${i * 60}ms`,
-                                  boxShadow: isBest ? '0 4px 14px rgba(245,158,11,0.45)' : 'none',
+                                  height: grown ? `${target}px` : '4px',
+                                  bgcolor: isBest ? '#C2410C' : 'rgba(249,115,22,0.55)',
+                                  borderRadius: '4px 4px 0 0',
+                                  transition: 'height .55s ease-out',
+                                  transitionDelay: `${i * 45}ms`,
                                 }}
                               />
-                              <Typography variant="caption" sx={{ mt: 0.75, fontWeight: isBest ? 800 : 600, color: isBest ? '#B45309' : 'text.secondary' }}>
+                              <Typography variant="caption" sx={{ mt: 0.75, fontWeight: isBest ? 700 : 500, color: isBest ? 'text.primary' : 'text.secondary' }}>
                                 {day.label}
                               </Typography>
                               <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.6rem' }}>
@@ -259,25 +252,21 @@ const AnalyticsPage: NextPage = () => {
                               >
                                 <Box
                                   sx={{
-                                    borderRadius: 2, px: 0.5, py: 0.75, textAlign: 'center', minHeight: 52,
+                                    borderRadius: 1.5, px: 0.5, py: 0.75, textAlign: 'center', minHeight: 52,
                                     border: '1px solid',
-                                    borderColor: isBest ? '#F59E0B' : isToday ? 'primary.main' : 'divider',
-                                    background: isBest
-                                      ? 'linear-gradient(160deg, #FEF3C7, #FDE68A)'
-                                      : heat > 0
-                                        ? `rgba(249,115,22,${0.06 + heat * 0.24})`
-                                        : 'transparent',
-                                    opacity: grown ? (isFuture ? 0.4 : 1) : 0,
-                                    transform: grown ? 'none' : 'scale(0.8)',
-                                    transition: 'opacity .4s, transform .4s',
-                                    transitionDelay: `${i * 12}ms`,
+                                    // Peak day reads through a heavier border + deepest fill.
+                                    borderColor: isBest ? '#C2410C' : isToday ? 'primary.main' : 'divider',
+                                    bgcolor: heat > 0 ? `rgba(249,115,22,${0.05 + heat * 0.22})` : 'transparent',
+                                    opacity: grown ? (isFuture ? 0.45 : 1) : 0,
+                                    transition: 'opacity .3s ease',
+                                    transitionDelay: `${i * 8}ms`,
                                     cursor: 'default',
                                   }}
                                 >
-                                  <Typography variant="caption" sx={{ fontWeight: isBest || isToday ? 800 : 600, display: 'block', lineHeight: 1.4 }}>
-                                    {isBest ? '👑 ' : ''}{day.date.date()}
+                                  <Typography variant="caption" sx={{ fontWeight: isBest || isToday ? 700 : 500, display: 'block', lineHeight: 1.4 }}>
+                                    {day.date.date()}
                                   </Typography>
-                                  <Typography variant="caption" sx={{ fontSize: '0.6rem', fontWeight: 700, color: isBest ? '#92400E' : day.revenue > 0 ? '#C2410C' : 'text.disabled', display: 'block' }}>
+                                  <Typography variant="caption" sx={{ fontSize: '0.6rem', fontWeight: isBest ? 700 : 600, color: day.revenue > 0 ? '#C2410C' : 'text.disabled', display: 'block' }}>
                                     {day.revenue > 0 ? compactNum(day.revenue) : isFuture ? '' : '-'}
                                   </Typography>
                                 </Box>
@@ -289,24 +278,25 @@ const AnalyticsPage: NextPage = () => {
                     </Box>
                   )}
 
-                  {/* Best-day highlight */}
+                  {/* Peak-day summary line */}
                   {bestDay && (
-                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 2.5, p: 1.5, borderRadius: 2, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
-                      <Avatar sx={{ bgcolor: '#FDE68A', color: '#92400E', width: 36, height: 36 }}>
-                        <EmojiEvents fontSize="small" />
-                      </Avatar>
-                      <Box minWidth={0}>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Eng daromadli kun
+                    <Stack
+                      direction="row" alignItems="baseline" justifyContent="space-between"
+                      flexWrap="wrap" gap={1}
+                      sx={{ mt: 2.5, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        Eng daromadli kun
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        {view === 'week'
+                          ? WEEKDAY_NAMES[mondayIndex(bestDay.date)]
+                          : `${bestDay.date.date()}-${MONTHS[bestDay.date.month()].toLowerCase()}`}
+                        {' · '}{formatMoney(bestDay.revenue, currency)}
+                        <Typography component="span" variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                          {' · '}{bestDay.orders} ta buyurtma
                         </Typography>
-                        <Typography fontWeight={800} noWrap>
-                          {view === 'week'
-                            ? WEEKDAY_NAMES[mondayIndex(bestDay.date)]
-                            : `${bestDay.date.date()}-${MONTHS[bestDay.date.month()].toLowerCase()}`}
-                          {' - '}{formatMoney(bestDay.revenue, currency)}
-                          <Typography component="span" variant="caption" color="text.secondary"> · {bestDay.orders} ta buyurtma</Typography>
-                        </Typography>
-                      </Box>
+                      </Typography>
                     </Stack>
                   )}
                 </CardContent>
@@ -317,13 +307,13 @@ const AnalyticsPage: NextPage = () => {
             <Grid item xs={12} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  <Typography variant="h6" fontWeight={700} mb={2}>🔥 Top 5 taom</Typography>
+                  <Typography variant="h6" fontWeight={700} mb={2}>Eng ko‘p sotilgan 5 ta taom</Typography>
                   <Stack spacing={2} sx={{ flex: 1 }}>
                     {topItems.map((item: any, i: number) => (
                       <Box key={item.menuItemId}>
-                        <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
-                          <Typography sx={{ fontSize: i < 3 ? 18 : 13, fontWeight: 800, width: 24, textAlign: 'center', color: 'text.secondary', flexShrink: 0 }}>
-                            {MEDALS[i]}
+                        <Stack direction="row" alignItems="center" spacing={1.25} mb={0.75}>
+                          <Typography variant="caption" sx={{ fontWeight: 700, width: 16, textAlign: 'right', color: 'text.disabled', flexShrink: 0 }}>
+                            {i + 1}
                           </Typography>
                           <Typography variant="body2" fontWeight={600} noWrap sx={{ flex: 1, minWidth: 0 }}>
                             {item.name}
@@ -335,8 +325,11 @@ const AnalyticsPage: NextPage = () => {
                         <LinearProgress
                           variant="determinate"
                           value={grown ? Math.min(100, (item.totalOrdered / topMax) * 100) : 0}
-                          sx={{ height: 6, borderRadius: 3, ml: '32px', '& .MuiLinearProgress-bar': { transition: `transform .8s ease ${i * 90}ms` } }}
-                          color={i === 0 ? 'warning' : 'primary'}
+                          sx={{
+                            height: 5, borderRadius: 1, ml: '28px',
+                            bgcolor: 'action.hover',
+                            '& .MuiLinearProgress-bar': { borderRadius: 1, transition: `transform .5s ease-out ${i * 60}ms`, bgcolor: i === 0 ? '#C2410C' : 'rgba(249,115,22,0.55)' },
+                          }}
                         />
                       </Box>
                     ))}
@@ -345,11 +338,9 @@ const AnalyticsPage: NextPage = () => {
                     )}
                   </Stack>
                   {topItems.length > 0 && (
-                    <Chip
-                      label="Top taomlar mijozlar menyusida «🔥 Eng mashxur taomlar» belgisi bilan avtomatik ko‘rsatiladi"
-                      size="small"
-                      sx={{ mt: 2, height: 'auto', py: 0.75, bgcolor: '#FFF1E4', color: '#C2410C', fontWeight: 600, '& .MuiChip-label': { whiteSpace: 'normal', display: 'block' } }}
-                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider', display: 'block' }}>
+                      Ushbu taomlar mijozlar menyusida avtomatik tavsiya qilinadi.
+                    </Typography>
                   )}
                 </CardContent>
               </Card>
@@ -359,7 +350,7 @@ const AnalyticsPage: NextPage = () => {
             <Grid item xs={12}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" fontWeight={700} mb={2}>📊 Stollar aylanmasi</Typography>
+                  <Typography variant="h6" fontWeight={700} mb={2}>Stollar aylanmasi</Typography>
                   <Box sx={{ overflowX: 'auto' }}>
                     <Stack direction="row" spacing={2} sx={{ minWidth: 'max-content' }}>
                       {(analytics?.tableTurnover ?? []).map((table: any) => (
