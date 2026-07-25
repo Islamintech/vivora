@@ -393,7 +393,7 @@ const Home: NextPage = () => {
                         alt="Oshxona"
                         sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 300, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)' }}
                       />
-                      <Box sx={{ mt: { xs: 0, md: -8 }, px: { xs: 0, md: 3 } }}>
+                      <Box sx={{ mt: { xs: 0, md: 2.5 } }}>
                         <KitchenMock />
                       </Box>
                     </Box>
