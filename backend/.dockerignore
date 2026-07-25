@@ -1,0 +1,14 @@
+# Never bake secrets into the image. Without this, `COPY . .` copies .env,
+# and dotenv would load it inside the container - any variable the host does
+# NOT set (NODE_ENV, for one) would silently fall back to local dev values.
+.env
+.env.*
+!.env.example
+
+node_modules
+dist
+npm-debug.log*
+
+.git
+.gitignore
+*.md
