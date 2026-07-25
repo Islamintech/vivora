@@ -23,7 +23,8 @@ import {
   PENDING_RESTAURANTS_QUERY, APPROVE_RESTAURANT_MUTATION, REJECT_RESTAURANT_MUTATION,
   PURGE_ERROR_LOGS_MUTATION, ADMIN_USERS_QUERY, ADMIN_TOGGLE_USER_MUTATION,
   ADMIN_RESET_USER_PASSWORD_MUTATION, ADMIN_RESTAURANT_DETAIL_QUERY,
-  PLATFORM_TIMESERIES_QUERY,
+  PLATFORM_TIMESERIES_QUERY, ALL_INVOICES_QUERY, GENERATE_INVOICES_MUTATION,
+  CONFIRM_INVOICE_PAID_MUTATION,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth.store';
@@ -71,6 +72,16 @@ const AdminPage: NextPage = () => {
   const { data: ordersData, loading: ordersLoading } = useQuery(ALL_ORDERS_QUERY, { variables: { limit: 100 }, skip: !user || tab !== 1 });
   const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useQuery(ADMIN_USERS_QUERY, { skip: !user || tab !== 4 });
   const { data: trendsData, loading: trendsLoading } = useQuery(PLATFORM_TIMESERIES_QUERY, { variables: { days: 30 }, skip: !user || tab !== 5 });
+  const { data: invoicesData, loading: invoicesLoading, refetch: refetchInvoices } = useQuery(ALL_INVOICES_QUERY, { skip: !user || tab !== 6 });
+
+  const [generateInvoices, { loading: generating }] = useMutation(GENERATE_INVOICES_MUTATION, {
+    onCompleted(d) { toast.success(`${d.generateInvoices} ta hisob-faktura yaratildi`); refetchInvoices(); },
+    onError(e) { toast.error(e.message); },
+  });
+  const [confirmInvoice] = useMutation(CONFIRM_INVOICE_PAID_MUTATION, {
+    onCompleted() { toast.success('To‘lov tasdiqlandi'); refetchInvoices(); },
+    onError(e) { toast.error(e.message); },
+  });
 
   // Reject flow needs a reason, so it's captured via a small dialog.
   const [rejectTarget, setRejectTarget] = useState<{ _id: string; name: string } | null>(null);
@@ -136,7 +147,13 @@ const AdminPage: NextPage = () => {
   const orders = ordersData?.allOrders ?? [];
   const users = usersData?.adminUsers ?? [];
   const trends = trendsData?.platformTimeseries ?? [];
+  const invoices = invoicesData?.allInvoices ?? [];
   const detail = detailData?.adminRestaurantDetail;
+
+  const lastMonthPeriod = (() => {
+    const d = new Date(); d.setDate(0); // last day of previous month
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  })();
 
   const handleLogout = () => { logout(); router.push('/login'); };
 
@@ -226,6 +243,7 @@ const AdminPage: NextPage = () => {
                 <Tab label={<Badge color="warning" badgeContent={pending.length} sx={{ '& .MuiBadge-badge': { right: -14, top: 2 } }}>Tasdiqlash</Badge>} />
                 <Tab label="Foydalanuvchilar" />
                 <Tab label="Tahlil" />
+                <Tab label="To‘lovlar" />
               </Tabs>
             </Box>
 
@@ -585,6 +603,67 @@ const AdminPage: NextPage = () => {
               <Box sx={{ p: { xs: 2, md: 3 } }}>
                 {trendsLoading && <LinearProgress sx={{ mb: 2 }} />}
                 <PlatformTrends data={trends} />
+              </Box>
+            )}
+
+            {/* Billing Tab — service-fee invoices */}
+            {tab === 6 && (
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1.5} sx={{ p: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Har oy restoran savdosining 0.3% xizmat haqi. Egasi to‘lovni bildirgach, bu yerda tasdiqlang.
+                  </Typography>
+                  <Button size="small" variant="outlined" disabled={generating} onClick={() => generateInvoices({ variables: { period: lastMonthPeriod } })}>
+                    {lastMonthPeriod} uchun yaratish
+                  </Button>
+                </Stack>
+                {invoicesLoading && <LinearProgress />}
+                <Box sx={{ overflowX: 'auto' }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Restoran</TableCell>
+                        <TableCell>Davr</TableCell>
+                        <TableCell>Savdo</TableCell>
+                        <TableCell>To‘lov</TableCell>
+                        <TableCell>Holati</TableCell>
+                        <TableCell align="right">Amal</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {invoices.map((inv: any) => {
+                        const meta = inv.status === 'PAID'
+                          ? { label: 'To‘langan', color: 'success' as const }
+                          : inv.status === 'AWAITING_REVIEW'
+                            ? { label: 'Tekshirilmoqda', color: 'info' as const }
+                            : { label: 'To‘lanmagan', color: 'warning' as const };
+                        return (
+                          <TableRow key={inv._id} hover>
+                            <TableCell><Typography fontWeight={600}>{inv.restaurantName ?? inv.restaurantId?.slice(-6)}</Typography></TableCell>
+                            <TableCell>{inv.period}</TableCell>
+                            <TableCell>{formatMoney(inv.revenue, inv.currency)}</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>{formatMoney(inv.amountDue, inv.currency)}</TableCell>
+                            <TableCell><Chip label={meta.label} color={meta.color} size="small" /></TableCell>
+                            <TableCell align="right">
+                              {inv.status !== 'PAID' ? (
+                                <Button size="small" variant="contained" color="success" onClick={() => confirmInvoice({ variables: { invoiceId: inv._id } })}>
+                                  Tasdiqlash
+                                </Button>
+                              ) : (
+                                <CheckCircle sx={{ color: 'success.main' }} />
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {invoices.length === 0 && !invoicesLoading && (
+                        <TableRow><TableCell colSpan={6} sx={{ textAlign: 'center', py: 5 }}>
+                          <Typography color="text.secondary">Hali hisob-faktura yo‘q. Oy uchun yaratib ko‘ring.</Typography>
+                        </TableCell></TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Box>
               </Box>
             )}
           </Card>

@@ -21,6 +21,14 @@ export enum OrderType {
   TAKE_OUT = 'TAKE_OUT',
 }
 
+// Service-fee invoice lifecycle: generated → owner reports bank transfer →
+// super admin confirms receipt.
+export enum BillingStatus {
+  PENDING = 'PENDING',
+  AWAITING_REVIEW = 'AWAITING_REVIEW',
+  PAID = 'PAID',
+}
+
 export enum ErrorLogLevel {
   ERROR = 'ERROR',
   WARN = 'WARN',
@@ -45,6 +53,7 @@ export enum TableSessionStatus {
 registerEnumType(UserRole, { name: 'UserRole' });
 registerEnumType(TableSessionStatus, { name: 'TableSessionStatus' });
 registerEnumType(OrderStatus, { name: 'OrderStatus' });
+registerEnumType(BillingStatus, { name: 'BillingStatus' });
 registerEnumType(OrderType, { name: 'OrderType' });
 registerEnumType(ErrorLogLevel, { name: 'ErrorLogLevel' });
 registerEnumType(RestaurantStatus, { name: 'RestaurantStatus' });

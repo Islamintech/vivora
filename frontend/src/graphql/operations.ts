@@ -342,6 +342,47 @@ export const FEEDBACK_LIST_QUERY = gql`
   }
 `;
 
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export const MY_BILLING_QUERY = gql`
+  query MyBilling {
+    myBilling {
+      currentPeriod currentRevenue currentFee feeRate currency
+      bank { bankName cardNumber holder }
+      invoices {
+        _id period revenue feeRate amountDue currency status paidReportedAt confirmedAt createdAt
+      }
+    }
+  }
+`;
+
+export const REPORT_INVOICE_PAID_MUTATION = gql`
+  mutation ReportInvoicePaid($invoiceId: ID!) {
+    reportInvoicePaid(invoiceId: $invoiceId) { _id status }
+  }
+`;
+
+export const ALL_INVOICES_QUERY = gql`
+  query AllInvoices($period: String) {
+    allInvoices(period: $period) {
+      _id restaurantId restaurantName period revenue amountDue currency status
+      paidReportedAt confirmedAt createdAt
+    }
+  }
+`;
+
+export const GENERATE_INVOICES_MUTATION = gql`
+  mutation GenerateInvoices($period: String!) {
+    generateInvoices(period: $period)
+  }
+`;
+
+export const CONFIRM_INVOICE_PAID_MUTATION = gql`
+  mutation ConfirmInvoicePaid($invoiceId: ID!) {
+    confirmInvoicePaid(invoiceId: $invoiceId) { _id status }
+  }
+`;
+
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
 export const PLATFORM_STATS_QUERY = gql`

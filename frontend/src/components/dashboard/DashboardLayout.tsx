@@ -11,6 +11,7 @@ import {
   Dashboard, MenuBook, TableRestaurant, ShoppingBag,
   Analytics, Feedback, Settings, Logout, Kitchen,
   Menu as MenuIcon, Restaurant, Inventory2, HourglassTop, Block,
+  CreditCard,
 } from '@mui/icons-material';
 import { useQuery } from '@apollo/client';
 import { useAuthStore } from '@/store/auth.store';
@@ -29,6 +30,7 @@ const navItems = [
   { label: 'Buyurtmalar', href: '/dashboard/orders', icon: <ShoppingBag /> },
   { label: 'Tahlil', href: '/dashboard/analytics', icon: <Analytics /> },
   { label: 'Mijozlar fikri', href: '/dashboard/feedback', icon: <Feedback /> },
+  { label: 'To‘lov', href: '/dashboard/billing', icon: <CreditCard /> },
   { label: 'Sozlamalar', href: '/dashboard/settings', icon: <Settings /> },
 ];
 

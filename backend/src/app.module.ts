@@ -18,6 +18,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { ErrorLogsModule } from './error-logs/error-logs.module';
 import { AdminModule } from './admin/admin.module';
+import { BillingModule } from './billing/billing.module';
 import { PubSubModule } from './pubsub/pubsub.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { TelegramBotModule } from './telegram/telegram-bot.module';
@@ -67,6 +68,7 @@ import { TelegramBotModule } from './telegram/telegram-bot.module';
     FeedbackModule,
     ErrorLogsModule,
     AdminModule,
+    BillingModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GqlExceptionFilter },

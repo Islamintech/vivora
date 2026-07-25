@@ -78,6 +78,33 @@ type AuthPayload {
   user: UserModel!
 }
 
+type BillingBank {
+  bankName: String!
+  cardNumber: String!
+  holder: String!
+}
+
+type BillingInvoiceModel {
+  _id: ID!
+  amountDue: Float!
+  confirmedAt: DateTime
+  createdAt: DateTime!
+  currency: String!
+  feeRate: Float!
+  paidReportedAt: DateTime
+  period: String!
+  restaurantId: ID!
+  restaurantName: String
+  revenue: Float!
+  status: BillingStatus!
+}
+
+enum BillingStatus {
+  AWAITING_REVIEW
+  PAID
+  PENDING
+}
+
 input CreateCategoryInput {
   name: String!
   order: Int
@@ -184,12 +211,14 @@ type Mutation {
   adminToggleUser(userId: ID!): AdminUserView!
   approveRestaurant(restaurantId: ID!): RestaurantModel!
   closeTableSession(sessionId: ID!): TableSessionModel!
+  confirmInvoicePaid(invoiceId: ID!): BillingInvoiceModel!
   createCategory(input: CreateCategoryInput!): MenuCategoryModel!
   createMenuItem(input: CreateMenuItemInput!): MenuItemModel!
   createTable(input: CreateTableInput!): TableModel!
   deleteCategory(categoryId: ID!): Boolean!
   deleteMenuItem(itemId: ID!): Boolean!
   deleteTable(tableId: ID!): Boolean!
+  generateInvoices(period: String!): Float!
   login(input: LoginInput!): AuthPayload!
   markOrderPreparing(orderId: ID!): OrderModel
   placeOrder(input: PlaceOrderInput!): OrderModel!
@@ -197,6 +226,7 @@ type Mutation {
   regenerateQrCode(tableId: ID!): TableModel!
   register(input: RegisterInput!): AuthPayload!
   rejectRestaurant(reason: String, restaurantId: ID!): RestaurantModel!
+  reportInvoicePaid(invoiceId: ID!): BillingInvoiceModel!
   submitFeedback(input: SubmitFeedbackInput!): FeedbackModel!
   updateCategory(input: UpdateCategoryInput!): MenuCategoryModel!
   updateItemAvailability(input: UpdateItemAvailabilityInput!): MenuItemModel!
@@ -204,6 +234,16 @@ type Mutation {
   updateOrderStatus(input: UpdateOrderStatusInput!): OrderModel!
   updateRestaurant(input: UpdateRestaurantInput!): RestaurantModel!
   updateTable(input: UpdateTableInput!): TableModel!
+}
+
+type MyBilling {
+  bank: BillingBank!
+  currency: String!
+  currentFee: Float!
+  currentPeriod: String!
+  currentRevenue: Float!
+  feeRate: Float!
+  invoices: [BillingInvoiceModel!]!
 }
 
 input OrderItemInput {
@@ -291,6 +331,7 @@ type Query {
   adminRestaurantDetail(restaurantId: ID!): AdminRestaurantDetail!
   adminRestaurants: [AdminRestaurantView!]!
   adminUsers: [AdminUserView!]!
+  allInvoices(period: String): [BillingInvoiceModel!]!
   allOrders(limit: Float): [OrderModel!]!
   allRestaurants: [RestaurantModel!]!
   analytics(period: AnalyticsPeriodInput!): AnalyticsOverview!
@@ -300,6 +341,7 @@ type Query {
   feedbackSummary: FeedbackSummary!
   me: UserModel!
   menuItems(categoryId: ID): [MenuItemModel!]!
+  myBilling: MyBilling!
   myRestaurant: RestaurantModel!
   openTableSessions: [TableSessionModel!]!
   order(orderId: ID!): OrderModel!
