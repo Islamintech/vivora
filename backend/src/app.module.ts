@@ -36,7 +36,13 @@ import { TelegramBotModule } from './telegram/telegram-bot.module';
     ),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      // In production the schema is generated in memory: writing it to src/
+      // needs a source tree and a writable filesystem, neither of which a
+      // deployed container is guaranteed to have.
+      autoSchemaFile:
+        process.env.NODE_ENV === 'production'
+          ? true
+          : join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: process.env.NODE_ENV !== 'production',
       subscriptions: {
