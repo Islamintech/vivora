@@ -73,6 +73,12 @@ export class OrderModel {
   language: string;
 
   @Field()
+  isPaid: boolean;
+
+  @Field({ nullable: true })
+  paidAt?: Date;
+
+  @Field()
   createdAt: Date;
 
   @Field()

@@ -51,12 +51,24 @@ export class OrdersResolver {
     @CurrentUser() user: any,
     @Args('status', { type: () => OrderStatus, nullable: true }) status?: OrderStatus,
     @Args('limit', { type: () => Number, nullable: true }) limit?: number,
+    @Args('unpaidOnly', { nullable: true }) unpaidOnly?: boolean,
   ): Promise<OrderModel[]> {
     return this.ordersService.findByRestaurant(
       user.restaurantId?.toString(),
       status,
       Math.min(Math.max(limit || 50, 1), 200),
+      unpaidOnly ?? false,
     );
+  }
+
+  /** Staff collected payment - removes the order from the kitchen board. */
+  @Mutation(() => OrderModel)
+  @UseGuards(GqlAuthGuard)
+  async markOrderPaid(
+    @Args('orderId', { type: () => ID }) orderId: string,
+    @CurrentUser() user: any,
+  ): Promise<OrderModel> {
+    return this.ordersService.markPaid(user.restaurantId?.toString(), orderId);
   }
 
   @Query(() => OrderModel)

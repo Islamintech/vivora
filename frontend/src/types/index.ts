@@ -83,6 +83,9 @@ export interface Order {
   totalAmount: number;
   customerNote?: string;
   language: string;
+  /** Staff collected payment; paid orders leave the kitchen board. */
+  isPaid?: boolean;
+  paidAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

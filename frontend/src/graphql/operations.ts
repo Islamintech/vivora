@@ -210,13 +210,22 @@ export const REGENERATE_QR_MUTATION = gql`
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
 export const ORDERS_QUERY = gql`
-  query Orders($status: OrderStatus, $limit: Float) {
-    orders(status: $status, limit: $limit) {
+  query Orders($status: OrderStatus, $limit: Float, $unpaidOnly: Boolean) {
+    orders(status: $status, limit: $limit, unpaidOnly: $unpaidOnly) {
       _id tableNumber status orderType totalAmount customerNote language createdAt updatedAt
+      isPaid paidAt
       items {
         menuItemId quantity price notes
         name
       }
+    }
+  }
+`;
+
+export const MARK_ORDER_PAID_MUTATION = gql`
+  mutation MarkOrderPaid($orderId: ID!) {
+    markOrderPaid(orderId: $orderId) {
+      _id isPaid paidAt
     }
   }
 `;

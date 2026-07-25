@@ -235,6 +235,9 @@ export class OrdersService {
     input: UpdateOrderStatusInput,
   ): Promise<OrderDocument> {
     const { orderId, status } = input;
+    const before = await this.orderModel.findOne({ _id: orderId, restaurantId });
+    if (!before) throw new NotFoundException('Order not found');
+
     const order = await this.orderModel.findOneAndUpdate(
       { _id: orderId, restaurantId },
       { $set: { status } },
@@ -242,12 +245,55 @@ export class OrdersService {
     );
     if (!order) throw new NotFoundException('Order not found');
 
+    // Rejecting an order puts its tracked items back on the shelf, so a
+    // refused order doesn't silently eat the day's prepared quantity.
+    if (
+      status === OrderStatus.CANCELLED &&
+      before.status !== OrderStatus.CANCELLED
+    ) {
+      await Promise.all(
+        order.items.map((it) =>
+          this.menuService.releaseQuantity(
+            restaurantId,
+            it.menuItemId.toString(),
+            it.quantity,
+          ),
+        ),
+      ).catch((err) =>
+        this.logger.error(`Stock release failed for order ${orderId}: ${err.message}`),
+      );
+    }
+
     await this.pubSub.publish(ORDER_STATUS_UPDATED, {
       orderStatusUpdated: order,
       restaurantId: order.restaurantId.toString(),
     });
 
     return order;
+  }
+
+  /**
+   * Staff collected payment for this order. Paid orders drop off the kitchen
+   * board and count towards collected income. Idempotent.
+   */
+  async markPaid(restaurantId: string, orderId: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findOneAndUpdate(
+      { _id: orderId, restaurantId, isPaid: { $ne: true } },
+      { $set: { isPaid: true, paidAt: new Date() } },
+      { new: true },
+    );
+    if (order) {
+      await this.pubSub.publish(ORDER_STATUS_UPDATED, {
+        orderStatusUpdated: order,
+        restaurantId: order.restaurantId.toString(),
+      });
+      return order;
+    }
+    // Already paid (or missing) - return the current doc rather than erroring
+    // on a double tap from two devices.
+    const existing = await this.orderModel.findOne({ _id: orderId, restaurantId });
+    if (!existing) throw new NotFoundException('Order not found');
+    return existing;
   }
 
   /**
@@ -288,14 +334,36 @@ export class OrdersService {
     restaurantId: string,
     status?: OrderStatus,
     limit = 50,
+    unpaidOnly = false,
   ): Promise<OrderDocument[]> {
     const filter: any = { restaurantId };
     if (status) filter.status = status;
+    // The kitchen board asks for unpaid only, so settled orders drop off it.
+    if (unpaidOnly) filter.isPaid = { $ne: true };
     return this.orderModel
       .find(filter)
       .sort({ createdAt: -1 })
       .limit(limit)
       .exec();
+  }
+
+  /** Total collected (paid) between two dates - the day's cash figure. */
+  async paidRevenueBetween(
+    restaurantId: string,
+    start: Date,
+    end: Date,
+  ): Promise<{ total: number; count: number }> {
+    const [row] = await this.orderModel.aggregate([
+      {
+        $match: {
+          restaurantId,
+          isPaid: true,
+          paidAt: { $gte: start, $lte: end },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$totalAmount' }, count: { $sum: 1 } } },
+    ]);
+    return { total: row?.total ?? 0, count: row?.count ?? 0 };
   }
 
   async findById(orderId: string): Promise<OrderDocument | null> {
@@ -339,63 +407,37 @@ export class OrdersService {
     return this.orderModel.countDocuments({ restaurantId });
   }
 
-  // How long an order may sit before it's auto-served, and how quickly a
-  // never-printed order is assumed to be in the kitchen. Kept generous — the
-  // point is to keep the board clean when 2-3 staff can't tap every stage,
-  // not to be precise.
-  private static readonly AUTO_SERVE_MS = 20 * 60_000; // 20 min
-  private static readonly AUTO_PREP_MS = 60_000; // 1 min
+  // Safety net only. New orders wait for a human to accept or reject them, so
+  // PENDING is never advanced automatically — otherwise the kitchen board's
+  // accept step would resolve itself. Orders staff already accepted are
+  // auto-served after a long delay so the board doesn't fill up if someone
+  // forgets to tap "done"; they still have to be marked paid by hand.
+  private static readonly AUTO_SERVE_MS = 45 * 60_000; // 45 min
 
-  /**
-   * Keeps order status moving without staff taps. Runs every minute:
-   *   1. anything still open after 20 min is auto-served (safety net),
-   *   2. fresh PENDING orders slide to PREPARING after ~1 min, so the customer
-   *      sees progress even at restaurants with no printer (printers advance
-   *      it instantly via the print agent).
-   */
   @Cron(CronExpression.EVERY_MINUTE)
   async autoAdvanceOrders(): Promise<void> {
-    const now = Date.now();
-    const serveCutoff = new Date(now - OrdersService.AUTO_SERVE_MS);
-    const prepCutoff = new Date(now - OrdersService.AUTO_PREP_MS);
-
-    const publish = async (order: OrderDocument) => {
-      await order.save();
-      await this.pubSub.publish(ORDER_STATUS_UPDATED, {
-        orderStatusUpdated: order,
-        restaurantId: order.restaurantId.toString(),
-      });
-    };
+    const serveCutoff = new Date(Date.now() - OrdersService.AUTO_SERVE_MS);
 
     try {
-      // 1. Auto-serve anything left open past the timeout.
       const toServe = await this.orderModel
         .find({
-          status: { $in: [OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY] },
+          // PENDING deliberately excluded - it needs an accept/reject decision.
+          status: { $in: [OrderStatus.PREPARING, OrderStatus.READY] },
           createdAt: { $lt: serveCutoff },
         })
         .limit(200);
+
       for (const order of toServe) {
         order.status = OrderStatus.SERVED;
-        await publish(order);
+        await order.save();
+        await this.pubSub.publish(ORDER_STATUS_UPDATED, {
+          orderStatusUpdated: order,
+          restaurantId: order.restaurantId.toString(),
+        });
       }
 
-      // 2. Nudge still-pending (but not yet stale) orders into PREPARING.
-      const toPrep = await this.orderModel
-        .find({
-          status: OrderStatus.PENDING,
-          createdAt: { $lt: prepCutoff, $gte: serveCutoff },
-        })
-        .limit(200);
-      for (const order of toPrep) {
-        order.status = OrderStatus.PREPARING;
-        await publish(order);
-      }
-
-      if (toServe.length || toPrep.length) {
-        this.logger.log(
-          `Auto-advanced orders: ${toPrep.length} → preparing, ${toServe.length} → served`,
-        );
+      if (toServe.length) {
+        this.logger.log(`Auto-served ${toServe.length} stale order(s)`);
       }
     } catch (err: any) {
       this.logger.error(`autoAdvanceOrders failed: ${err.message}`);

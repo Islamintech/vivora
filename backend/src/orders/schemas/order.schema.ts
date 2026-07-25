@@ -48,6 +48,14 @@ export class Order {
   @Prop({ default: 'en' })
   language: string;
 
+  // Cash collected: staff tap "To'landi" on the kitchen board once the guest
+  // has paid. Paid orders leave the board and count as collected income.
+  @Prop({ default: false })
+  isPaid: boolean;
+
+  @Prop({ type: Date, default: null })
+  paidAt: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +64,8 @@ export const OrderSchema = SchemaFactory.createForClass(Order);
 
 // Index for efficient restaurant+status queries
 OrderSchema.index({ restaurantId: 1, status: 1 });
+// Kitchen board lists unpaid orders; billing sums paid ones by date.
+OrderSchema.index({ restaurantId: 1, isPaid: 1, createdAt: -1 });
 OrderSchema.index({ restaurantId: 1, createdAt: -1 });
 OrderSchema.index({ tableId: 1, createdAt: -1 });
 OrderSchema.index({ sessionId: 1 });

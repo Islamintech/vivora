@@ -222,6 +222,7 @@ type Mutation {
   deleteTable(tableId: ID!): Boolean!
   generateInvoices(period: String!): Float!
   login(input: LoginInput!): AuthPayload!
+  markOrderPaid(orderId: ID!): OrderModel!
   markOrderPreparing(orderId: ID!): OrderModel
   placeOrder(input: PlaceOrderInput!): OrderModel!
   purgeErrorLogs(olderThanDays: Int!): Int!
@@ -266,9 +267,11 @@ type OrderModel {
   _id: ID!
   createdAt: DateTime!
   customerNote: String
+  isPaid: Boolean!
   items: [OrderItemModel!]!
   language: String!
   orderType: OrderType!
+  paidAt: DateTime
   restaurantId: ID!
   sessionId: ID
   status: OrderStatus!
@@ -347,7 +350,7 @@ type Query {
   myRestaurant: RestaurantModel!
   openTableSessions: [TableSessionModel!]!
   order(orderId: ID!): OrderModel!
-  orders(limit: Float, status: OrderStatus): [OrderModel!]!
+  orders(limit: Float, status: OrderStatus, unpaidOnly: Boolean): [OrderModel!]!
   pendingRestaurants: [RestaurantModel!]!
   platformStats: PlatformStats!
   platformTimeseries(days: Int, timezone: String): [PlatformTimePoint!]!
