@@ -34,40 +34,40 @@ const CATEGORIES: {
   {
     name: 'Starters',
     items: [
-      { name: 'Garlic Bread', description: 'Toasted ciabatta, roasted garlic butter, parsley', price: 4.5, img: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=400' },
-      { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons, classic dressing', price: 7.0, popular: true },
-      { name: 'Soup of the Day', description: 'Ask your server — made fresh daily', price: 5.5, track: 15 },
+      { name: 'Garlic Bread', description: 'Toasted ciabatta, roasted garlic butter, parsley', price: 4.5, img: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons, classic dressing', price: 7.0, popular: true, img: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Soup of the Day', description: 'Ask your server - made fresh daily', price: 5.5, track: 15, img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80&auto=format&fit=crop' },
     ],
   },
   {
     name: 'Burgers',
     items: [
-      { name: 'Classic Beef Burger', description: 'Grass-fed beef, cheddar, lettuce, tomato', price: 9.5, popular: true, img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-      { name: 'Crispy Chicken Burger', description: 'Buttermilk-fried chicken, slaw, spicy mayo', price: 9.0 },
-      { name: 'Veggie Burger', description: 'Black bean patty, avocado, pickled onion', price: 8.5, track: 10 },
+      { name: 'Classic Beef Burger', description: 'Grass-fed beef, cheddar, lettuce, tomato', price: 9.5, popular: true, img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Crispy Chicken Burger', description: 'Buttermilk-fried chicken, slaw, spicy mayo', price: 9.0, img: 'https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Veggie Burger', description: 'Black bean patty, avocado, pickled onion', price: 8.5, track: 10, img: 'https://images.unsplash.com/photo-1520072959219-c595dc870360?w=600&q=80&auto=format&fit=crop' },
     ],
   },
   {
     name: 'Pizza',
     items: [
-      { name: 'Margherita', description: 'San Marzano tomato, mozzarella, basil', price: 11.0, popular: true, img: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=400' },
-      { name: 'Pepperoni', description: 'Double pepperoni, mozzarella, oregano', price: 12.5 },
-      { name: 'Funghi', description: 'Wild mushrooms, truffle oil, fontina', price: 13.0, track: 8 },
+      { name: 'Margherita', description: 'San Marzano tomato, mozzarella, basil', price: 11.0, popular: true, img: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Pepperoni', description: 'Double pepperoni, mozzarella, oregano', price: 12.5, img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Funghi', description: 'Wild mushrooms, truffle oil, fontina', price: 13.0, track: 8, img: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=600&q=80&auto=format&fit=crop' },
     ],
   },
   {
     name: 'Drinks',
     items: [
-      { name: 'Fresh Lemonade', description: 'House-made, lightly sweetened', price: 3.5 },
-      { name: 'Cola', description: 'Chilled, 330ml', price: 2.5 },
-      { name: 'Espresso', description: 'Double shot, single-origin', price: 2.0 },
+      { name: 'Fresh Lemonade', description: 'House-made, lightly sweetened', price: 3.5, img: 'https://images.unsplash.com/photo-1523677011781-c91d1bbe2f9e?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Cola', description: 'Chilled, 330ml', price: 2.5, img: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Espresso', description: 'Double shot, single-origin', price: 2.0, img: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=600&q=80&auto=format&fit=crop' },
     ],
   },
   {
     name: 'Desserts',
     items: [
-      { name: 'Chocolate Lava Cake', description: 'Warm molten center, vanilla ice cream', price: 6.5, popular: true, track: 12 },
-      { name: 'Cheesecake', description: 'New York style, berry compote', price: 6.0 },
+      { name: 'Chocolate Lava Cake', description: 'Warm molten center, vanilla ice cream', price: 6.5, popular: true, track: 12, img: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=600&q=80&auto=format&fit=crop' },
+      { name: 'Cheesecake', description: 'New York style, berry compote', price: 6.0, img: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=600&q=80&auto=format&fit=crop' },
     ],
   },
 ];
