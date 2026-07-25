@@ -1,5 +1,5 @@
 import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminService } from './admin.service';
@@ -77,7 +77,8 @@ export class AdminResolver {
   async purgeErrorLogs(
     @Args('olderThanDays', { type: () => Int }) olderThanDays: number,
   ): Promise<number> {
-    return this.adminService.purgeErrorLogs(olderThanDays);
+    // A negative value would put the cutoff in the future and wipe every log.
+    return this.adminService.purgeErrorLogs(Math.max(olderThanDays, 0));
   }
 
   @Mutation(() => AdminUserView)
@@ -96,6 +97,10 @@ export class AdminResolver {
     @Args('userId', { type: () => ID }) userId: string,
     @Args('newPassword') newPassword: string,
   ): Promise<boolean> {
+    // Same floor as RegisterInput/AddStaffInput — raw @Args skip class-validator.
+    if (!newPassword || newPassword.length < 8 || newPassword.length > 128) {
+      throw new BadRequestException('Password must be 8-128 characters');
+    }
     return this.adminService.resetUserPassword(userId, newPassword);
   }
 }

@@ -41,8 +41,11 @@ export class RestaurantsResolver {
     return this.restaurantsService.findByStatus(RestaurantStatus.PENDING_REVIEW);
   }
 
+  // Settings (printer IP, Telegram chat, currency…) are owner-only — a STAFF
+  // login is for the kitchen/orders, not for reconfiguring the restaurant.
   @Mutation(() => RestaurantModel)
-  @UseGuards(GqlAuthGuard)
+  @UseGuards(GqlAuthGuard, RolesGuard)
+  @Roles(UserRole.RESTAURANT_ADMIN)
   async updateRestaurant(
     @Args('input') input: UpdateRestaurantInput,
     @CurrentUser() user: any,

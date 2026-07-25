@@ -25,8 +25,10 @@ export class BillingResolver {
     return this.billing.getMyBilling(user.restaurantId?.toString()) as any;
   }
 
+  // Only the owner may declare an invoice paid — staff logins can't touch money state.
   @Mutation(() => BillingInvoiceModel)
-  @UseGuards(GqlAuthGuard)
+  @UseGuards(GqlAuthGuard, RolesGuard)
+  @Roles(UserRole.RESTAURANT_ADMIN)
   async reportInvoicePaid(
     @Args('invoiceId', { type: () => ID }) invoiceId: string,
     @CurrentUser() user: any,

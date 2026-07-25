@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -131,6 +136,9 @@ export class BillingService {
    * and already-generated ones). Returns how many were created.
    */
   async generateForPeriod(period: string): Promise<number> {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) {
+      throw new BadRequestException('Period must be YYYY-MM');
+    }
     const restaurants = await this.restaurantsService.findAll();
     let created = 0;
     for (const r of restaurants) {
