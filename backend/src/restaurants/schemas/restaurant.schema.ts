@@ -50,13 +50,17 @@ export class Restaurant {
   // Opening hours, "HH:mm" in the restaurant's own timezone. Customers can
   // only order while open. closingTime <= openingTime means the shift runs
   // past midnight (e.g. 18:00 -> 02:00). alwaysOpen skips the check entirely.
+  //
+  // New restaurants start alwaysOpen so a fresh signup is never blocked by
+  // hours it hasn't configured yet; the times below are just the starting
+  // values shown in Settings once the owner turns 24/7 off.
   @Prop({ default: '09:00' })
   openingTime: string;
 
   @Prop({ default: '22:00' })
   closingTime: string;
 
-  @Prop({ default: false })
+  @Prop({ default: true })
   alwaysOpen: boolean;
 
   // IANA zone used to evaluate the hours above.
