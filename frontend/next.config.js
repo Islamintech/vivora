@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Emit a self-contained server bundle so the runtime image ships only what
+  // it needs instead of the whole node_modules tree.
+  output: 'standalone',
   images: {
     domains: ['res.cloudinary.com', 'localhost'],
   },
