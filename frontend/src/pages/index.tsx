@@ -177,30 +177,37 @@ function PhoneMock() {
     { n: 'Lag‘mon', d: 'Qo‘lda tortilgan, sabzavotli', p: '₩10 500', best: false, img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200&q=70&auto=format&fit=crop' },
     { n: 'Shashlik', d: 'Ko‘mirda pishirilgan', p: '₩8 000', best: false, img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=200&q=70&auto=format&fit=crop' },
   ];
+  const W = 260;                 // device width
+  const BEZEL = 11;              // uniform bezel, like a real phone
   return (
-    <Box sx={{ position: 'relative', width: 268, mx: 'auto' }}>
+    <Box sx={{ position: 'relative', width: W, mx: 'auto' }}>
       <Box sx={{ position: 'absolute', inset: '-12%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(30px)' }} />
 
-      {/* Device body */}
+      {/* Device body - true phone proportions (9:19.5) */}
       <Box sx={{
-        position: 'relative', borderRadius: '2.6rem', p: '9px',
-        background: 'linear-gradient(155deg, #3a3a3e, #17171a 42%, #2c2c30)',
-        boxShadow: '0 36px 70px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.35)',
+        position: 'relative', width: W, aspectRatio: '9 / 19.5',
+        borderRadius: `${W * 0.155}px`, p: `${BEZEL}px`,
+        background: 'linear-gradient(150deg, #6f7076 0%, #2a2b30 18%, #17181c 50%, #34353b 82%, #6f7076 100%)',
+        boxShadow: '0 40px 80px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.25)',
       }}>
         {/* Side buttons */}
-        <Box sx={{ position: 'absolute', left: -2, top: 108, width: 3, height: 34, borderRadius: 2, bgcolor: '#26262a' }} />
-        <Box sx={{ position: 'absolute', left: -2, top: 152, width: 3, height: 34, borderRadius: 2, bgcolor: '#26262a' }} />
-        <Box sx={{ position: 'absolute', right: -2, top: 128, width: 3, height: 52, borderRadius: 2, bgcolor: '#26262a' }} />
+        <Box sx={{ position: 'absolute', left: -2.5, top: '17%', width: 2.5, height: 26, borderRadius: 99, background: 'linear-gradient(90deg,#4a4b52,#2a2b30)' }} />
+        <Box sx={{ position: 'absolute', left: -2.5, top: '24%', width: 2.5, height: 40, borderRadius: 99, background: 'linear-gradient(90deg,#4a4b52,#2a2b30)' }} />
+        <Box sx={{ position: 'absolute', left: -2.5, top: '32.5%', width: 2.5, height: 40, borderRadius: 99, background: 'linear-gradient(90deg,#4a4b52,#2a2b30)' }} />
+        <Box sx={{ position: 'absolute', right: -2.5, top: '26%', width: 2.5, height: 58, borderRadius: 99, background: 'linear-gradient(270deg,#4a4b52,#2a2b30)' }} />
 
         {/* Screen */}
-        <Box sx={{ position: 'relative', borderRadius: '2.1rem', overflow: 'hidden', bgcolor: '#fffdf9' }}>
+        <Box sx={{
+          position: 'relative', height: '100%', borderRadius: `${W * 0.155 - BEZEL}px`,
+          overflow: 'hidden', bgcolor: '#fffdf9', display: 'flex', flexDirection: 'column',
+        }}>
           {/* Dynamic island */}
-          <Box sx={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 74, height: 20, borderRadius: 99, bgcolor: '#101013', zIndex: 3 }} />
+          <Box sx={{ position: 'absolute', top: 7, left: '50%', transform: 'translateX(-50%)', width: 68, height: 19, borderRadius: 99, bgcolor: '#08080a', zIndex: 3 }} />
 
           {/* Status bar */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.25, pt: 1.15, pb: 0.4, fontSize: 9.5, fontWeight: 700, color: TEXT }}>
-            <Box>9:41</Box>
-            <Stack direction="row" spacing={0.4} alignItems="center">
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, pt: 1.15, pb: 0.5, fontSize: 9.5, fontWeight: 700, color: TEXT, flexShrink: 0 }}>
+            <Box sx={{ pl: 0.25 }}>9:41</Box>
+            <Stack direction="row" spacing={0.4} alignItems="center" sx={{ pr: 0.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1.5px', height: 7 }}>
                 {[3, 4.5, 6, 7].map((hh, i) => <Box key={i} sx={{ width: 2, height: hh, borderRadius: '1px', bgcolor: TEXT }} />)}
               </Box>
@@ -211,21 +218,33 @@ function PhoneMock() {
           </Stack>
 
           {/* App header */}
-          <Box sx={{ px: 2, pt: 0.75, pb: 1.25, borderBottom: `1px solid ${BORDER}` }}>
+          <Box sx={{ px: 1.75, pt: 1.25, pb: 1.25, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Box>
                 <Box sx={{ fontSize: 9.5, color: MUTED, fontWeight: 600 }}>7-stol · Zaytoon</Box>
-                <Box sx={{ fontSize: 15, fontWeight: 800, color: TEXT }}>Menyu</Box>
+                <Box sx={{ fontSize: 16, fontWeight: 800, color: TEXT }}>Menyu</Box>
               </Box>
               <Box sx={{ px: 1, py: 0.35, borderRadius: 99, border: `1px solid ${BORDER}`, fontSize: 9, fontWeight: 700, color: MUTED }}>UZ</Box>
             </Stack>
           </Box>
 
+          {/* Category chips */}
+          <Stack direction="row" spacing={0.6} sx={{ px: 1.25, py: 1, flexShrink: 0 }}>
+            {['Hammasi', 'Taomlar', 'Ichimlik'].map((cat, i) => (
+              <Box key={cat} sx={{
+                px: 1.1, py: 0.5, borderRadius: 99, fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap',
+                ...(i === 0
+                  ? { background: GRAD, color: '#fff' }
+                  : { bgcolor: CARD2, color: MUTED, border: `1px solid ${BORDER}` }),
+              }}>{cat}</Box>
+            ))}
+          </Stack>
+
           {/* Items with photos */}
-          <Stack spacing={1} sx={{ p: 1.25, pb: 1 }}>
+          <Stack spacing={0.9} sx={{ px: 1.25, flex: 1, overflow: 'hidden' }}>
             {items.map((it) => (
-              <Stack key={it.n} direction="row" alignItems="center" spacing={1.15} sx={{ p: 1, borderRadius: 2.5, bgcolor: '#fff', border: `1px solid ${BORDER}` }}>
-                <Box component="img" src={it.img} alt="" sx={{ width: 40, height: 40, borderRadius: 1.75, objectFit: 'cover', flexShrink: 0, bgcolor: CARD2 }} />
+              <Stack key={it.n} direction="row" alignItems="center" spacing={1.15} sx={{ p: 0.9, borderRadius: 2.5, bgcolor: '#fff', border: `1px solid ${BORDER}`, flexShrink: 0 }}>
+                <Box component="img" src={it.img} alt="" sx={{ width: 42, height: 42, borderRadius: 1.75, objectFit: 'cover', flexShrink: 0, bgcolor: CARD2 }} />
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <Box sx={{ fontSize: 11.5, fontWeight: 800, color: TEXT }}>{it.n}</Box>
@@ -240,13 +259,13 @@ function PhoneMock() {
           </Stack>
 
           {/* Order button + home indicator */}
-          <Box sx={{ px: 1.25, pb: 1 }}>
-            <Box sx={{ py: 1.1, borderRadius: 99, background: GRAD, textAlign: 'center', fontSize: 11.5, fontWeight: 800, color: '#fff', boxShadow: `0 8px 18px ${GLOW}` }}>
+          <Box sx={{ px: 1.25, pt: 1.25, flexShrink: 0 }}>
+            <Box sx={{ py: 1.15, borderRadius: 99, background: GRAD, textAlign: 'center', fontSize: 11.5, fontWeight: 800, color: '#fff', boxShadow: `0 8px 18px ${GLOW}` }}>
               Buyurtma berish · ₩30 500
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'center', pb: 0.9 }}>
-            <Box sx={{ width: 90, height: 3.5, borderRadius: 99, bgcolor: 'rgba(0,0,0,0.22)' }} />
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1, flexShrink: 0 }}>
+            <Box sx={{ width: 88, height: 4, borderRadius: 99, bgcolor: 'rgba(0,0,0,0.25)' }} />
           </Box>
         </Box>
       </Box>
