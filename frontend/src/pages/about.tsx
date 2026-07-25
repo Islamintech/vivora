@@ -41,14 +41,15 @@ const About: NextPage = () => (
       </Typography>
     </Container>
 
-    {/* Metrics band — dark card with gradient numbers, like the pricing card */}
+    {/* Metrics band — orange gradient, same family as the pricing card */}
     <Container maxWidth="lg" sx={{ pb: { xs: 8, md: 12 } }}>
-      <Box sx={{ borderRadius: '2rem', background: `linear-gradient(160deg, #2a1206, ${ON_SURFACE})`, p: { xs: 3, md: 5 }, boxShadow: '0 30px 60px rgba(157,67,0,0.25)' }}>
-        <Grid container spacing={2}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', borderRadius: '2rem', background: 'linear-gradient(135deg, #B45309, #EA580C 55%, #F97316)', p: { xs: 3, md: 5 }, boxShadow: '0 30px 60px rgba(157,67,0,0.25)' }}>
+        <Box sx={{ position: 'absolute', top: '-40%', left: '-10%', width: '55%', height: '160%', border: '40px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
+        <Grid container spacing={2} sx={{ position: 'relative' }}>
           {metrics.map((m) => (
             <Grid item xs={6} md={3} key={m.l} sx={{ textAlign: 'center' }}>
-              <Typography sx={{ fontSize: { xs: '2rem', md: '2.6rem' }, fontWeight: 900, lineHeight: 1, background: 'linear-gradient(90deg, #FDBA74, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{m.n}</Typography>
-              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', mt: 0.5 }}>{m.l}</Typography>
+              <Typography sx={{ fontSize: { xs: '2rem', md: '2.6rem' }, fontWeight: 900, lineHeight: 1, color: '#fff', textShadow: '0 6px 20px rgba(0,0,0,0.15)' }}>{m.n}</Typography>
+              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', mt: 0.5 }}>{m.l}</Typography>
             </Grid>
           ))}
         </Grid>

@@ -3,7 +3,7 @@ import NextLink from 'next/link';
 import { Box, Container, Typography, Button, Stack, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { CheckCircle, ArrowForward, ExpandMore, ReceiptLong, AccountBalance, TaskAlt } from '@mui/icons-material';
 import MarketingLayout, {
-  PRIMARY, ON_SURFACE, ON_VAR, SURFACE, SC_LOW, GRAD, pill,
+  PRIMARY, ON_VAR, SURFACE, SC_LOW, GRAD, pill,
 } from '@/components/marketing/MarketingLayout';
 
 // Everything is included — the platform simply takes 0.3% of the order
@@ -53,25 +53,29 @@ const Pricing: NextPage = () => (
     <Container maxWidth="md" sx={{ pb: { xs: 6, md: 8 } }}>
       <Box
         sx={{
+          position: 'relative', overflow: 'hidden',
           borderRadius: '2rem', p: { xs: 3, md: 5 },
-          background: `linear-gradient(160deg, #2a1206, ${ON_SURFACE})`, color: '#fff',
+          background: 'linear-gradient(135deg, #B45309, #EA580C 55%, #F97316)', color: '#fff',
           boxShadow: '0 30px 60px rgba(157,67,0,0.25)',
         }}
       >
-        <Grid container spacing={{ xs: 3, md: 5 }} alignItems="center">
+        {/* Ring decorations, same as the CTA band */}
+        <Box sx={{ position: 'absolute', top: '-40%', left: '-10%', width: '55%', height: '160%', border: '50px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
+        <Box sx={{ position: 'absolute', bottom: '-50%', right: '-8%', width: '48%', height: '150%', border: '34px solid rgba(255,255,255,0.07)', borderRadius: '50%' }} />
+        <Grid container spacing={{ xs: 3, md: 5 }} alignItems="center" sx={{ position: 'relative' }}>
           <Grid item xs={12} md={5} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
-            <Box sx={{ display: 'inline-flex', px: 1.5, py: 0.5, borderRadius: 99, background: GRAD, fontSize: 11, fontWeight: 800, mb: 2 }}>YAGONA REJA</Box>
+            <Box sx={{ display: 'inline-flex', px: 1.5, py: 0.5, borderRadius: 99, bgcolor: '#fff', color: '#B45309', fontSize: 11, fontWeight: 800, mb: 2 }}>YAGONA REJA</Box>
             <Stack direction="row" alignItems="baseline" spacing={1} justifyContent={{ xs: 'center', md: 'flex-start' }}>
-              <Typography sx={{ fontSize: 'clamp(3.4rem, 7vw, 5rem)', fontWeight: 900, lineHeight: 1, background: 'linear-gradient(90deg, #FDBA74, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>0.3%</Typography>
+              <Typography sx={{ fontSize: 'clamp(3.4rem, 7vw, 5rem)', fontWeight: 900, lineHeight: 1, color: '#fff', textShadow: '0 6px 24px rgba(0,0,0,0.18)' }}>0.3%</Typography>
             </Stack>
-            <Typography sx={{ fontSize: 15, color: 'rgba(255,255,255,0.75)', mt: 1, mb: 0.5 }}>oylik savdodan</Typography>
-            <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', mb: 3 }}>
+            <Typography sx={{ fontSize: 15, color: 'rgba(255,255,255,0.9)', mt: 1, mb: 0.5 }}>oylik savdodan</Typography>
+            <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', mb: 3 }}>
               Boshlash bepul · Bank kartasi shart emas
             </Typography>
-            <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', mb: 3 }}>
-              <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', mb: 0.25 }}>Masalan</Typography>
+            <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.2)', mb: 3 }}>
+              <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', mb: 0.25 }}>Masalan</Typography>
               <Typography sx={{ fontSize: 14.5, fontWeight: 700 }}>
-                Oylik savdo ₩10 000 000 → to&apos;lov <Box component="span" sx={{ color: '#FDBA74' }}>₩30 000</Box>
+                Oylik savdo ₩10 000 000 → to&apos;lov <Box component="span" sx={{ fontWeight: 900 }}>₩30 000</Box>
               </Typography>
             </Box>
             <Button
@@ -79,20 +83,20 @@ const Pricing: NextPage = () => (
               href="/register"
               fullWidth
               endIcon={<ArrowForward />}
-              sx={pill({ py: 1.4, fontSize: 15, bgcolor: '#fff', color: PRIMARY, '&:hover': { bgcolor: SURFACE } })}
+              sx={pill({ py: 1.4, fontSize: 15, bgcolor: '#fff', color: '#B45309', boxShadow: '0 14px 30px rgba(0,0,0,0.2)', '&:hover': { bgcolor: SURFACE } })}
             >
               Bepul boshlash
             </Button>
           </Grid>
           <Grid item xs={12} md={7}>
-            <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase', mb: 1.75 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.1em', textTransform: 'uppercase', mb: 1.75 }}>
               Hammasi ichida
             </Typography>
             <Stack spacing={1.25}>
               {included.map((f) => (
                 <Stack key={f} direction="row" alignItems="center" spacing={1}>
-                  <CheckCircle sx={{ fontSize: 18, color: '#4ADE80' }} />
-                  <Typography sx={{ fontSize: 14.5, color: 'rgba(255,255,255,0.92)' }}>{f}</Typography>
+                  <CheckCircle sx={{ fontSize: 18, color: '#fff' }} />
+                  <Typography sx={{ fontSize: 14.5, color: 'rgba(255,255,255,0.95)' }}>{f}</Typography>
                 </Stack>
               ))}
             </Stack>
