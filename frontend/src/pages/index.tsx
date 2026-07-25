@@ -14,18 +14,19 @@ import {
 } from '@mui/icons-material';
 import { MarketingNav } from '@/components/marketing/MarketingLayout';
 
-// ── Dark premium palette ──
-const BG = '#0A0D14';
-const BG2 = '#0E1219';
-const CARD = 'rgba(255,255,255,0.04)';
-const CARD2 = 'rgba(255,255,255,0.06)';
-const BORDER = 'rgba(255,255,255,0.08)';
-const TEXT = '#F2F5F9';
-const MUTED = '#9AA3B2';
-const ORANGE = '#F97316';
-const ORANGE_L = '#FB923C';
-const GRAD = `linear-gradient(90deg, ${ORANGE}, ${ORANGE_L})`;
-const GLOW = 'rgba(249,115,22,0.32)';
+// ── Warm Material-3 palette (same layout as the dark draft, light colors) ──
+const BG = '#fff8f2';
+const BG2 = '#fbf2e8';
+const CARD = '#ffffff';
+const CARD2 = '#fbf4ec';
+const BORDER = 'rgba(140,113,100,0.14)';
+const TEXT = '#1f1b15';
+const MUTED = '#584237';
+const PRIMARY = '#9d4300';
+const ORANGE = '#f97316';
+const ORANGE_L = '#fb923c';
+const GRAD = `linear-gradient(90deg, ${PRIMARY}, ${ORANGE})`;
+const GLOW = 'rgba(249,115,22,0.25)';
 
 const fadeUp = keyframes`from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}`;
 const growBar = keyframes`from{transform:scaleY(0)}to{transform:scaleY(1)}`;
@@ -99,25 +100,25 @@ const MockChip = ({ label, color, bg }: { label: string; color: string; bg: stri
   <Box sx={{ px: 1, py: 0.25, borderRadius: 99, fontSize: 9.5, fontWeight: 700, color, bgcolor: bg, whiteSpace: 'nowrap' }}>{label}</Box>
 );
 
-/** CSS-built dashboard preview inside a browser frame, with an orange glow. */
+/** CSS-built dashboard preview inside a browser frame, with a soft warm glow. */
 function DashboardMock() {
   const bars = [42, 58, 38, 72, 64, 96, 80];
   const orders = [
-    { t: '5-stol', i: '2× Osh, 1× Lag‘mon', s: 'Yangi', c: '#FBBF24', bg: 'rgba(251,191,36,0.12)' },
-    { t: '12-stol', i: '1× Shashlik, 2× Choy', s: 'Tayyorlanmoqda', c: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
-    { t: '3-stol', i: '3× Somsa', s: 'Berildi', c: '#4ADE80', bg: 'rgba(74,222,128,0.12)' },
+    { t: '5-stol', i: '2× Osh, 1× Lag‘mon', s: 'Yangi', c: '#B45309', bg: 'rgba(245,158,11,0.16)' },
+    { t: '12-stol', i: '1× Shashlik, 2× Choy', s: 'Tayyorlanmoqda', c: '#1D4ED8', bg: 'rgba(96,165,250,0.16)' },
+    { t: '3-stol', i: '3× Somsa', s: 'Berildi', c: '#15803D', bg: 'rgba(74,222,128,0.2)' },
   ];
   return (
     <Box sx={{ position: 'relative' }}>
       {/* Glow */}
       <Box sx={{ position: 'absolute', inset: '-8% -6%', background: `radial-gradient(ellipse at 50% 40%, ${GLOW}, transparent 65%)`, filter: 'blur(30px)', zIndex: 0 }} />
-      <Box sx={{ position: 'relative', zIndex: 1, borderRadius: '18px', overflow: 'hidden', border: `1px solid rgba(255,255,255,0.12)`, bgcolor: '#0D1017', boxShadow: '0 40px 90px rgba(0,0,0,0.55)' }}>
+      <Box sx={{ position: 'relative', zIndex: 1, borderRadius: '18px', overflow: 'hidden', border: `1px solid ${BORDER}`, bgcolor: '#fff', boxShadow: '0 40px 90px rgba(157,67,0,0.16)' }}>
         {/* Browser chrome */}
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2, py: 1.25, bgcolor: '#141926', borderBottom: `1px solid ${BORDER}` }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2, py: 1.25, bgcolor: '#f6ede4', borderBottom: `1px solid ${BORDER}` }}>
           {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => (
             <Box key={c} sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: c }} />
           ))}
-          <Box sx={{ flex: 1, maxWidth: 260, mx: 'auto', bgcolor: 'rgba(255,255,255,0.07)', borderRadius: 99, px: 2, py: 0.4, fontSize: 11, color: MUTED, textAlign: 'center' }}>
+          <Box sx={{ flex: 1, maxWidth: 260, mx: 'auto', bgcolor: 'rgba(140,113,100,0.09)', borderRadius: 99, px: 2, py: 0.4, fontSize: 11, color: MUTED, textAlign: 'center' }}>
             vivora.kr/dashboard
           </Box>
         </Stack>
@@ -127,7 +128,7 @@ function DashboardMock() {
           <Box sx={{ width: 52, borderRight: `1px solid ${BORDER}`, py: 2, display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'center', gap: 1.75 }}>
             <Box sx={{ width: 26, height: 26, borderRadius: 2, background: GRAD }} />
             {[1, 2, 3, 4, 5].map((i) => (
-              <Box key={i} sx={{ width: 18, height: 4, borderRadius: 2, bgcolor: i === 1 ? ORANGE : 'rgba(255,255,255,0.14)' }} />
+              <Box key={i} sx={{ width: 18, height: 4, borderRadius: 2, bgcolor: i === 1 ? ORANGE : 'rgba(140,113,100,0.22)' }} />
             ))}
           </Box>
 
@@ -136,7 +137,7 @@ function DashboardMock() {
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.75}>
               <Box sx={{ fontSize: 13, fontWeight: 800, color: TEXT }}>Bugungi ko‘rsatkichlar</Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#4ADE80', animation: `${pulse} 2s infinite` }} />
+                <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#22C55E', animation: `${pulse} 2s infinite` }} />
                 <Box sx={{ fontSize: 10.5, color: MUTED }}>Jonli</Box>
               </Box>
             </Stack>
@@ -152,7 +153,7 @@ function DashboardMock() {
                   <Box sx={{ p: { xs: 1, sm: 1.5 }, borderRadius: 2.5, bgcolor: CARD2, border: `1px solid ${BORDER}` }}>
                     <Box sx={{ fontSize: 9.5, color: MUTED, mb: 0.25 }}>{s.l}</Box>
                     <Box sx={{ fontSize: { xs: 11, sm: 14 }, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.v}</Box>
-                    <Box sx={{ fontSize: 9, fontWeight: 700, color: '#4ADE80' }}>{s.d}</Box>
+                    <Box sx={{ fontSize: 9, fontWeight: 700, color: '#15803D' }}>{s.d}</Box>
                   </Box>
                 </Grid>
               ))}
@@ -179,7 +180,7 @@ function DashboardMock() {
                   <Box sx={{ fontSize: 10, color: MUTED, mb: 1 }}>So‘nggi buyurtmalar</Box>
                   <Stack spacing={0.9}>
                     {orders.map((o) => (
-                      <Stack key={o.t} direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ p: 0.9, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.04)' }}>
+                      <Stack key={o.t} direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ p: 0.9, borderRadius: 2, bgcolor: '#fff', border: `1px solid ${BORDER}` }}>
                         <Box sx={{ minWidth: 0 }}>
                           <Box sx={{ fontSize: 10.5, fontWeight: 800, color: TEXT }}>{o.t}</Box>
                           <Box sx={{ fontSize: 9, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.i}</Box>
@@ -198,7 +199,7 @@ function DashboardMock() {
   );
 }
 
-/** Minimal dark phone preview of the customer menu. */
+/** Light phone preview of the customer menu. */
 function PhoneMock() {
   const items = [
     { n: 'Palov', p: '₩12 000', best: true },
@@ -208,21 +209,21 @@ function PhoneMock() {
   return (
     <Box sx={{ position: 'relative', maxWidth: 290, mx: 'auto' }}>
       <Box sx={{ position: 'absolute', inset: '-10%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(28px)' }} />
-      <Box sx={{ position: 'relative', borderRadius: '2.2rem', border: '1px solid rgba(255,255,255,0.14)', bgcolor: '#0D1017', p: 1, boxShadow: '0 30px 70px rgba(0,0,0,0.55)' }}>
-        <Box sx={{ borderRadius: '1.8rem', overflow: 'hidden', bgcolor: '#10141D' }}>
+      <Box sx={{ position: 'relative', borderRadius: '2.2rem', border: `1px solid ${BORDER}`, bgcolor: '#fff', p: 1, boxShadow: '0 30px 70px rgba(157,67,0,0.18)' }}>
+        <Box sx={{ borderRadius: '1.8rem', overflow: 'hidden', bgcolor: '#fffdf9' }}>
           <Box sx={{ px: 2, pt: 2, pb: 1.25, borderBottom: `1px solid ${BORDER}` }}>
             <Box sx={{ fontSize: 10, color: MUTED }}>7-stol · Zaytoon</Box>
             <Box sx={{ fontSize: 15, fontWeight: 800, color: TEXT }}>Menyu</Box>
           </Box>
           <Stack spacing={1} sx={{ p: 1.5 }}>
             {items.map((it) => (
-              <Stack key={it.n} direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 1.25, borderRadius: 2.5, bgcolor: CARD2, border: `1px solid ${BORDER}` }}>
+              <Stack key={it.n} direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 1.25, borderRadius: 2.5, bgcolor: '#fff', border: `1px solid ${BORDER}` }}>
                 <Box>
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <Box sx={{ fontSize: 12, fontWeight: 800, color: TEXT }}>{it.n}</Box>
-                    {it.best && <Box sx={{ fontSize: 8.5, fontWeight: 800, color: '#FDBA74', bgcolor: 'rgba(249,115,22,0.15)', px: 0.75, py: 0.2, borderRadius: 99 }}>🔥 Xit</Box>}
+                    {it.best && <Box sx={{ fontSize: 8.5, fontWeight: 800, color: '#C2410C', bgcolor: 'rgba(249,115,22,0.12)', px: 0.75, py: 0.2, borderRadius: 99 }}>🔥 Xit</Box>}
                   </Stack>
-                  <Box sx={{ fontSize: 10.5, fontWeight: 700, color: ORANGE_L }}>{it.p}</Box>
+                  <Box sx={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY }}>{it.p}</Box>
                 </Box>
                 <Box sx={{ width: 26, height: 26, borderRadius: '50%', background: GRAD, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800 }}>+</Box>
               </Stack>
@@ -237,8 +238,9 @@ function PhoneMock() {
   );
 }
 
-/** Mini kitchen-display preview: three status columns. */
+/** Mini kitchen-display preview — intentionally dark, like the real screen. */
 function KitchenMock() {
+  const K = { bg: '#12151f', card: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.1)', text: '#F2F5F9', muted: '#9AA3B2' };
   const cols = [
     { h: 'Yangi', c: '#FBBF24', cards: ['5-stol · 2 taom', '9-stol · 1 taom'] },
     { h: 'Tayyorlanmoqda', c: '#60A5FA', cards: ['12-stol · 3 taom'] },
@@ -247,10 +249,10 @@ function KitchenMock() {
   return (
     <Box sx={{ position: 'relative' }}>
       <Box sx={{ position: 'absolute', inset: '-8%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(28px)' }} />
-      <Box sx={{ position: 'relative', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)', bgcolor: '#0D1017', p: { xs: 1.5, sm: 2 }, boxShadow: '0 30px 70px rgba(0,0,0,0.5)' }}>
+      <Box sx={{ position: 'relative', borderRadius: '16px', border: `1px solid rgba(0,0,0,0.2)`, bgcolor: K.bg, p: { xs: 1.5, sm: 2 }, boxShadow: '0 30px 70px rgba(157,67,0,0.2)' }}>
         <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
           <Kitchen sx={{ fontSize: 16, color: ORANGE_L }} />
-          <Box sx={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Oshxona ekrani</Box>
+          <Box sx={{ fontSize: 12, fontWeight: 800, color: K.text }}>Oshxona ekrani</Box>
           <Box sx={{ ml: 'auto', width: 7, height: 7, borderRadius: '50%', bgcolor: '#4ADE80', animation: `${pulse} 2s infinite` }} />
         </Stack>
         <Grid container spacing={1}>
@@ -259,7 +261,7 @@ function KitchenMock() {
               <Box sx={{ fontSize: 9, fontWeight: 800, color: col.c, mb: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{col.h}</Box>
               <Stack spacing={0.75}>
                 {col.cards.map((card) => (
-                  <Box key={card} sx={{ p: 1, borderRadius: 2, bgcolor: CARD2, border: `1px solid ${BORDER}`, borderLeft: `2.5px solid ${col.c}`, fontSize: 9.5, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <Box key={card} sx={{ p: 1, borderRadius: 2, bgcolor: K.card, border: `1px solid ${K.border}`, borderLeft: `2.5px solid ${col.c}`, fontSize: 9.5, fontWeight: 700, color: K.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {card}
                   </Box>
                 ))}
@@ -278,19 +280,19 @@ const Home: NextPage = () => {
       <Head><title>Vivora | Modern Restoran Boshqaruvi</title></Head>
       <Box sx={{ bgcolor: BG, color: TEXT, overflowX: 'hidden', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
 
-        <MarketingNav dark />
+        <MarketingNav />
 
         <Box component="main">
           {/* ── Hero ── */}
           <Box sx={{ position: 'relative' }}>
-            {/* Ambient glows */}
-            <Box sx={{ position: 'absolute', top: -180, left: '50%', transform: 'translateX(-50%)', width: 900, height: 500, background: `radial-gradient(ellipse, rgba(249,115,22,0.16), transparent 65%)`, filter: 'blur(40px)', pointerEvents: 'none' }} />
+            {/* Ambient glow */}
+            <Box sx={{ position: 'absolute', top: -180, left: '50%', transform: 'translateX(-50%)', width: 900, height: 500, background: `radial-gradient(ellipse, rgba(249,115,22,0.13), transparent 65%)`, filter: 'blur(40px)', pointerEvents: 'none' }} />
             <Container maxWidth="lg" sx={{ position: 'relative', pt: { xs: 8, md: 12 }, pb: { xs: 7, md: 10 }, textAlign: 'center' }}>
               <Box sx={{ animation: `${fadeUp} .7s ${bounce} both` }}>
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.75, borderRadius: 99, border: `1px solid rgba(249,115,22,0.35)`, bgcolor: 'rgba(249,115,22,0.08)' }}>
-                    <Bolt sx={{ fontSize: 15, color: ORANGE_L }} />
-                    <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: ORANGE_L }}>Restoranlar uchun zamonaviy boshqaruv tizimi</Typography>
+                  <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.75, borderRadius: 99, border: '1px solid rgba(157,67,0,0.25)', bgcolor: 'rgba(249,115,22,0.07)' }}>
+                    <Bolt sx={{ fontSize: 15, color: PRIMARY }} />
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: PRIMARY }}>Restoranlar uchun zamonaviy boshqaruv tizimi</Typography>
                   </Box>
                 </Stack>
               </Box>
@@ -312,7 +314,7 @@ const Home: NextPage = () => {
                 <Button component={NextLink} href="/register" sx={pill({ color: '#fff', background: GRAD, boxShadow: `0 14px 34px ${GLOW}`, '&:hover': { boxShadow: `0 18px 44px ${GLOW}`, transform: 'translateY(-2px)' } })}>
                   Bepul boshlash
                 </Button>
-                <Button component={NextLink} href="/login" sx={pill({ color: TEXT, border: '1.5px solid rgba(255,255,255,0.18)', '&:hover': { borderColor: 'rgba(255,255,255,0.35)', bgcolor: 'rgba(255,255,255,0.05)' } })}>
+                <Button component={NextLink} href="/login" sx={pill({ color: PRIMARY, bgcolor: '#fff', border: '1px solid rgba(140,113,100,0.2)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', '&:hover': { bgcolor: '#fff', borderColor: 'rgba(157,67,0,0.4)', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' } })}>
                   Demoni ko&apos;rish
                 </Button>
               </Stack>
@@ -322,11 +324,11 @@ const Home: NextPage = () => {
                 <DashboardMock />
               </Box>
 
-              {/* Glass stat row */}
+              {/* Stat row */}
               <Grid container spacing={2} sx={{ mt: { xs: 3, md: 5 }, maxWidth: 860, mx: 'auto' }}>
                 {metrics.map((m, i) => (
                   <Grid item xs={6} md={3} key={m.l}>
-                    <Box sx={{ animation: `${fadeUp} .7s ${bounce} ${0.45 + i * 0.08}s both`, p: 2.25, borderRadius: 3, bgcolor: CARD, border: `1px solid ${BORDER}`, backdropFilter: 'blur(8px)', textAlign: 'center' }}>
+                    <Box sx={{ animation: `${fadeUp} .7s ${bounce} ${0.45 + i * 0.08}s both`, p: 2.25, borderRadius: 3, bgcolor: CARD, border: `1px solid ${BORDER}`, textAlign: 'center', boxShadow: '0 6px 18px rgba(157,67,0,0.06)' }}>
                       <Typography sx={{ fontSize: 26, fontWeight: 800, background: GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{m.n}</Typography>
                       <Typography sx={{ fontSize: 12.5, color: MUTED, fontWeight: 600 }}>{m.l}</Typography>
                     </Box>
@@ -340,7 +342,7 @@ const Home: NextPage = () => {
           <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: BG2, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
             <Container maxWidth="lg">
               <Reveal sx={{ textAlign: 'center', mb: { xs: 5, md: 8 } }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 800, color: ORANGE_L, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Qanday ishlaydi</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Qanday ishlaydi</Typography>
                 <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.6rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
                   Uch qadam — tayyor
                 </Typography>
@@ -349,9 +351,9 @@ const Home: NextPage = () => {
                 {steps.map((s, i) => (
                   <Grid item xs={12} md={4} key={s.title}>
                     <Reveal delay={i * 0.12} sx={{ height: '100%' }}>
-                      <Box sx={{ position: 'relative', height: '100%', p: 3.5, borderRadius: 4, bgcolor: CARD, border: `1px solid ${BORDER}`, transition: 'transform .25s, border-color .25s', '&:hover': { transform: 'translateY(-6px)', borderColor: 'rgba(249,115,22,0.4)' } }}>
-                        <Typography sx={{ position: 'absolute', top: 14, right: 20, fontSize: 52, fontWeight: 800, color: 'rgba(255,255,255,0.05)', lineHeight: 1 }}>{i + 1}</Typography>
-                        <Box sx={{ width: 52, height: 52, borderRadius: 3, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', color: ORANGE_L, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2.5 }}>
+                      <Box sx={{ position: 'relative', height: '100%', p: 3.5, borderRadius: 4, bgcolor: CARD, border: `1px solid ${BORDER}`, transition: 'transform .25s, box-shadow .25s', '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 20px 44px rgba(157,67,0,0.12)' } }}>
+                        <Typography sx={{ position: 'absolute', top: 14, right: 20, fontSize: 52, fontWeight: 800, color: 'rgba(157,67,0,0.07)', lineHeight: 1 }}>{i + 1}</Typography>
+                        <Box sx={{ width: 52, height: 52, borderRadius: 3, bgcolor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(157,67,0,0.2)', color: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2.5 }}>
                           {s.icon}
                         </Box>
                         <Typography sx={{ fontSize: 19, fontWeight: 800, mb: 1 }}>{s.title}</Typography>
@@ -369,7 +371,7 @@ const Home: NextPage = () => {
             <Grid container spacing={{ xs: 5, md: 8 }} alignItems="center">
               <Grid item xs={12} md={6}>
                 <Reveal>
-                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: ORANGE_L, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Mijoz tajribasi</Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Mijoz tajribasi</Typography>
                   <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2 }}>
                     Ilovasiz. Kutishsiz.<br />O&apos;z tilida.
                   </Typography>
@@ -398,12 +400,12 @@ const Home: NextPage = () => {
           <Box sx={{ bgcolor: BG2, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
             <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
               <Grid container spacing={{ xs: 5, md: 8 }} alignItems="center" direction={{ xs: 'column-reverse', md: 'row' }}>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={6} sx={{ width: '100%' }}>
                   <Reveal delay={0.15}><KitchenMock /></Reveal>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Reveal>
-                    <Typography sx={{ fontSize: 13, fontWeight: 800, color: ORANGE_L, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Oshxona</Typography>
+                    <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Oshxona</Typography>
                     <Typography sx={{ fontSize: 'clamp(1.6rem, 3vw, 2.3rem)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, mb: 2 }}>
                       Buyurtma tushdi —<br />chek chiqdi
                     </Typography>
@@ -429,7 +431,7 @@ const Home: NextPage = () => {
           {/* ── Features grid ── */}
           <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
             <Reveal sx={{ textAlign: 'center', mb: { xs: 5, md: 7 } }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 800, color: ORANGE_L, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Imkoniyatlar</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Imkoniyatlar</Typography>
               <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.6rem)', fontWeight: 800, letterSpacing: '-0.02em', mb: 1.5 }}>
                 Bitta tizim — butun restoran
               </Typography>
@@ -441,8 +443,8 @@ const Home: NextPage = () => {
               {features.map((f, i) => (
                 <Grid item xs={12} sm={6} md={4} key={f.title}>
                   <Reveal delay={(i % 3) * 0.1} sx={{ height: '100%' }}>
-                    <Box sx={{ height: '100%', p: 3, borderRadius: 4, bgcolor: CARD, border: `1px solid ${BORDER}`, transition: 'transform .25s, border-color .25s, background .25s', '&:hover': { transform: 'translateY(-5px)', borderColor: 'rgba(249,115,22,0.4)', bgcolor: 'rgba(249,115,22,0.05)' } }}>
-                      <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.28)', color: ORANGE_L, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, '& svg': { fontSize: 22 } }}>
+                    <Box sx={{ height: '100%', p: 3, borderRadius: 4, bgcolor: CARD, border: `1px solid ${BORDER}`, transition: 'transform .25s, box-shadow .25s, border-color .25s', '&:hover': { transform: 'translateY(-5px)', borderColor: 'rgba(157,67,0,0.3)', boxShadow: '0 16px 36px rgba(157,67,0,0.1)' } }}>
+                      <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(157,67,0,0.18)', color: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, '& svg': { fontSize: 22 } }}>
                         {f.icon}
                       </Box>
                       <Typography sx={{ fontSize: 16.5, fontWeight: 800, mb: 0.75 }}>{f.title}</Typography>
@@ -458,7 +460,7 @@ const Home: NextPage = () => {
           <Box sx={{ bgcolor: BG2, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
             <Container maxWidth="md" sx={{ py: { xs: 8, md: 12 } }}>
               <Reveal sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 800, color: ORANGE_L, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Savol-javob</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 800, color: PRIMARY, letterSpacing: '0.12em', textTransform: 'uppercase', mb: 1.5 }}>Savol-javob</Typography>
                 <Typography sx={{ fontSize: 'clamp(1.7rem, 3.4vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
                   Ko&apos;p beriladigan savollar
                 </Typography>
@@ -468,7 +470,7 @@ const Home: NextPage = () => {
                   <Accordion key={f.q} disableGutters elevation={0} sx={{
                     bgcolor: CARD, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: '14px !important',
                     mb: 1.5, '&:before': { display: 'none' },
-                    '&.Mui-expanded': { borderColor: 'rgba(249,115,22,0.35)' },
+                    '&.Mui-expanded': { borderColor: 'rgba(157,67,0,0.35)', boxShadow: '0 10px 26px rgba(157,67,0,0.08)' },
                   }}>
                     <AccordionSummary expandIcon={<ExpandMore sx={{ color: MUTED }} />} sx={{ px: 3, py: 0.5 }}>
                       <Typography sx={{ fontWeight: 700, fontSize: 15.5 }}>{f.q}</Typography>
@@ -509,7 +511,7 @@ const Home: NextPage = () => {
         </Box>
 
         {/* ── Footer ── */}
-        <Box component="footer" sx={{ borderTop: `1px solid ${BORDER}`, py: { xs: 6, md: 9 }, bgcolor: BG2 }}>
+        <Box component="footer" sx={{ borderTop: `1px solid ${BORDER}`, py: { xs: 6, md: 9 }, bgcolor: 'rgba(234,225,215,0.5)' }}>
           <Container maxWidth="lg">
             <Grid container spacing={4}>
               <Grid item xs={12} lg={4}>
@@ -517,14 +519,14 @@ const Home: NextPage = () => {
                   <Box sx={{ width: 36, height: 36, borderRadius: 2.5, background: GRAD, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Restaurant sx={{ fontSize: 18 }} />
                   </Box>
-                  <Typography sx={{ fontSize: 20, fontWeight: 800, color: TEXT, letterSpacing: '-0.02em' }}>Vivora</Typography>
+                  <Typography sx={{ fontSize: 20, fontWeight: 800, color: PRIMARY, letterSpacing: '-0.02em' }}>Vivora</Typography>
                 </Stack>
                 <Typography sx={{ fontSize: 14.5, color: MUTED, mb: 3, lineHeight: 1.65, maxWidth: 300 }}>
                   Restoranlar uchun innovatsion boshqaruv tizimi. Xizmat sifatini oshiring va daromadingizni ko&apos;paytiring.
                 </Typography>
                 <Stack direction="row" spacing={1.5}>
                   {[<Public key="1" />, <Chat key="2" />, <Email key="3" />].map((ic, i) => (
-                    <Box key={i} component="a" href="#" sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: CARD, border: `1px solid ${BORDER}`, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '& svg': { fontSize: 18 }, '&:hover': { color: '#fff', borderColor: 'rgba(249,115,22,0.5)', bgcolor: 'rgba(249,115,22,0.12)', transform: 'translateY(-3px)' } }}>{ic}</Box>
+                    <Box key={i} component="a" href="#" sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: '#fff', border: `1px solid ${BORDER}`, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', '& svg': { fontSize: 18 }, '&:hover': { color: '#fff', bgcolor: PRIMARY, transform: 'translateY(-3px)' } }}>{ic}</Box>
                   ))}
                 </Stack>
               </Grid>
@@ -532,10 +534,10 @@ const Home: NextPage = () => {
                 <Grid container spacing={4}>
                   {footerCols.map((col) => (
                     <Grid item xs={6} sm={4} key={col.h}>
-                      <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: ORANGE_L, mb: 2, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{col.h}</Typography>
+                      <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: PRIMARY, mb: 2, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{col.h}</Typography>
                       <Stack spacing={1.5}>
                         {col.links.map(([l, href]) => (
-                          <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 500, color: MUTED, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: TEXT } }}>{l}</Typography>
+                          <Typography key={l} component={NextLink} href={href} sx={{ fontSize: 14, fontWeight: 500, color: MUTED, textDecoration: 'none', transition: 'color .2s', '&:hover': { color: PRIMARY } }}>{l}</Typography>
                         ))}
                       </Stack>
                     </Grid>
@@ -546,12 +548,12 @@ const Home: NextPage = () => {
             <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={2} sx={{ mt: { xs: 5, md: 7 }, pt: 4, borderTop: `1px solid ${BORDER}` }}>
               <Typography sx={{ fontSize: 12.5, color: MUTED }}>© {new Date().getFullYear()} Vivora Technologies. Barcha huquqlar himoyalangan.</Typography>
               <Stack direction="row" spacing={2}>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: CARD, borderRadius: 99, border: `1px solid ${BORDER}` }}>
-                  <VerifiedUser sx={{ fontSize: 15, color: '#4ADE80' }} />
+                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: '#fff', borderRadius: 99, border: `1px solid ${BORDER}` }}>
+                  <VerifiedUser sx={{ fontSize: 15, color: '#16A34A' }} />
                   <Typography sx={{ fontSize: 11, fontWeight: 600, color: MUTED }}>Xavfsiz to&apos;lovlar</Typography>
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: CARD, borderRadius: 99, border: `1px solid ${BORDER}` }}>
-                  <Security sx={{ fontSize: 15, color: '#60A5FA' }} />
+                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.5, py: 0.5, bgcolor: '#fff', borderRadius: 99, border: `1px solid ${BORDER}` }}>
+                  <Security sx={{ fontSize: 15, color: '#2563EB' }} />
                   <Typography sx={{ fontSize: 11, fontWeight: 600, color: MUTED }}>Shifrlangan ma&apos;lumotlar</Typography>
                 </Stack>
               </Stack>
