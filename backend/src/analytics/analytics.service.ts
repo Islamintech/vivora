@@ -70,6 +70,21 @@ export class AnalyticsService {
     const totalRevenue = revenueAgg[0]?.total || 0;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
+    // Cash actually collected: staff tapped "To'landi" on the kitchen board.
+    // Matched on paidAt so money lands on the day it was taken.
+    const [paidAgg] = await this.orderModel.aggregate([
+      {
+        $match: {
+          restaurantId,
+          isPaid: true,
+          paidAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$totalAmount' }, count: { $sum: 1 } } },
+    ]);
+    const paidRevenue = paidAgg?.total ?? 0;
+    const paidOrders = paidAgg?.count ?? 0;
+
     // Popular items
     const popularItems = await this.orderModel.aggregate([
       { $match: filter },
@@ -139,6 +154,8 @@ export class AnalyticsService {
 
     return {
       totalRevenue,
+      paidRevenue,
+      paidOrders,
       totalOrders,
       averageOrderValue,
       pendingOrders,

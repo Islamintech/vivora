@@ -319,7 +319,7 @@ export const CLOSE_TABLE_SESSION_MUTATION = gql`
 export const ANALYTICS_QUERY = gql`
   query Analytics($period: AnalyticsPeriodInput!) {
     analytics(period: $period) {
-      totalRevenue totalOrders averageOrderValue pendingOrders servedOrders
+      totalRevenue paidRevenue paidOrders totalOrders averageOrderValue pendingOrders servedOrders
       popularItems { menuItemId name totalOrdered revenue }
       dailyRevenue { date revenue orderCount }
       tableTurnover { tableNumber tableName totalOrders totalRevenue }

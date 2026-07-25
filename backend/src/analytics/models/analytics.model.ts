@@ -48,6 +48,13 @@ export class AnalyticsOverview {
   @Field(() => Float)
   totalRevenue: number;
 
+  // Cash collected via the kitchen board's "To'landi" button.
+  @Field(() => Float)
+  paidRevenue: number;
+
+  @Field(() => Int)
+  paidOrders: number;
+
   @Field(() => Int)
   totalOrders: number;
 

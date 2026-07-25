@@ -60,6 +60,8 @@ type AdminUserView {
 type AnalyticsOverview {
   averageOrderValue: Float!
   dailyRevenue: [DailyRevenue!]!
+  paidOrders: Int!
+  paidRevenue: Float!
   pendingOrders: Int!
   popularItems: [PopularItemStat!]!
   servedOrders: Int!

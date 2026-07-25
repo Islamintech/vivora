@@ -7,7 +7,7 @@ import {
   ToggleButton, ToggleButtonGroup, LinearProgress, IconButton, Tooltip,
 } from '@mui/material';
 import {
-  TrendingUp, ShoppingBag, Star, TableRestaurant,
+  TrendingUp, ShoppingBag, TableRestaurant, Payments,
   ChevronLeft, ChevronRight,
 } from '@mui/icons-material';
 import dayjs, { Dayjs } from 'dayjs';
@@ -165,9 +165,10 @@ const AnalyticsPage: NextPage = () => {
           <Grid container spacing={3} mb={4}>
             {[
               { label: 'Umumiy daromad', value: formatMoney(analytics?.totalRevenue ?? 0, currency), icon: <TrendingUp />, color: 'success' },
+              // Money staff actually collected via the kitchen board.
+              { label: 'Yig‘ilgan to‘lov', value: formatMoney(analytics?.paidRevenue ?? 0, currency), icon: <Payments />, color: 'success' },
               { label: 'Umumiy buyurtmalar', value: analytics?.totalOrders ?? 0, icon: <ShoppingBag />, color: 'primary' },
               { label: 'O‘rtacha buyurtma', value: formatMoney(analytics?.averageOrderValue ?? 0, currency), icon: <TableRestaurant />, color: 'info' },
-              { label: 'Berilgan buyurtmalar', value: analytics?.servedOrders ?? 0, icon: <Star />, color: 'warning' },
             ].map((kpi) => (
               <Grid item xs={12} sm={6} md={3} key={kpi.label}>
                 <Card>
