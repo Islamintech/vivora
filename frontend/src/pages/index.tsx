@@ -170,39 +170,84 @@ function DashboardMock() {
   );
 }
 
-/** Light phone preview of the customer menu (product UI, stays as shipped). */
+/** Customer menu inside a realistic phone device frame (product UI as shipped). */
 function PhoneMock() {
   const items = [
-    { n: 'Palov', p: '₩12 000', best: true },
-    { n: 'Lag‘mon', p: '₩10 500', best: false },
-    { n: 'Shashlik', p: '₩8 000', best: false },
+    { n: 'Palov', d: 'Qo‘y go‘shti, sabzi, guruch', p: '₩12 000', best: true, img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=200&q=70&auto=format&fit=crop' },
+    { n: 'Lag‘mon', d: 'Qo‘lda tortilgan, sabzavotli', p: '₩10 500', best: false, img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200&q=70&auto=format&fit=crop' },
+    { n: 'Shashlik', d: 'Ko‘mirda pishirilgan', p: '₩8 000', best: false, img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=200&q=70&auto=format&fit=crop' },
   ];
   return (
-    <Box sx={{ position: 'relative', maxWidth: 290, mx: 'auto' }}>
-      <Box sx={{ position: 'absolute', inset: '-10%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(28px)' }} />
-      <Box sx={{ position: 'relative', borderRadius: '2.2rem', border: `1px solid ${BORDER}`, bgcolor: '#fff', p: 1, boxShadow: '0 30px 70px rgba(157,67,0,0.18)' }}>
-        <Box sx={{ borderRadius: '1.8rem', overflow: 'hidden', bgcolor: '#fffdf9' }}>
-          <Box sx={{ px: 2, pt: 2, pb: 1.25, borderBottom: `1px solid ${BORDER}` }}>
-            <Box sx={{ fontSize: 10, color: MUTED }}>7-stol · Zaytoon</Box>
-            <Box sx={{ fontSize: 15, fontWeight: 800, color: TEXT }}>Menyu</Box>
+    <Box sx={{ position: 'relative', width: 268, mx: 'auto' }}>
+      <Box sx={{ position: 'absolute', inset: '-12%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(30px)' }} />
+
+      {/* Device body */}
+      <Box sx={{
+        position: 'relative', borderRadius: '2.6rem', p: '9px',
+        background: 'linear-gradient(155deg, #3a3a3e, #17171a 42%, #2c2c30)',
+        boxShadow: '0 36px 70px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.35)',
+      }}>
+        {/* Side buttons */}
+        <Box sx={{ position: 'absolute', left: -2, top: 108, width: 3, height: 34, borderRadius: 2, bgcolor: '#26262a' }} />
+        <Box sx={{ position: 'absolute', left: -2, top: 152, width: 3, height: 34, borderRadius: 2, bgcolor: '#26262a' }} />
+        <Box sx={{ position: 'absolute', right: -2, top: 128, width: 3, height: 52, borderRadius: 2, bgcolor: '#26262a' }} />
+
+        {/* Screen */}
+        <Box sx={{ position: 'relative', borderRadius: '2.1rem', overflow: 'hidden', bgcolor: '#fffdf9' }}>
+          {/* Dynamic island */}
+          <Box sx={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', width: 74, height: 20, borderRadius: 99, bgcolor: '#101013', zIndex: 3 }} />
+
+          {/* Status bar */}
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.25, pt: 1.15, pb: 0.4, fontSize: 9.5, fontWeight: 700, color: TEXT }}>
+            <Box>9:41</Box>
+            <Stack direction="row" spacing={0.4} alignItems="center">
+              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1.5px', height: 7 }}>
+                {[3, 4.5, 6, 7].map((hh, i) => <Box key={i} sx={{ width: 2, height: hh, borderRadius: '1px', bgcolor: TEXT }} />)}
+              </Box>
+              <Box sx={{ width: 14, height: 7.5, borderRadius: '2px', border: `1px solid ${TEXT}`, p: '1px', display: 'flex' }}>
+                <Box sx={{ flex: 1, borderRadius: '1px', bgcolor: TEXT }} />
+              </Box>
+            </Stack>
+          </Stack>
+
+          {/* App header */}
+          <Box sx={{ px: 2, pt: 0.75, pb: 1.25, borderBottom: `1px solid ${BORDER}` }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Box>
+                <Box sx={{ fontSize: 9.5, color: MUTED, fontWeight: 600 }}>7-stol · Zaytoon</Box>
+                <Box sx={{ fontSize: 15, fontWeight: 800, color: TEXT }}>Menyu</Box>
+              </Box>
+              <Box sx={{ px: 1, py: 0.35, borderRadius: 99, border: `1px solid ${BORDER}`, fontSize: 9, fontWeight: 700, color: MUTED }}>UZ</Box>
+            </Stack>
           </Box>
-          <Stack spacing={1} sx={{ p: 1.5 }}>
+
+          {/* Items with photos */}
+          <Stack spacing={1} sx={{ p: 1.25, pb: 1 }}>
             {items.map((it) => (
-              <Stack key={it.n} direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 1.25, borderRadius: 2.5, bgcolor: '#fff', border: `1px solid ${BORDER}` }}>
-                <Box>
+              <Stack key={it.n} direction="row" alignItems="center" spacing={1.15} sx={{ p: 1, borderRadius: 2.5, bgcolor: '#fff', border: `1px solid ${BORDER}` }}>
+                <Box component="img" src={it.img} alt="" sx={{ width: 40, height: 40, borderRadius: 1.75, objectFit: 'cover', flexShrink: 0, bgcolor: CARD2 }} />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Box sx={{ fontSize: 12, fontWeight: 800, color: TEXT }}>{it.n}</Box>
-                    {it.best && <Box sx={{ fontSize: 8.5, fontWeight: 800, color: '#C2410C', bgcolor: 'rgba(249,115,22,0.12)', px: 0.75, py: 0.2, borderRadius: 99 }}>🔥 Xit</Box>}
+                    <Box sx={{ fontSize: 11.5, fontWeight: 800, color: TEXT }}>{it.n}</Box>
+                    {it.best && <Box sx={{ fontSize: 8, fontWeight: 800, color: '#C2410C', bgcolor: 'rgba(249,115,22,0.12)', px: 0.6, py: 0.15, borderRadius: 99, whiteSpace: 'nowrap' }}>🔥 Xit</Box>}
                   </Stack>
-                  <Box sx={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY }}>{it.p}</Box>
+                  <Box sx={{ fontSize: 8.5, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.d}</Box>
+                  <Box sx={{ fontSize: 10.5, fontWeight: 800, color: PRIMARY }}>{it.p}</Box>
                 </Box>
-                <Box sx={{ width: 26, height: 26, borderRadius: '50%', background: GRAD, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800 }}>+</Box>
+                <Box sx={{ width: 24, height: 24, borderRadius: '50%', background: GRAD, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0 }}>+</Box>
               </Stack>
             ))}
-            <Box sx={{ mt: 0.5, py: 1.1, borderRadius: 99, background: GRAD, textAlign: 'center', fontSize: 12, fontWeight: 800, color: '#fff', boxShadow: `0 8px 20px ${GLOW}` }}>
+          </Stack>
+
+          {/* Order button + home indicator */}
+          <Box sx={{ px: 1.25, pb: 1 }}>
+            <Box sx={{ py: 1.1, borderRadius: 99, background: GRAD, textAlign: 'center', fontSize: 11.5, fontWeight: 800, color: '#fff', boxShadow: `0 8px 18px ${GLOW}` }}>
               Buyurtma berish · ₩30 500
             </Box>
-          </Stack>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', pb: 0.9 }}>
+            <Box sx={{ width: 90, height: 3.5, borderRadius: 99, bgcolor: 'rgba(0,0,0,0.22)' }} />
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -362,17 +407,15 @@ const Home: NextPage = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Reveal delay={0.15}>
-                  {/* Real restaurant photo with the phone mockup overlapping it */}
-                  <Box sx={{ position: 'relative', pb: { xs: 0, md: 5 } }}>
+                  {/* Restaurant photo above, phone mockup below - no overlap */}
+                  <Box>
                     <Box
                       component="img"
                       src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80&auto=format&fit=crop"
                       alt="Restoran"
-                      sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 470, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)' }}
+                      sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 220, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)', mb: 3 }}
                     />
-                    <Box sx={{ position: { xs: 'static', md: 'absolute' }, bottom: { md: 0 }, left: { md: -28 }, width: { md: 265 } }}>
-                      <PhoneMock />
-                    </Box>
+                    <PhoneMock />
                   </Box>
                 </Reveal>
               </Grid>
