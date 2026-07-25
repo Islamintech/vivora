@@ -47,15 +47,19 @@ const AnalyticsPage: NextPage = () => {
   // Memoized: fresh Date objects on every render make Apollo see "new
   // variables" and refetch in an endless loop.
   const periodInput = useMemo(() => {
+    // The browser's zone, so the backend groups days by OUR midnight, not UTC.
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (view === 'week') {
       return {
         startDate: dayjs().subtract(6, 'day').startOf('day').toDate(),
         endDate: dayjs().endOf('day').toDate(),
+        timezone,
       };
     }
     return {
       startDate: month.startOf('month').toDate(),
       endDate: month.endOf('month').toDate(),
+      timezone,
     };
   }, [view, month]);
 
@@ -342,7 +346,7 @@ const AnalyticsPage: NextPage = () => {
                   </Stack>
                   {topItems.length > 0 && (
                     <Chip
-                      label="Top taomlar mijozlar menyusida «🔥 Eng xaridorgir» belgisi bilan avtomatik ko‘rsatiladi"
+                      label="Top taomlar mijozlar menyusida «🔥 Eng mashxur taomlar» belgisi bilan avtomatik ko‘rsatiladi"
                       size="small"
                       sx={{ mt: 2, height: 'auto', py: 0.75, bgcolor: '#FFF1E4', color: '#C2410C', fontWeight: 600, '& .MuiChip-label': { whiteSpace: 'normal', display: 'block' } }}
                     />

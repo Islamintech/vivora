@@ -69,8 +69,9 @@ export class AdminResolver {
   @Query(() => [PlatformTimePoint])
   async platformTimeseries(
     @Args('days', { type: () => Int, nullable: true }) days?: number,
+    @Args('timezone', { nullable: true }) timezone?: string,
   ): Promise<PlatformTimePoint[]> {
-    return this.adminService.getPlatformTimeseries(days ?? 30);
+    return this.adminService.getPlatformTimeseries(days ?? 30, timezone);
   }
 
   @Mutation(() => Int)

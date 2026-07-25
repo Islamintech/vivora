@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from '../orders/schemas/order.schema';
 import { OrderStatus } from '../common/enums';
+import { safeTimezone } from '../common/timezone';
 
 @Injectable()
 export class AnalyticsService {
@@ -38,7 +39,12 @@ export class AnalyticsService {
     return rows.map((r) => String(r._id));
   }
 
-  async getOverview(restaurantId: string, startDate: Date, endDate: Date) {
+  async getOverview(
+    restaurantId: string,
+    startDate: Date,
+    endDate: Date,
+    timezone?: string,
+  ) {
     if (!Types.ObjectId.isValid(restaurantId)) {
       throw new BadRequestException('Invalid restaurant id');
     }
@@ -88,13 +94,18 @@ export class AnalyticsService {
       },
     ]);
 
-    // Daily revenue
+    // Daily revenue, grouped by the viewer's local calendar day — otherwise
+    // late-evening orders (KST is UTC+9) land on the previous UTC date.
     const dailyRevenue = await this.orderModel.aggregate([
       { $match: { ...filter, status: { $in: [OrderStatus.SERVED, OrderStatus.READY] } } },
       {
         $group: {
           _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt',
+              timezone: safeTimezone(timezone),
+            },
           },
           revenue: { $sum: '$totalAmount' },
           orderCount: { $sum: 1 },

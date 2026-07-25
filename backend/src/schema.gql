@@ -71,6 +71,7 @@ type AnalyticsOverview {
 input AnalyticsPeriodInput {
   endDate: DateTime!
   startDate: DateTime!
+  timezone: String
 }
 
 type AuthPayload {
@@ -349,7 +350,7 @@ type Query {
   orders(limit: Float, status: OrderStatus): [OrderModel!]!
   pendingRestaurants: [RestaurantModel!]!
   platformStats: PlatformStats!
-  platformTimeseries(days: Int): [PlatformTimePoint!]!
+  platformTimeseries(days: Int, timezone: String): [PlatformTimePoint!]!
   publicMenu(restaurantId: ID!): [PublicMenuSection!]!
   publicRestaurant(slug: String!): RestaurantModel!
   tableSession(restaurantId: ID!, tableNumber: Int!): TableSessionModel

@@ -496,8 +496,8 @@ export const ADMIN_RESTAURANT_DETAIL_QUERY = gql`
 `;
 
 export const PLATFORM_TIMESERIES_QUERY = gql`
-  query PlatformTimeseries($days: Int) {
-    platformTimeseries(days: $days) {
+  query PlatformTimeseries($days: Int, $timezone: String) {
+    platformTimeseries(days: $days, timezone: $timezone) {
       date revenue orders signups
     }
   }

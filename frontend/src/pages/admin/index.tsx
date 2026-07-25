@@ -73,7 +73,10 @@ const AdminPage: NextPage = () => {
   });
   const { data: ordersData, loading: ordersLoading } = useQuery(ALL_ORDERS_QUERY, { variables: { limit: 100 }, skip: !user || tab !== 1 });
   const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useQuery(ADMIN_USERS_QUERY, { skip: !user || tab !== 4 });
-  const { data: trendsData, loading: trendsLoading } = useQuery(PLATFORM_TIMESERIES_QUERY, { variables: { days: 30 }, skip: !user || tab !== 5 });
+  const { data: trendsData, loading: trendsLoading } = useQuery(PLATFORM_TIMESERIES_QUERY, {
+    variables: { days: 30, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+    skip: !user || tab !== 5,
+  });
   const { data: invoicesData, loading: invoicesLoading, refetch: refetchInvoices } = useQuery(ALL_INVOICES_QUERY, { skip: !user || tab !== 6 });
 
   const [generateInvoices, { loading: generating }] = useMutation(GENERATE_INVOICES_MUTATION, {

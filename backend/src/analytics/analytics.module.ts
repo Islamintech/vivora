@@ -23,6 +23,7 @@ export class AnalyticsResolver {
       user.restaurantId?.toString(),
       period.startDate,
       period.endDate,
+      period.timezone,
     );
   }
 
@@ -37,6 +38,7 @@ export class AnalyticsResolver {
       restaurantId,
       period.startDate,
       period.endDate,
+      period.timezone,
     );
   }
 }

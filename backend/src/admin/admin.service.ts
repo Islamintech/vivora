@@ -14,6 +14,7 @@ import { TablesService } from '../tables/tables.service';
 import { ErrorLogsService } from '../error-logs/error-logs.service';
 import { Order, OrderDocument } from '../orders/schemas/order.schema';
 import { ErrorLogLevel, OrderStatus } from '../common/enums';
+import { safeTimezone } from '../common/timezone';
 
 @Injectable()
 export class AdminService {
@@ -215,14 +216,20 @@ export class AdminService {
 
   // --- Platform trends ---
 
-  async getPlatformTimeseries(days: number) {
+  async getPlatformTimeseries(days: number, timezone?: string) {
+    const tz = safeTimezone(timezone);
     const span = Math.min(Math.max(days || 30, 1), 365);
-    const start = new Date();
-    start.setDate(start.getDate() - (span - 1));
-    start.setHours(0, 0, 0, 0);
+    // Formats any instant as YYYY-MM-DD in the viewer's zone (en-CA is ISO).
+    const dayFmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    });
+    const keyOf = (d: Date) => dayFmt.format(d);
+    // Fetch a day of margin on each side of the window; the axis below only
+    // picks the exact tz-local days it needs, extras are ignored.
+    const start = new Date(Date.now() - (span + 1) * 86_400_000);
 
     const dayKey = {
-      $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+      $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: tz },
     };
 
     const [orderAgg, restaurants] = await Promise.all([
@@ -250,7 +257,7 @@ export class AdminService {
     for (const r of restaurants) {
       const created = (r as any).createdAt as Date | undefined;
       if (!created || created < start) continue;
-      const key = created.toISOString().slice(0, 10);
+      const key = keyOf(created);
       signupsByDay.set(key, (signupsByDay.get(key) ?? 0) + 1);
     }
 
@@ -265,9 +272,8 @@ export class AdminService {
       signups: number;
     }[] = [];
     for (let i = 0; i < span; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const key = d.toISOString().slice(0, 10);
+      // Step back in whole 24h units from now and label with the tz-local day.
+      const key = keyOf(new Date(Date.now() - (span - 1 - i) * 86_400_000));
       const o = orderByDay.get(key);
       points.push({
         date: key,
