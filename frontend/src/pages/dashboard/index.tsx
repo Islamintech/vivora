@@ -17,18 +17,22 @@ import { useCurrency } from '@/hooks/useCurrency';
 import dayjs from 'dayjs';
 import { statusColor, statusLabel } from '@/types';
 
+// All four cards must render at the same height, so the card fills its grid
+// cell and the label/value/sub block stretches inside it.
 const StatCard = ({ label, value, icon, color, sub }: any) => (
-  <Card>
-    <CardContent>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Box>
+  <Card sx={{ height: '100%' }}>
+    <CardContent sx={{ height: '100%', display: 'flex' }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ width: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <Typography variant="body2" color="text.secondary" fontWeight={500} mb={0.5}>
             {label}
           </Typography>
-          <Typography variant="h4" fontWeight={800}>{value}</Typography>
-          {sub && <Typography variant="caption" color="text.secondary">{sub}</Typography>}
+          <Typography variant="h4" fontWeight={800} noWrap>{value}</Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto', pt: 0.5 }}>
+            {sub ?? ' '}
+          </Typography>
         </Box>
-        <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.dark`, width: 48, height: 48 }}>
+        <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.dark`, width: 48, height: 48, flexShrink: 0 }}>
           {icon}
         </Avatar>
       </Stack>
@@ -75,7 +79,7 @@ const DashboardPage: NextPage = () => {
           {/* Stat cards */}
           <Grid container spacing={3} mb={4}>
             <Grid item xs={12} sm={6} md={3}>
-              {aLoading ? <Skeleton variant="rounded" height={120} /> : (
+              {aLoading ? <Skeleton variant="rounded" height={130} /> : (
                 <StatCard
                   label="Umumiy daromad (30 kun)"
                   value={formatMoney(analytics?.totalRevenue ?? 0, currency)}
@@ -86,7 +90,7 @@ const DashboardPage: NextPage = () => {
               )}
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              {aLoading ? <Skeleton variant="rounded" height={120} /> : (
+              {aLoading ? <Skeleton variant="rounded" height={130} /> : (
                 <StatCard
                   label="Bugungi buyurtmalar"
                   value={analytics?.totalOrders ?? 0}
@@ -97,12 +101,13 @@ const DashboardPage: NextPage = () => {
               )}
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              {aLoading ? <Skeleton variant="rounded" height={120} /> : (
+              {aLoading ? <Skeleton variant="rounded" height={130} /> : (
                 <StatCard
                   label="O‘rtacha buyurtma summasi"
                   value={formatMoney(analytics?.averageOrderValue ?? 0, currency)}
                   icon={<TableRestaurant />}
                   color="info"
+                  sub="So‘nggi 30 kun"
                 />
               )}
             </Grid>
