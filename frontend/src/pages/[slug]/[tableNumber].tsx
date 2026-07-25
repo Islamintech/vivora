@@ -300,6 +300,61 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   };
 
 
+  // Closed: show opening hours instead of the menu. Checked before the
+  // welcome gate so nobody picks a language and dine-in only to be turned
+  // away. The backend rejects orders independently of this screen.
+  if (restaurant && restaurant.isOpenNow === false) {
+    const closedLang = prefs?.lang ?? 'en';
+    return (
+      <>
+        <Head><title>{restaurant.name}</title></Head>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+          <Card sx={{ width: '100%', textAlign: 'center' }}>
+            <CardContent sx={{ p: 4 }}>
+              {restaurant.logo
+                ? <Box component="img" src={restaurant.logo} alt="" sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
+                : <Typography sx={{ fontSize: 44, mb: 1 }}>🌙</Typography>}
+
+              <Typography variant="h6" fontWeight={800}>{restaurant.name}</Typography>
+              <Typography color="text.secondary" variant="body2" mb={2.5}>
+                {t.table} {tableNumber}
+              </Typography>
+
+              <Typography variant="h6" fontWeight={700} mb={2}>{t.closedNow}</Typography>
+
+              {/* Opening hours - the point of this screen */}
+              <Box sx={{ py: 2, px: 2, borderRadius: 3, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.100', mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                  {t.workingHours}
+                </Typography>
+                <Typography variant="h5" fontWeight={800} color="primary.main">
+                  {restaurant.openingTime} - {restaurant.closingTime}
+                </Typography>
+              </Box>
+
+              <Typography color="text.secondary" variant="body2" mb={2}>{t.closedHint}</Typography>
+
+              {/* Let them read this in their own language */}
+              <Stack direction="row" spacing={0.75} justifyContent="center" flexWrap="wrap" useFlexGap>
+                {LANGUAGES.map((l) => (
+                  <Chip
+                    key={l.code}
+                    label={`${l.flag} ${l.code.toUpperCase()}`}
+                    size="small"
+                    variant={l.code === closedLang ? 'filled' : 'outlined'}
+                    color={l.code === closedLang ? 'primary' : 'default'}
+                    onClick={() => savePrefs({ lang: l.code, orderType: prefs?.orderType ?? 'DINE_IN' })}
+                    sx={{ fontWeight: 700 }}
+                  />
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      </>
+    );
+  }
+
   // First scan of this sitting: ask for language, then dine-in vs take-out.
   // Held until localStorage has been read so the gate doesn't flash.
   if (prefsLoaded && !prefs && !restError) {
@@ -331,34 +386,6 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
               <Typography sx={{ fontSize: 48, mb: 1 }}>🍽️</Typography>
               <Typography variant="h6" fontWeight={800} mb={1}>{t.menuUnavailable}</Typography>
               <Typography color="text.secondary">{t.menuUnavailableHint}</Typography>
-            </CardContent>
-          </Card>
-        </Box>
-      </>
-    );
-  }
-
-  // Outside opening hours: show when they reopen instead of the menu. The
-  // backend rejects orders independently, so this is presentation only.
-  if (restaurant && restaurant.isOpenNow === false) {
-    return (
-      <>
-        <Head><title>{restaurant.name}</title></Head>
-        <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
-          <Card sx={{ width: '100%', textAlign: 'center' }}>
-            <CardContent sx={{ p: 4 }}>
-              {restaurant.logo
-                ? <Box component="img" src={restaurant.logo} alt="" sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
-                : <Typography sx={{ fontSize: 48, mb: 1 }}>🌙</Typography>}
-              <Typography variant="h6" fontWeight={800} mb={0.5}>{restaurant.name}</Typography>
-              <Typography variant="h6" fontWeight={700} color="text.primary" mb={1.5}>{t.closedNow}</Typography>
-              <Chip
-                label={t.closedHours.replace('{from}', restaurant.openingTime).replace('{to}', restaurant.closingTime)}
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 700, mb: 2 }}
-              />
-              <Typography color="text.secondary" variant="body2">{t.closedHint}</Typography>
             </CardContent>
           </Card>
         </Box>

@@ -39,6 +39,7 @@ const en = {
   menuUnavailable: 'Menu is not available',
   closedNow: 'We are closed right now',
   closedHours: 'Open {from} - {to}',
+  workingHours: 'Opening hours',
   closedHint: 'Please come back during opening hours.',
   menuUnavailableHint: 'This restaurant isn’t accepting orders right now. Please check back later.',
 
@@ -104,6 +105,7 @@ const ko: UIStrings = {
   menuUnavailable: '메뉴를 이용할 수 없습니다',
   closedNow: '지금은 영업시간이 아닙니다',
   closedHours: '영업시간 {from} - {to}',
+  workingHours: '영업시간',
   closedHint: '영업시간에 다시 방문해 주세요.',
   menuUnavailableHint: '지금은 주문을 받지 않습니다. 나중에 다시 시도해 주세요.',
 
@@ -163,6 +165,7 @@ const ru: UIStrings = {
   menuUnavailable: 'Меню недоступно',
   closedNow: 'Сейчас мы закрыты',
   closedHours: 'Работаем {from} - {to}',
+  workingHours: 'Часы работы',
   closedHint: 'Пожалуйста, зайдите в рабочее время.',
   menuUnavailableHint: 'Ресторан сейчас не принимает заказы. Пожалуйста, зайдите позже.',
 
@@ -222,6 +225,7 @@ const uz: UIStrings = {
   menuUnavailable: 'Menyu mavjud emas',
   closedNow: 'Hozir yopiqmiz',
   closedHours: 'Ish vaqti {from} - {to}',
+  workingHours: 'Ish vaqti',
   closedHint: 'Iltimos, ish vaqtida qayta tashrif buyuring.',
   menuUnavailableHint: 'Hozircha buyurtma qabul qilinmayapti. Keyinroq urinib ko‘ring.',
 
