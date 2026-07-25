@@ -407,15 +407,20 @@ const Home: NextPage = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Reveal delay={0.15}>
-                  {/* Restaurant photo above, phone mockup below - no overlap */}
-                  <Box>
-                    <Box
-                      component="img"
-                      src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80&auto=format&fit=crop"
-                      alt="Restoran"
-                      sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 220, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)', mb: 3 }}
-                    />
-                    <PhoneMock />
+                  {/* Phone centred on a warm stage panel */}
+                  <Box sx={{
+                    position: 'relative', overflow: 'hidden', borderRadius: '2.5rem',
+                    background: 'linear-gradient(150deg, #fff3e8, #ffe6d3 55%, #ffdcc4)',
+                    px: 2, pt: { xs: 5, md: 6 }, pb: { xs: 0, md: 0 },
+                    display: 'flex', justifyContent: 'center',
+                  }}>
+                    {/* Decorative rings */}
+                    <Box sx={{ position: 'absolute', top: '-22%', left: '-14%', width: '62%', height: '85%', border: '28px solid rgba(255,255,255,0.5)', borderRadius: '50%' }} />
+                    <Box sx={{ position: 'absolute', bottom: '-30%', right: '-16%', width: '58%', height: '80%', border: '20px solid rgba(249,115,22,0.1)', borderRadius: '50%' }} />
+                    {/* Phone, cropped at the stage edge so it sits in the panel */}
+                    <Box sx={{ position: 'relative', mb: { xs: -6, md: -8 } }}>
+                      <PhoneMock />
+                    </Box>
                   </Box>
                 </Reveal>
               </Grid>
