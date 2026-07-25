@@ -136,13 +136,23 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
         )}
 
         {order.status === 'PREPARING' && (
-          <Button
-            fullWidth size="small" variant="contained" startIcon={<DoneAll />}
-            onClick={() => actions.onDone(order._id)}
-            sx={{ bgcolor: '#3B82F6', color: '#fff', fontWeight: 800, borderRadius: 2, '&:hover': { bgcolor: '#2563EB' } }}
-          >
-            Tayyor - berildi
-          </Button>
+          <Stack spacing={1}>
+            {/* Guest changed their mind mid-prep - add to the same bill. */}
+            <Button
+              fullWidth size="small" variant="outlined" startIcon={<PlaylistAdd />}
+              onClick={() => actions.onAddItems(order)}
+              sx={{ color: '#93C5FD', borderColor: '#1E3A8A', fontWeight: 700, borderRadius: 2, '&:hover': { borderColor: '#3B82F6', bgcolor: 'rgba(59,130,246,0.08)' } }}
+            >
+              Ovqat qo‘shish
+            </Button>
+            <Button
+              fullWidth size="small" variant="contained" startIcon={<DoneAll />}
+              onClick={() => actions.onDone(order._id)}
+              sx={{ bgcolor: '#3B82F6', color: '#fff', fontWeight: 800, borderRadius: 2, '&:hover': { bgcolor: '#2563EB' } }}
+            >
+              Tayyor - berildi
+            </Button>
+          </Stack>
         )}
 
         {order.status === 'SERVED' && (

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { PubSub } from 'graphql-subscriptions';
 import { Order, OrderDocument } from './schemas/order.schema';
 import {
@@ -282,7 +282,11 @@ export class OrdersService {
     restaurantId: string,
     input: AddItemsToOrderInput,
   ): Promise<OrderDocument> {
-    const orderId = input.orderId.toString();
+    const orderId = input.orderId?.toString() ?? '';
+    // A malformed id would otherwise blow up as a Mongoose cast error (500).
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw new NotFoundException('Order not found');
+    }
     const order = await this.orderModel.findOne({ _id: orderId, restaurantId });
     if (!order) throw new NotFoundException('Order not found');
     if (order.isPaid) {
@@ -317,6 +321,9 @@ export class OrdersService {
    * board and count towards collected income. Idempotent.
    */
   async markPaid(restaurantId: string, orderId: string): Promise<OrderDocument> {
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw new NotFoundException('Order not found');
+    }
     const order = await this.orderModel.findOneAndUpdate(
       { _id: orderId, restaurantId, isPaid: { $ne: true } },
       { $set: { isPaid: true, paidAt: new Date() } },
