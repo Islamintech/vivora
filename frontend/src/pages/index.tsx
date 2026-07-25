@@ -298,11 +298,11 @@ const Home: NextPage = () => {
               </Box>
 
               <Typography component="h1" sx={{ animation: `${fadeUp} .7s ${bounce} .08s both`, fontSize: 'clamp(2.3rem, 6vw, 4.4rem)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.06, mb: 3 }}>
-                Restoraningiz{' '}
+                Restoraningiz uchun{' '}
                 <Box component="span" sx={{ background: GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  QR-kod
+                  QR menyu
                 </Box>
-                {' '}bilan<br />o&apos;z-o&apos;zidan ishlaydi
+                <br />va buyurtma tizimi
               </Typography>
 
               <Typography sx={{ animation: `${fadeUp} .7s ${bounce} .16s both`, fontSize: 'clamp(1rem, 1.4vw, 1.2rem)', color: MUTED, maxWidth: 640, mx: 'auto', lineHeight: 1.7, mb: 4.5 }}>
