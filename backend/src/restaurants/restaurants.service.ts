@@ -9,6 +9,7 @@ import slugify from 'slugify';
 import { Restaurant, RestaurantDocument } from './schemas/restaurant.schema';
 import { UpdateRestaurantInput } from './models/restaurant.model';
 import { RestaurantStatus } from '../common/enums';
+import { isOpenNow } from './opening-hours';
 
 // Restaurant slugs live at the site root (e.g. /zaytoon), so a slug must never
 // collide with a real app route or it would shadow that page. Any name that
@@ -102,6 +103,8 @@ export class RestaurantsService {
   /**
    * Gate for customer-facing flows (public menu, ordering). Throws unless the
    * restaurant has been approved by a super admin and is not suspended.
+   * Opening hours are NOT checked here so customers can still browse the menu
+   * while closed — ordering is gated separately by assertOpen().
    */
   async assertServable(restaurantId: string): Promise<RestaurantDocument> {
     const restaurant = await this.findById(restaurantId);
@@ -112,6 +115,18 @@ export class RestaurantsService {
       );
     }
     return restaurant;
+  }
+
+  /**
+   * Ordering gate: the restaurant must be within its opening hours. Checked
+   * server-side so a stale customer tab can't place an order after closing.
+   */
+  assertOpen(restaurant: RestaurantDocument): void {
+    if (!isOpenNow(restaurant)) {
+      throw new ForbiddenException(
+        `Closed right now. Open ${restaurant.openingTime} - ${restaurant.closingTime}.`,
+      );
+    }
   }
 
   // Used to roll back a half-finished registration; not exposed via the API.

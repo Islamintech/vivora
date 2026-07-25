@@ -20,6 +20,13 @@ export interface Restaurant {
   logo?: string;
   currency: string;
   telegramChatId?: string;
+  /** Opening hours, "HH:mm" in the restaurant's timezone. */
+  openingTime: string;
+  closingTime: string;
+  alwaysOpen: boolean;
+  timezone?: string;
+  /** Computed server-side on the public query only. */
+  isOpenNow?: boolean;
   isActive: boolean;
   status: RestaurantStatus;
   rejectionReason?: string;

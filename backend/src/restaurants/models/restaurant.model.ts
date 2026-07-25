@@ -1,6 +1,6 @@
 import { Field, ID, Int, ObjectType, InputType } from '@nestjs/graphql';
 import {
-  IsBoolean, IsIP, IsInt, IsOptional, IsString, Max, MaxLength, Min,
+  IsBoolean, IsIP, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min,
   MinLength, ValidateIf,
 } from 'class-validator';
 import { RestaurantStatus } from '../../common/enums';
@@ -45,6 +45,22 @@ export class RestaurantModel {
 
   @Field()
   printerPort: number;
+
+  @Field()
+  openingTime: string;
+
+  @Field()
+  closingTime: string;
+
+  @Field()
+  alwaysOpen: boolean;
+
+  @Field()
+  timezone: string;
+
+  // Computed per request from the hours above (see RestaurantsResolver).
+  @Field({ nullable: true })
+  isOpenNow?: boolean;
 
   @Field()
   isActive: boolean;
@@ -118,4 +134,26 @@ export class UpdateRestaurantInput {
   @Min(1)
   @Max(65535)
   printerPort?: number;
+
+  // Opening hours - "HH:mm", 24-hour.
+  @Field({ nullable: true })
+  @IsOptional()
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'openingTime must be HH:mm' })
+  openingTime?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'closingTime must be HH:mm' })
+  closingTime?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  alwaysOpen?: boolean;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timezone?: string;
 }

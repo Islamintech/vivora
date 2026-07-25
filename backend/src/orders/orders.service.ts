@@ -123,8 +123,9 @@ export class OrdersService {
   async placeOrder(input: PlaceOrderInput): Promise<OrderDocument> {
     const { restaurantId, tableNumber, items, customerNote, language, orderType } = input;
 
-    // Block orders for restaurants that aren't approved/active.
-    await this.restaurantsService.assertServable(restaurantId.toString());
+    // Block orders for restaurants that aren't approved/active, or are closed.
+    const servable = await this.restaurantsService.assertServable(restaurantId.toString());
+    this.restaurantsService.assertOpen(servable);
 
     // Resolve table
     const table = await this.tablesService.findByNumber(restaurantId, tableNumber);

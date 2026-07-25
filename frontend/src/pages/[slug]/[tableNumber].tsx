@@ -338,6 +338,34 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
     );
   }
 
+  // Outside opening hours: show when they reopen instead of the menu. The
+  // backend rejects orders independently, so this is presentation only.
+  if (restaurant && restaurant.isOpenNow === false) {
+    return (
+      <>
+        <Head><title>{restaurant.name}</title></Head>
+        <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+          <Card sx={{ width: '100%', textAlign: 'center' }}>
+            <CardContent sx={{ p: 4 }}>
+              {restaurant.logo
+                ? <Box component="img" src={restaurant.logo} alt="" sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
+                : <Typography sx={{ fontSize: 48, mb: 1 }}>🌙</Typography>}
+              <Typography variant="h6" fontWeight={800} mb={0.5}>{restaurant.name}</Typography>
+              <Typography variant="h6" fontWeight={700} color="text.primary" mb={1.5}>{t.closedNow}</Typography>
+              <Chip
+                label={t.closedHours.replace('{from}', restaurant.openingTime).replace('{to}', restaurant.closingTime)}
+                color="primary"
+                variant="outlined"
+                sx={{ fontWeight: 700, mb: 2 }}
+              />
+              <Typography color="text.secondary" variant="body2">{t.closedHint}</Typography>
+            </CardContent>
+          </Card>
+        </Box>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>

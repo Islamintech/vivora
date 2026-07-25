@@ -48,7 +48,7 @@ const ItemRow = ({ item, onSave }: {
             onChange={(e) => onSave({ itemId: item._id, isAvailable: e.target.checked })}
           />
         }
-        label={<Typography variant="caption">Omborda</Typography>}
+        label={<Typography variant="caption">Mavjud</Typography>}
       />
 
       {/* Quantity tracking */}
@@ -60,7 +60,7 @@ const ItemRow = ({ item, onSave }: {
             onChange={(e) => onSave({ itemId: item._id, trackQuantity: e.target.checked })}
           />
         }
-        label={<Typography variant="caption">Miqdorni kuzatish</Typography>}
+        label={<Typography variant="caption">Miqdorni belgilash</Typography>}
       />
 
       {item.trackQuantity && (

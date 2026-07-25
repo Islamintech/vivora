@@ -7,7 +7,7 @@ import {
   Stack, Divider, Grid, Avatar, Alert, FormControlLabel, Switch,
   CircularProgress,
 } from '@mui/material';
-import { Save, Store, Print, PhotoCamera, Delete } from '@mui/icons-material';
+import { Save, Store, Print, PhotoCamera, Delete, Schedule } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { MY_RESTAURANT_QUERY, UPDATE_RESTAURANT_MUTATION } from '@/graphql/operations';
@@ -22,6 +22,7 @@ const SettingsPage: NextPage = () => {
   const [form, setForm] = useState({
     name: '', description: '', address: '', phone: '', logo: '', currency: 'KRW', telegramChatId: '',
     printerEnabled: false, printerIp: '', printerPort: '9100',
+    openingTime: '09:00', closingTime: '22:00', alwaysOpen: false,
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -38,6 +39,9 @@ const SettingsPage: NextPage = () => {
         printerEnabled: restaurant.printerEnabled || false,
         printerIp: restaurant.printerIp || '',
         printerPort: String(restaurant.printerPort || 9100),
+        openingTime: restaurant.openingTime || '09:00',
+        closingTime: restaurant.closingTime || '22:00',
+        alwaysOpen: restaurant.alwaysOpen || false,
       });
     }
   }, [restaurant]);
@@ -176,6 +180,71 @@ const SettingsPage: NextPage = () => {
                 variant="contained"
                 startIcon={<Save />}
                 sx={{ mt: 3 }}
+                disabled={loading}
+                onClick={handleSave}
+              >
+                {loading ? 'Saqlanmoqda…' : 'Saqlash'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Opening hours - customers can only order while open */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                <Avatar sx={{ width: 48, height: 48, bgcolor: 'primary.light', color: 'primary.dark' }}>
+                  <Schedule />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>Ish vaqti</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Yopiq vaqtda mijozlar QR orqali buyurtma bera olmaydi
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.alwaysOpen}
+                    onChange={(e) => setForm((p) => ({ ...p, alwaysOpen: e.target.checked }))}
+                  />
+                }
+                label="Kunu tun ochiq (24/7)"
+              />
+
+              {!form.alwaysOpen && (
+                <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Ochilish vaqti"
+                      type="time"
+                      {...field('openingTime')}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Yopilish vaqti"
+                      type="time"
+                      {...field('closingTime')}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      helperText={
+                        form.closingTime <= form.openingTime
+                          ? 'Yarim tundan oshadi (masalan 18:00 - 02:00)'
+                          : ' '
+                      }
+                    />
+                  </Grid>
+                </Grid>
+              )}
+
+              <Button
+                variant="contained"
+                startIcon={<Save />}
+                sx={{ mt: 2 }}
                 disabled={loading}
                 onClick={handleSave}
               >

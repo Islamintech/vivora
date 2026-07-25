@@ -5,6 +5,7 @@ import { RestaurantModel, UpdateRestaurantInput } from './models/restaurant.mode
 import { GqlAuthGuard, RolesGuard } from '../common/guards';
 import { CurrentUser, Roles } from '../common/decorators';
 import { UserRole, RestaurantStatus } from '../common/enums';
+import { isOpenNow } from './opening-hours';
 
 @Resolver(() => RestaurantModel)
 export class RestaurantsResolver {
@@ -23,7 +24,9 @@ export class RestaurantsResolver {
     const restaurant = await this.restaurantsService.findBySlug(slug);
     if (!restaurant) throw new NotFoundException('Restaurant not found');
     // Customers may only reach approved, active restaurants.
-    return this.restaurantsService.assertServable(restaurant._id.toString());
+    const servable = await this.restaurantsService.assertServable(restaurant._id.toString());
+    // Attach live open/closed so the customer page can gate ordering.
+    return { ...servable.toObject(), isOpenNow: isOpenNow(servable) } as RestaurantModel;
   }
 
   @Query(() => [RestaurantModel])

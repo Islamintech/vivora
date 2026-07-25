@@ -367,12 +367,16 @@ input RegisterInput {
 type RestaurantModel {
   _id: ID!
   address: String
+  alwaysOpen: Boolean!
+  closingTime: String!
   createdAt: DateTime!
   currency: String!
   description: String
   isActive: Boolean!
+  isOpenNow: Boolean
   logo: String
   name: String!
+  openingTime: String!
   ownerId: ID
   phone: String
   printerEnabled: Boolean!
@@ -382,6 +386,7 @@ type RestaurantModel {
   slug: String!
   status: RestaurantStatus!
   telegramChatId: String
+  timezone: String!
 }
 
 enum RestaurantStatus {
@@ -475,15 +480,19 @@ input UpdateOrderStatusInput {
 
 input UpdateRestaurantInput {
   address: String
+  alwaysOpen: Boolean
+  closingTime: String
   currency: String
   description: String
   logo: String
   name: String
+  openingTime: String
   phone: String
   printerEnabled: Boolean
   printerIp: String
   printerPort: Int
   telegramChatId: String
+  timezone: String
 }
 
 input UpdateTableInput {

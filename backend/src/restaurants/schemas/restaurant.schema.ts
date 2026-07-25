@@ -47,6 +47,22 @@ export class Restaurant {
   @Prop({ default: 9100 })
   printerPort: number;
 
+  // Opening hours, "HH:mm" in the restaurant's own timezone. Customers can
+  // only order while open. closingTime <= openingTime means the shift runs
+  // past midnight (e.g. 18:00 -> 02:00). alwaysOpen skips the check entirely.
+  @Prop({ default: '09:00' })
+  openingTime: string;
+
+  @Prop({ default: '22:00' })
+  closingTime: string;
+
+  @Prop({ default: false })
+  alwaysOpen: boolean;
+
+  // IANA zone used to evaluate the hours above.
+  @Prop({ default: 'Asia/Seoul' })
+  timezone: string;
+
   @Prop({ default: true })
   isActive: boolean;
 
