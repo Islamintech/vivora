@@ -389,7 +389,7 @@ const Home: NextPage = () => {
                     <Box>
                       <Box
                         component="img"
-                        src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=900&q=80&auto=format&fit=crop"
+                        src="https://images.unsplash.com/photo-1577106263724-2c8e03bfe9cf?w=900&q=80&auto=format&fit=crop"
                         alt="Oshxona"
                         sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 300, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)' }}
                       />
