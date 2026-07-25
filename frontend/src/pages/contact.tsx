@@ -7,7 +7,7 @@ import MarketingLayout, {
 } from '@/components/marketing/MarketingLayout';
 
 const channels = [
-  { icon: <Email />, title: 'Email', value: 'salom@vivora.kr' },
+  { icon: <Email />, title: 'Email', value: 'vivora.support@gmail.com', href: 'mailto:vivora.support@gmail.com' },
   { icon: <Chat />, title: 'Telegram', value: '@vivora_support', href: 'https://t.me/vivora_support' },
 ];
 
@@ -59,7 +59,7 @@ const Contact: NextPage = () => {
                 <Stack
                   key={c.title}
                   direction="row" spacing={2} alignItems="center"
-                  {...(c.href ? { component: 'a', href: c.href, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  {...(c.href ? { component: 'a', href: c.href, ...(c.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {})}
                   sx={{ bgcolor: '#fff', borderRadius: '1.25rem', p: 2.5, border: '1px solid rgba(140,113,100,0.14)', textDecoration: 'none', cursor: c.href ? 'pointer' : 'default', transition: 'transform .25s, box-shadow .25s', '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 12px 28px rgba(157,67,0,0.1)' } }}
                 >
                   <Box sx={{ width: 48, height: 48, borderRadius: 2.5, bgcolor: 'rgba(249,115,22,0.1)', border: '1px solid rgba(157,67,0,0.18)', color: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.icon}</Box>
