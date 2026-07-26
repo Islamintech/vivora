@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { LocationOn, Phone, QrCodeScanner } from '@mui/icons-material';
 import { PUBLIC_RESTAURANT_QUERY } from '@/graphql/operations';
+import CoverHeader from '@/components/customer/CoverHeader';
 
 interface Props { slug: string }
 
@@ -43,8 +44,8 @@ const RestaurantProfilePage: NextPage<Props> = ({ slug }) => {
       </Head>
 
       <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto' }}>
-        {/* Header */}
-        <Box sx={{ background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 100%)', pt: 5, pb: 6, px: 2.5, textAlign: 'center' }}>
+        {/* Header - the owner's cover photo when they've set one */}
+        <CoverHeader image={restaurant?.coverImage} sx={{ pt: 5, pb: 6, px: 2.5, textAlign: 'center' }}>
           {restaurant?.logo && (
             <Avatar src={restaurant.logo} sx={{ width: 80, height: 80, mb: 2, mx: 'auto' }} />
           )}
@@ -52,11 +53,11 @@ const RestaurantProfilePage: NextPage<Props> = ({ slug }) => {
             {restaurant?.name}
           </Typography>
           {restaurant?.description && (
-            <Typography variant="body2" sx={{ color: 'grey.400', mt: 1, maxWidth: 360, mx: 'auto' }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', mt: 1, maxWidth: 360, mx: 'auto' }}>
               {restaurant.description}
             </Typography>
           )}
-        </Box>
+        </CoverHeader>
 
         <Box sx={{ px: 2, mt: -4, pb: 4 }}>
           {/* Contact / details card */}

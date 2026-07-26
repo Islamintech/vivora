@@ -31,6 +31,9 @@ export class RestaurantModel {
   @Field({ nullable: true })
   logo?: string;
 
+  @Field({ nullable: true })
+  coverImage?: string;
+
   @Field()
   currency: string;
 
@@ -103,6 +106,11 @@ export class UpdateRestaurantInput {
   @IsOptional()
   @MaxLength(2000)
   logo?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @MaxLength(2000)
+  coverImage?: string;
 
   @Field({ nullable: true })
   @IsOptional()

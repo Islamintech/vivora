@@ -22,6 +22,7 @@ import { Lang, LANGUAGES, getStrings, UIStrings } from '@/lib/i18n';
 import WelcomeGate, { OrderType } from '@/components/customer/WelcomeGate';
 import ItemSheet from '@/components/customer/ItemSheet';
 import Flag from '@/components/Flag';
+import CoverHeader from '@/components/customer/CoverHeader';
 
 // Which of the 3 calm stages an order is at (READY folds into "preparing").
 const orderStep = (s: OrderStatus): number =>
@@ -369,6 +370,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
         <WelcomeGate
           restaurantName={restaurant?.name}
           logo={restaurant?.logo}
+          coverImage={restaurant?.coverImage}
           tableNumber={tableNumber}
           onComplete={(lang, orderType) => savePrefs({ lang, orderType })}
         />
@@ -404,13 +406,8 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
 
       <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto', position: 'relative' }}>
 
-        {/* Header */}
-        <Box
-          sx={{
-            background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 100%)',
-            pt: 4, pb: 6, px: 2.5, position: 'relative',
-          }}
-        >
+        {/* Header - the owner's cover photo when they've set one */}
+        <CoverHeader image={restaurant?.coverImage} sx={{ pt: 4, pb: 6, px: 2.5 }}>
           {/* Language switcher - the gate sets it once, this allows changing it later. */}
           <IconButton
             onClick={(e) => setLangMenuAnchor(e.currentTarget)}
@@ -447,10 +444,12 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           <Typography variant="h5" fontWeight={800} color="white" textAlign="center">
             {restaurant?.name}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'grey.400', textAlign: 'center', mt: 0.5 }}>
+          {/* Brighter than grey.400: this line sits over a photo, where a dim
+              grey is the first thing to become unreadable. */}
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', textAlign: 'center', mt: 0.5 }}>
             {t.table} {tableNumber} · {prefs?.orderType === 'TAKE_OUT' ? t.takeOut : t.dineIn}
           </Typography>
-        </Box>
+        </CoverHeader>
 
         {/* Category pills - tapping scrolls to that section; the active pill
             follows the scroll position (scroll-spy). */}

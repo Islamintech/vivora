@@ -18,6 +18,8 @@ export interface Restaurant {
   address?: string;
   phone?: string;
   logo?: string;
+  /** Wide photo shown behind the restaurant name on the customer menu. */
+  coverImage?: string;
   currency: string;
   telegramChatId?: string;
   /** Opening hours, "HH:mm" in the restaurant's timezone. */

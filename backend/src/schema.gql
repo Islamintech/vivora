@@ -380,6 +380,7 @@ type RestaurantModel {
   address: String
   alwaysOpen: Boolean!
   closingTime: String!
+  coverImage: String
   createdAt: DateTime!
   currency: String!
   description: String
@@ -493,6 +494,7 @@ input UpdateRestaurantInput {
   address: String
   alwaysOpen: Boolean
   closingTime: String
+  coverImage: String
   currency: String
   description: String
   logo: String

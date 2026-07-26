@@ -3,12 +3,14 @@ import { Box, Typography, Stack, Avatar, Collapse, Fade, ButtonBase } from '@mui
 import { Restaurant, ShoppingBag } from '@mui/icons-material';
 import { LANGUAGES, Lang, getStrings } from '@/lib/i18n';
 import Flag from '@/components/Flag';
+import CoverHeader from '@/components/customer/CoverHeader';
 
 export type OrderType = 'DINE_IN' | 'TAKE_OUT';
 
 interface Props {
   restaurantName?: string;
   logo?: string;
+  coverImage?: string;
   tableNumber: number;
   onComplete: (lang: Lang, orderType: OrderType) => void;
 }
@@ -22,7 +24,7 @@ interface Props {
  * going back. Both answers are remembered per table, so this only appears on
  * the first scan of a sitting.
  */
-export default function WelcomeGate({ restaurantName, logo, tableNumber, onComplete }: Props) {
+export default function WelcomeGate({ restaurantName, logo, coverImage, tableNumber, onComplete }: Props) {
   const [lang, setLang] = useState<Lang | null>(null);
   const [picking, setPicking] = useState<OrderType | null>(null);
   const t = getStrings(lang ?? 'en');
@@ -72,14 +74,14 @@ export default function WelcomeGate({ restaurantName, logo, tableNumber, onCompl
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto', display: 'flex', flexDirection: 'column' }}>
-      {/* Branded header */}
-      <Box sx={{ background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 100%)', pt: 5, pb: 5, px: 3, textAlign: 'center' }}>
+      {/* Branded header - the first thing a guest sees after scanning */}
+      <CoverHeader image={coverImage} sx={{ pt: 5, pb: 5, px: 3, textAlign: 'center' }}>
         {logo && <Avatar src={logo} sx={{ width: 64, height: 64, mb: 1.5, mx: 'auto' }} />}
         <Typography variant="h5" fontWeight={800} color="white">{restaurantName}</Typography>
-        <Typography variant="body2" sx={{ color: 'grey.400', mt: 0.5 }}>
+        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', mt: 0.5 }}>
           {t.table} {tableNumber}
         </Typography>
-      </Box>
+      </CoverHeader>
 
       <Box sx={{ flex: 1, p: 3 }}>
         {/* Stage 2 drops in above the flags once a language is chosen */}

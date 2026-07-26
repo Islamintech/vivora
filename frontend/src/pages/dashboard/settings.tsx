@@ -13,6 +13,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { MY_RESTAURANT_QUERY, UPDATE_RESTAURANT_MUTATION } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { uploadImage, cloudinaryConfigured } from '@/lib/cloudinary';
+import CoverHeader from '@/components/customer/CoverHeader';
 
 const SettingsPage: NextPage = () => {
   const { user } = useRequireAuth();
@@ -20,11 +21,12 @@ const SettingsPage: NextPage = () => {
   const restaurant = data?.myRestaurant;
 
   const [form, setForm] = useState({
-    name: '', description: '', address: '', phone: '', logo: '', currency: 'KRW', telegramChatId: '',
+    name: '', description: '', address: '', phone: '', logo: '', coverImage: '', currency: 'KRW', telegramChatId: '',
     printerEnabled: false, printerIp: '', printerPort: '9100',
     openingTime: '09:00', closingTime: '22:00', alwaysOpen: false,
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
@@ -34,6 +36,7 @@ const SettingsPage: NextPage = () => {
         address: restaurant.address || '',
         phone: restaurant.phone || '',
         logo: restaurant.logo || '',
+        coverImage: restaurant.coverImage || '',
         currency: restaurant.currency || 'KRW',
         telegramChatId: restaurant.telegramChatId || '',
         printerEnabled: restaurant.printerEnabled || false,
@@ -68,7 +71,13 @@ const SettingsPage: NextPage = () => {
     });
   };
 
-  const handleLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Shared by the logo and the cover photo - same upload, same limits, only
+  // the field it lands in differs.
+  const handleImageFile = (
+    key: 'logo' | 'coverImage',
+    label: string,
+    setBusy: (v: boolean) => void,
+  ) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ''; // allow re-selecting the same file
     if (!file) return;
@@ -77,20 +86,23 @@ const SettingsPage: NextPage = () => {
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Logotip 5 MB dan kichik bo‘lishi kerak.');
+      toast.error(`${label} 5 MB dan kichik bo‘lishi kerak.`);
       return;
     }
-    setUploadingLogo(true);
+    setBusy(true);
     try {
       const url = await uploadImage(file);
-      setForm((p) => ({ ...p, logo: url }));
-      toast.success('Logotip yuklandi - saqlashni unutmang.');
+      setForm((p) => ({ ...p, [key]: url }));
+      toast.success(`${label} yuklandi - saqlashni unutmang.`);
     } catch (err: any) {
       toast.error(err.message || 'Yuklab bo‘lmadi');
     } finally {
-      setUploadingLogo(false);
+      setBusy(false);
     }
   };
+
+  const handleLogoFile = handleImageFile('logo', 'Logotip', setUploadingLogo);
+  const handleCoverFile = handleImageFile('coverImage', 'Muqova rasmi', setUploadingCover);
 
   return (
     <>
@@ -162,6 +174,45 @@ const SettingsPage: NextPage = () => {
                     PNG yoki SVG tavsiya etiladi, 5 MB gacha.
                   </Typography>
                 </Grid>
+
+                {/* Cover photo, previewed exactly as the guest will see it -
+                    name and all - so the owner can tell straight away whether
+                    their photo works behind the text. */}
+                <Grid item xs={12}>
+                  <Typography variant="body2" fontWeight={600} mb={1}>Muqova rasmi</Typography>
+                  <CoverHeader
+                    image={form.coverImage || undefined}
+                    sx={{ borderRadius: 3, py: 4, px: 2, textAlign: 'center', mb: 1.5 }}
+                  >
+                    <Typography variant="h6" fontWeight={800} color="white">
+                      {form.name || 'Restoran nomi'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', mt: 0.5 }}>
+                      Stol 1 · Shu yerda
+                    </Typography>
+                  </CoverHeader>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={uploadingCover ? <CircularProgress size={16} /> : <PhotoCamera />}
+                      disabled={uploadingCover}
+                    >
+                      {form.coverImage ? 'Almashtirish' : 'Muqova yuklash'}
+                      <input hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={handleCoverFile} />
+                    </Button>
+                    {form.coverImage && (
+                      <Button color="error" startIcon={<Delete />} onClick={() => setForm((p) => ({ ...p, coverImage: '' }))}>
+                        O‘chirish
+                      </Button>
+                    )}
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                    Menyu tepasida ko‘rinadi. Keng (gorizontal) rasm tanlang, 5 MB gacha.
+                    Nomi o‘qilishi uchun rasm ustiga to‘q qatlam qo‘yiladi.
+                  </Typography>
+                </Grid>
+
                 <Grid item xs={12} sm={4}>
                   <TextField label="Valyuta" {...field('currency')} fullWidth placeholder="KRW" helperText="ISO kod: KRW (₩), USD, EUR…" />
                 </Grid>

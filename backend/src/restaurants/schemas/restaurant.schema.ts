@@ -28,6 +28,11 @@ export class Restaurant {
   @Prop({ default: '' })
   logo: string;
 
+  // Wide photo behind the restaurant name on the customer menu. Empty falls
+  // back to the plain gradient, so a restaurant is never obliged to have one.
+  @Prop({ default: '' })
+  coverImage: string;
+
   // Korean won (ISO 4217); Intl renders it as ₩ with no decimals.
   @Prop({ default: 'KRW' })
   currency: string;
