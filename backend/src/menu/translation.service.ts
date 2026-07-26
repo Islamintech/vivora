@@ -36,7 +36,7 @@ export class TranslationService {
   }
 
   private get model(): string {
-    return process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    return process.env.GEMINI_MODEL || 'gemini-flash-latest';
   }
 
   get configured(): boolean {
