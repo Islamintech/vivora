@@ -43,6 +43,9 @@ export class MenuItemModel {
   imageUrl?: string;
 
   @Field(() => [String])
+  images: string[];
+
+  @Field(() => [String])
   allergens: string[];
 
   @Field(() => [String])
@@ -125,6 +128,10 @@ export class CreateMenuItemInput {
   imageUrl?: string;
 
   @Field(() => [String], { nullable: true })
+  @IsOptional()
+  images?: string[];
+
+  @Field(() => [String], { nullable: true })
   allergens?: string[];
 
   @Field(() => [String], { nullable: true })
@@ -170,6 +177,10 @@ export class UpdateMenuItemInput {
   @IsOptional()
   @MaxLength(2000)
   imageUrl?: string;
+
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
+  images?: string[];
 
   @Field(() => [String], { nullable: true })
   allergens?: string[];

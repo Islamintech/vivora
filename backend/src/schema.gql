@@ -123,6 +123,7 @@ input CreateMenuItemInput {
   categoryId: ID!
   description: String
   imageUrl: String
+  images: [String!]
   isAvailable: Boolean
   isPopular: Boolean
   name: String!
@@ -201,6 +202,7 @@ type MenuItemModel {
   categoryId: ID!
   description: String
   imageUrl: String
+  images: [String!]!
   isAvailable: Boolean!
   isBestSeller: Boolean
   isPopular: Boolean!
@@ -419,6 +421,7 @@ input SubmitFeedbackInput {
 type Subscription {
   orderCreated(restaurantId: ID!): OrderModel!
   orderStatusUpdated(restaurantId: ID!): OrderModel!
+  tableOrderChanged(restaurantId: ID!, tableNumber: Int!): OrderModel!
 }
 
 type TableModel {
@@ -475,6 +478,7 @@ input UpdateMenuItemInput {
   allergens: [String!]
   description: String
   imageUrl: String
+  images: [String!]
   isAvailable: Boolean
   isPopular: Boolean
   itemId: ID!

@@ -1,7 +1,7 @@
 import type { NextPage, GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useSubscription } from '@apollo/client';
 import {
   Box, Typography, Stack, Card, CardContent, Button, Chip,
   IconButton, Drawer, Badge, Avatar, Divider, Dialog,
@@ -14,7 +14,7 @@ import {
 } from '@mui/icons-material';
 import {
   PUBLIC_MENU_QUERY, PLACE_ORDER_MUTATION, SUBMIT_FEEDBACK_MUTATION,
-  PUBLIC_RESTAURANT_QUERY, TABLE_SESSION_QUERY,
+  PUBLIC_RESTAURANT_QUERY, TABLE_SESSION_QUERY, TABLE_ORDER_CHANGED_SUBSCRIPTION,
 } from '@/graphql/operations';
 import { CartItem, MenuItem, Order, OrderStatus, TableSession } from '@/types';
 import { formatMoney } from '@/lib/money';
@@ -137,7 +137,17 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   const { data: sessionData, refetch: refetchSession } = useQuery(TABLE_SESSION_QUERY, {
     variables: { restaurantId, tableNumber },
     skip: !restaurantId,
-    pollInterval: 20000,
+    // Slow poll only as a safety net - the subscription below does the real
+    // work, and this covers a dropped socket on a phone that slept.
+    pollInterval: 120000,
+  });
+
+  // Live: the tab updates the moment the kitchen moves an order, or when
+  // someone else at the table orders.
+  useSubscription(TABLE_ORDER_CHANGED_SUBSCRIPTION, {
+    variables: { restaurantId, tableNumber },
+    skip: !restaurantId,
+    onData() { refetchSession(); },
   });
   const session: TableSession | null = sessionData?.tableSession ?? null;
   const placedOrders: Order[] = session?.orders ?? [];

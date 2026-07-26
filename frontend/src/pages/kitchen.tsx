@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import {
   Kitchen, Notifications, LocalDining, Check, Close, DoneAll, Payments,
-  PlaylistAdd, Add, Remove,
+  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
@@ -68,8 +68,23 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
               {order.tableNumber}
             </Avatar>
             <Typography fontWeight={700} color="white">{order.tableNumber}-stol</Typography>
-            {order.orderType === 'TAKE_OUT' && (
-              <Chip label="Olib ketish" size="small" sx={{ bgcolor: '#7C3AED', color: 'white', fontWeight: 800, height: 22 }} />
+            {/* Packing a dine-in order, or plating a takeaway, is a mistake the
+                kitchen only catches at the pass - so say which every time,
+                with an icon rather than the absence of a chip. */}
+            {order.orderType === 'TAKE_OUT' ? (
+              <Chip
+                icon={<ShoppingBag sx={{ fontSize: 15, color: 'inherit !important' }} />}
+                label="Olib ketish"
+                size="small"
+                sx={{ bgcolor: '#7C3AED', color: 'white', fontWeight: 800, height: 24 }}
+              />
+            ) : (
+              <Chip
+                icon={<Restaurant sx={{ fontSize: 15, color: 'inherit !important' }} />}
+                label="Shu yerda"
+                size="small"
+                sx={{ bgcolor: '#1E3A8A', color: '#BFDBFE', fontWeight: 800, height: 24 }}
+              />
             )}
           </Stack>
           <Typography variant="caption" sx={{ color: isUrgent ? '#EF4444' : 'grey.500', fontWeight: isUrgent ? 700 : 400 }}>

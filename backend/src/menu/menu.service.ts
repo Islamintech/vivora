@@ -70,18 +70,28 @@ export class MenuService {
 
   // --- Items ---
 
+  // A dish can carry several photos, but plenty of places want exactly one
+  // (list thumbnails, kitchen tickets). Keep imageUrl pinned to the first of
+  // them so those callers never have to know about the gallery.
+  private withPrimaryImage<T extends { images?: string[]; imageUrl?: string }>(
+    input: T,
+  ): T {
+    if (!input.images) return input;
+    return { ...input, imageUrl: input.images[0] ?? '' };
+  }
+
   async createItem(
     restaurantId: string,
     input: CreateMenuItemInput,
   ): Promise<MenuItemDocument> {
-    return this.itemModel.create({ restaurantId, ...input });
+    return this.itemModel.create({ restaurantId, ...this.withPrimaryImage(input) });
   }
 
   async updateItem(
     restaurantId: string,
     input: UpdateMenuItemInput,
   ): Promise<MenuItemDocument> {
-    const { itemId, ...update } = input;
+    const { itemId, ...update } = this.withPrimaryImage(input);
     const item = await this.itemModel.findOneAndUpdate(
       { _id: itemId, restaurantId },
       { $set: update },

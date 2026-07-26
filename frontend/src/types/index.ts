@@ -50,8 +50,10 @@ export interface MenuItem {
   name: string;
   description?: string;
   price: number;
+  /** The photo used wherever a single one is needed; mirrors images[0]. */
   imageUrl?: string;
-  allergens: string[];
+  /** Every photo of the dish, first one leading. */
+  images?: string[];
   tags: string[];
   isAvailable: boolean;
   isPopular: boolean;

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import {
   Add, Edit, Delete, ExpandMore, DragIndicator,
-  PhotoCamera,
+  PhotoCamera, Close,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -50,8 +50,7 @@ const MenuPage: NextPage = () => {
     name: '',
     description: '',
     price: '',
-    imageUrl: '',
-    allergens: '',
+    images: [] as string[],
     tags: '',
     isAvailable: true,
     isPopular: false,
@@ -61,23 +60,35 @@ const MenuPage: NextPage = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async (file?: File) => {
-    if (!file) return;
+  // Several photos at once: a dish is usually shot from a few angles in one
+  // sitting, and picking them one at a time is the tedious way to do it.
+  const handleUpload = async (files?: FileList | null) => {
+    if (!files?.length) return;
     if (!cloudinaryConfigured) {
       toast.error('Rasm yuklash sozlanmagan. Buning o‘rniga rasm havolasini joylashtiring.');
       return;
     }
     setUploading(true);
-    try {
-      const url = await uploadImage(file);
-      setItemForm((p) => ({ ...p, imageUrl: url }));
-      toast.success('Rasm yuklandi');
-    } catch (e: any) {
-      toast.error(e.message || 'Yuklab bo‘lmadi');
-    } finally {
-      setUploading(false);
-    }
+    const chosen = Array.from(files);
+    const results = await Promise.allSettled(chosen.map((f) => uploadImage(f)));
+    const urls = results
+      .filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled')
+      .map((r) => r.value);
+    const failed = results.length - urls.length;
+
+    if (urls.length) setItemForm((p) => ({ ...p, images: [...p.images, ...urls] }));
+    if (urls.length) toast.success(`${urls.length} ta rasm yuklandi`);
+    // Don't let one bad file silently swallow the whole batch.
+    if (failed) toast.error(`${failed} ta rasm yuklanmadi`);
+    setUploading(false);
   };
+
+  const removeImage = (url: string) =>
+    setItemForm((p) => ({ ...p, images: p.images.filter((u) => u !== url) }));
+
+  // The first image is the one the menu card and the kitchen ticket use.
+  const makePrimary = (url: string) =>
+    setItemForm((p) => ({ ...p, images: [url, ...p.images.filter((u) => u !== url)] }));
 
   const [createCategory] = useMutation(CREATE_CATEGORY_MUTATION, {
     onCompleted() { toast.success('Kategoriya yaratildi'); setCatDialog(false); refetchCats(); },
@@ -106,7 +117,7 @@ const MenuPage: NextPage = () => {
 
   const openCreateItem = (categoryId: string) => {
     setEditingItem(null);
-    setItemForm({ categoryId, name: '', description: '', price: '', imageUrl: '', allergens: '', tags: '', isAvailable: true, isPopular: false, trackQuantity: false, quantity: '' });
+    setItemForm({ categoryId, name: '', description: '', price: '', images: [], tags: '', isAvailable: true, isPopular: false, trackQuantity: false, quantity: '' });
     setItemDialog('create');
   };
 
@@ -117,8 +128,8 @@ const MenuPage: NextPage = () => {
       name: item.name,
       description: item.description || '',
       price: String(item.price),
-      imageUrl: item.imageUrl || '',
-      allergens: item.allergens.join(', '),
+      // Items saved before galleries existed have only imageUrl.
+      images: item.images?.length ? item.images : (item.imageUrl ? [item.imageUrl] : []),
       tags: item.tags.join(', '),
       isAvailable: item.isAvailable,
       isPopular: item.isPopular,
@@ -133,7 +144,6 @@ const MenuPage: NextPage = () => {
       ...itemForm,
       price: parseFloat(itemForm.price),
       quantity: parseInt(itemForm.quantity, 10) || 0,
-      allergens: itemForm.allergens.split(',').map((s) => s.trim()).filter(Boolean),
       tags: itemForm.tags.split(',').map((s) => s.trim()).filter(Boolean),
     };
     if (itemDialog === 'create') {
@@ -299,38 +309,80 @@ const MenuPage: NextPage = () => {
                 onChange={(e) => setItemForm((p) => ({ ...p, price: e.target.value }))}
                 fullWidth
               />
-              {/* Photo: upload (Cloudinary) or paste a URL */}
+              {/* Photos: several per dish, the first one leading */}
               <Box>
-                <Stack direction="row" spacing={2} alignItems="center" mb={1}>
-                  {itemForm.imageUrl ? (
-                    <Box component="img" src={itemForm.imageUrl} alt="preview"
-                      sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }} />
-                  ) : (
-                    <Avatar sx={{ width: 64, height: 64, borderRadius: 2, bgcolor: 'primary.light', color: 'primary.dark' }}>🍽</Avatar>
-                  )}
-                  <Button
-                    variant="outlined"
-                    startIcon={uploading ? <CircularProgress size={16} /> : <PhotoCamera />}
-                    disabled={uploading}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {uploading ? 'Yuklanmoqda…' : 'Rasm yuklash'}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => handleUpload(e.target.files?.[0] ?? undefined)}
-                  />
-                </Stack>
-                <TextField
-                  label="Rasm havolasi (URL)"
-                  value={itemForm.imageUrl}
-                  onChange={(e) => setItemForm((p) => ({ ...p, imageUrl: e.target.value }))}
-                  fullWidth
-                  helperText={cloudinaryConfigured ? 'Yuqoridan yuklang yoki havolani joylashtiring' : 'Rasm havolasini joylashtiring (yuklash sozlanmagan)'}
+                <Typography variant="body2" fontWeight={600} mb={1}>Rasmlar</Typography>
+                {itemForm.images.length > 0 && (
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mb={1.5}>
+                    {itemForm.images.map((url, i) => (
+                      <Box key={url} sx={{ position: 'relative' }}>
+                        <Box
+                          component="img"
+                          src={url}
+                          alt=""
+                          sx={{
+                            width: 84, height: 84, borderRadius: 2, objectFit: 'cover',
+                            border: '2px solid', borderColor: i === 0 ? 'primary.main' : 'divider',
+                            display: 'block',
+                          }}
+                        />
+                        {i === 0 ? (
+                          <Chip
+                            label="Asosiy"
+                            size="small"
+                            color="primary"
+                            sx={{ position: 'absolute', bottom: 4, left: 4, height: 18, fontSize: '0.62rem', fontWeight: 800 }}
+                          />
+                        ) : (
+                          <Button
+                            size="small"
+                            onClick={() => makePrimary(url)}
+                            sx={{
+                              position: 'absolute', bottom: 2, left: 2, minWidth: 0, px: 0.75,
+                              fontSize: '0.62rem', bgcolor: 'rgba(255,255,255,0.9)',
+                              '&:hover': { bgcolor: '#fff' },
+                            }}
+                          >
+                            Asosiy
+                          </Button>
+                        )}
+                        <IconButton
+                          size="small"
+                          onClick={() => removeImage(url)}
+                          aria-label="Rasmni o‘chirish"
+                          sx={{
+                            position: 'absolute', top: -6, right: -6, width: 22, height: 22,
+                            bgcolor: 'error.main', color: '#fff',
+                            '&:hover': { bgcolor: 'error.dark' },
+                          }}
+                        >
+                          <Close sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
+                <Button
+                  variant="outlined"
+                  startIcon={uploading ? <CircularProgress size={16} /> : <PhotoCamera />}
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? 'Yuklanmoqda…' : itemForm.images.length ? 'Yana rasm qo‘shish' : 'Rasm yuklash'}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => { handleUpload(e.target.files); e.target.value = ''; }}
                 />
+                <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                  {cloudinaryConfigured
+                    ? 'Bir nechta rasm tanlash mumkin. Birinchi rasm menyuda ko‘rinadi.'
+                    : 'Rasm yuklash sozlanmagan.'}
+                </Typography>
               </Box>
               {/* Prep quantity tracking */}
               <Box sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}>
@@ -350,13 +402,6 @@ const MenuPage: NextPage = () => {
                   />
                 )}
               </Box>
-              <TextField
-                label="Allergenlar (vergul bilan ajrating)"
-                value={itemForm.allergens}
-                onChange={(e) => setItemForm((p) => ({ ...p, allergens: e.target.value }))}
-                fullWidth
-                placeholder="yong‘oq, sut mahsulotlari, glyuten"
-              />
               <TextField
                 label="Teglar (vergul bilan ajrating)"
                 value={itemForm.tags}

@@ -62,10 +62,16 @@ const TablesPage: NextPage = () => {
     });
   };
 
+  // Printing a stack of QR codes means handling a stack of downloads, so the
+  // file has to say which restaurant and which table it is without opening it.
   const downloadQr = (table: Table) => {
+    const slug = (restaurant?.name || 'restoran')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'restoran';
     const link = document.createElement('a');
     link.href = table.qrCodeDataUrl;
-    link.download = `table-${table.number}-qr.png`;
+    link.download = `${slug}-stol-${table.number}-qr.png`;
     link.click();
   };
 

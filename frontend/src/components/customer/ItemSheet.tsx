@@ -42,6 +42,8 @@ export default function ItemSheet({
 
   if (!item) return null;
 
+  // Older items only ever had imageUrl; newer ones carry the whole gallery.
+  const gallery = item.images?.length ? item.images : (item.imageUrl ? [item.imageUrl] : []);
   const atMax = qty >= max;
   const soldOut = max <= 0;
 
@@ -55,11 +57,31 @@ export default function ItemSheet({
       }}
     >
       <Box sx={{ position: 'relative', overflowY: 'auto' }}>
-        {/* Hero image */}
-        {item.imageUrl ? (
+        {/* Photos: swipe sideways when the dish has more than one */}
+        {gallery.length > 1 ? (
+          <Box
+            sx={{
+              display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none',
+            }}
+          >
+            {gallery.map((url, i) => (
+              <Box
+                key={url}
+                component="img"
+                src={url}
+                alt={i === 0 ? item.name : ''}
+                sx={{
+                  width: '100%', height: 220, objectFit: 'cover',
+                  flex: '0 0 100%', scrollSnapAlign: 'start', display: 'block',
+                }}
+              />
+            ))}
+          </Box>
+        ) : gallery.length === 1 ? (
           <Box
             component="img"
-            src={item.imageUrl}
+            src={gallery[0]}
             alt={item.name}
             sx={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }}
           />
@@ -99,19 +121,6 @@ export default function ItemSheet({
             <Typography variant="body2" color="text.secondary" mb={2}>
               {item.description}
             </Typography>
-          )}
-
-          {!!item.allergens?.length && (
-            <Box mb={2}>
-              <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" mb={0.75}>
-                {t.allergens}
-              </Typography>
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                {item.allergens.map((a) => (
-                  <Chip key={a} label={a} size="small" color="error" variant="outlined" sx={{ height: 24 }} />
-                ))}
-              </Stack>
-            </Box>
           )}
 
           {!!item.tags?.length && (

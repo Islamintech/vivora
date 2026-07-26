@@ -6,6 +6,7 @@ import {
   Subscription,
   Context,
   ID,
+  Int,
 } from '@nestjs/graphql';
 import {
   UseGuards,
@@ -156,6 +157,30 @@ export class OrdersResolver {
   ) {
     this.assertSubscriptionAccess(ctx, restaurantId);
     return this.pubSub.asyncIterator(ORDER_STATUS_UPDATED);
+  }
+
+  // --- Customer subscription ---
+  // Public on purpose: a guest has no account, and the same
+  // (restaurantId, tableNumber) pair already returns this table's whole tab
+  // through the public tableSession query, so watching it live reveals
+  // nothing that asking repeatedly would not.
+  @Subscription(() => OrderModel, {
+    filter: (payload, variables) => {
+      const order = payload.orderCreated ?? payload.orderStatusUpdated;
+      return (
+        payload.restaurantId === variables.restaurantId &&
+        order?.tableNumber === variables.tableNumber
+      );
+    },
+    // Two different event names feed this one subscription, so pick whichever
+    // key the payload carries.
+    resolve: (payload) => payload.orderCreated ?? payload.orderStatusUpdated,
+  })
+  tableOrderChanged(
+    @Args('restaurantId', { type: () => ID }) restaurantId: string,
+    @Args('tableNumber', { type: () => Int }) tableNumber: number,
+  ) {
+    return this.pubSub.asyncIterator([ORDER_CREATED, ORDER_STATUS_UPDATED]);
   }
 
   private assertSubscriptionAccess(ctx: any, restaurantId: string): void {

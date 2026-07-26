@@ -85,7 +85,7 @@ export const CATEGORIES_QUERY = gql`
 export const MENU_ITEMS_QUERY = gql`
   query MenuItems($categoryId: ID) {
     menuItems(categoryId: $categoryId) {
-      _id categoryId restaurantId price imageUrl isAvailable isPopular allergens tags trackQuantity quantity
+      _id categoryId restaurantId price imageUrl images isAvailable isPopular tags trackQuantity quantity
       name
       description
     }
@@ -100,7 +100,7 @@ export const PUBLIC_MENU_QUERY = gql`
         name
       }
       items {
-        _id price imageUrl isAvailable isPopular isBestSeller allergens tags
+        _id price imageUrl images isAvailable isPopular isBestSeller tags
         trackQuantity quantity
         name
         description
@@ -136,7 +136,7 @@ export const DELETE_CATEGORY_MUTATION = gql`
 export const CREATE_MENU_ITEM_MUTATION = gql`
   mutation CreateMenuItem($input: CreateMenuItemInput!) {
     createMenuItem(input: $input) {
-      _id price imageUrl isAvailable isPopular trackQuantity quantity
+      _id price imageUrl images isAvailable isPopular tags trackQuantity quantity
       name
       description
     }
@@ -146,7 +146,7 @@ export const CREATE_MENU_ITEM_MUTATION = gql`
 export const UPDATE_MENU_ITEM_MUTATION = gql`
   mutation UpdateMenuItem($input: UpdateMenuItemInput!) {
     updateMenuItem(input: $input) {
-      _id price imageUrl isAvailable isPopular allergens tags trackQuantity quantity
+      _id price imageUrl images isAvailable isPopular tags trackQuantity quantity
       name
       description
     }
@@ -274,6 +274,16 @@ export const ORDER_CREATED_SUBSCRIPTION = gql`
 export const ORDER_STATUS_UPDATED_SUBSCRIPTION = gql`
   subscription OrderStatusUpdated($restaurantId: ID!) {
     orderStatusUpdated(restaurantId: $restaurantId) {
+      _id status updatedAt
+    }
+  }
+`;
+
+// Public - a guest watching their own table. Fires when an order is placed at
+// the table or when one of its orders changes status.
+export const TABLE_ORDER_CHANGED_SUBSCRIPTION = gql`
+  subscription TableOrderChanged($restaurantId: ID!, $tableNumber: Int!) {
+    tableOrderChanged(restaurantId: $restaurantId, tableNumber: $tableNumber) {
       _id status updatedAt
     }
   }
