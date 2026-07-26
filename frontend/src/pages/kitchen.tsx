@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import {
   Kitchen, Notifications, LocalDining, Check, Close, DoneAll, Payments,
-  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag, ArrowBack, Phone, Person, Schedule,
+  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag, ArrowBack, Phone,
 } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
@@ -92,38 +92,17 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
               />
             )}
           </Stack>
-          <Typography variant="caption" sx={{ color: isUrgent ? '#EF4444' : 'grey.500', fontWeight: isUrgent ? 700 : 400 }}>
-            {dayjs(order.createdAt).fromNow()}
-          </Typography>
-        </Stack>
-
-        {/* Who phoned it in, and when they are due */}
-        {(order.customerName || order.customerPhone || order.scheduledFor) && (
-          <Box sx={{ mb: 1.5, p: 1.25, bgcolor: '#252535', borderRadius: 1.5 }}>
-            {(order.customerName || order.customerPhone) && (
-              <Stack direction="row" alignItems="center" spacing={0.75}>
-                <Person sx={{ fontSize: 15, color: 'grey.500' }} />
-                <Typography variant="body2" color="white" fontWeight={700} noWrap>
-                  {order.customerName || 'Telefon buyurtma'}
-                </Typography>
-                {order.customerPhone && (
-                  <Typography variant="caption" color="grey.400" noWrap>{order.customerPhone}</Typography>
-                )}
-              </Stack>
-            )}
-            {order.scheduledFor && (
-              <Stack direction="row" alignItems="center" spacing={0.75} mt={0.5}>
-                <Schedule sx={{ fontSize: 15, color: '#FBBF24' }} />
-                <Typography variant="body2" sx={{ color: '#FBBF24', fontWeight: 800 }}>
-                  {dayjs(order.scheduledFor).format('HH:mm')}
-                </Typography>
-                <Typography variant="caption" color="grey.500">
-                  ({dayjs(order.scheduledFor).fromNow()})
-                </Typography>
-              </Stack>
-            )}
+          {/* Clock time as well as "how long ago": when a caller rings back
+              about their order, the time it was taken is what identifies it. */}
+          <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+            <Typography variant="body2" sx={{ color: isUrgent ? '#EF4444' : 'grey.300', fontWeight: 700, lineHeight: 1.2 }}>
+              {dayjs(order.createdAt).format('HH:mm')}
+            </Typography>
+            <Typography variant="caption" sx={{ color: isUrgent ? '#EF4444' : 'grey.500', lineHeight: 1.2 }}>
+              {dayjs(order.createdAt).fromNow()}
+            </Typography>
           </Box>
-        )}
+        </Stack>
 
         {/* Items */}
         <Box sx={{ mb: 1.5 }}>
@@ -339,18 +318,7 @@ const KitchenPage: NextPage = () => {
   });
 
   const orders: Order[] = data?.orders ?? [];
-  // A phone order due later waits in its own column instead of the kitchen
-  // starting it now: cooking at 18:00 for a 19:00 arrival just means cold
-  // food. It is still PENDING - the hold is a view, not a new status.
-  const isWaiting = (o: Order) =>
-    o.status === 'PENDING' && !!o.scheduledFor && new Date(o.scheduledFor).getTime() > Date.now();
-
-  const waiting = orders
-    .filter(isWaiting)
-    .sort((a, b) => new Date(a.scheduledFor!).getTime() - new Date(b.scheduledFor!).getTime());
-
-  const byStatus = (status: OrderStatus) =>
-    orders.filter((o) => o.status === status && !isWaiting(o));
+  const byStatus = (status: OrderStatus) => orders.filter((o) => o.status === status);
   const pendingCount = byStatus('PENDING').length;
   const awaitingTotal = byStatus('SERVED').reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -452,27 +420,6 @@ const KitchenPage: NextPage = () => {
             '& > *': { scrollSnapAlign: 'start' },
           }}
         >
-          {/* Phone orders due later. Only appears when there are any, so the
-              board is unchanged for a restaurant that never takes them. */}
-          {waiting.length > 0 && (
-            <Box sx={{ flex: { xs: '0 0 82%', sm: '0 0 45%', md: 1 }, minWidth: 0 }}>
-              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#A855F7', flexShrink: 0 }} />
-                <Typography fontWeight={700} color="white" noWrap sx={{ minWidth: 0 }}>Kutilmoqda</Typography>
-                <Chip
-                  label={waiting.length}
-                  size="small"
-                  sx={{ bgcolor: '#A855F720', color: '#A855F7', fontWeight: 700, height: 22, flexShrink: 0 }}
-                />
-              </Stack>
-              <Stack spacing={2}>
-                {waiting.map((order) => (
-                  <OrderCard key={order._id} order={order} actions={actions} />
-                ))}
-              </Stack>
-            </Box>
-          )}
-
           {COLUMNS.map((col) => {
             const list = byStatus(col.status);
             return (
@@ -528,9 +475,6 @@ const KitchenPage: NextPage = () => {
                   tableNumber: r.tableNumber ?? undefined,
                   items: r.items,
                   orderType: r.orderType,
-                  customerName: r.customerName || undefined,
-                  customerPhone: r.customerPhone || undefined,
-                  scheduledFor: r.scheduledFor ?? undefined,
                   customerNote: r.customerNote || undefined,
                   language: 'uz',
                 },
