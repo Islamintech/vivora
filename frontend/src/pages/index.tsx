@@ -10,8 +10,10 @@ import {
 import {
   QrCodeScanner, TouchApp, Whatshot, BarChart, QrCode2,
   Print, Language, Notifications, ExpandMore, Kitchen, Bolt,
+  Add, ShoppingCart,
 } from '@mui/icons-material';
 import { MarketingNav, MarketingFooter } from '@/components/marketing/MarketingLayout';
+import Flag from '@/components/Flag';
 import { useMarketingT } from '@/lib/marketing-i18n';
 
 // ── Warm Material-3 palette ──
@@ -217,86 +219,148 @@ function PhoneMock() {
             </Stack>
           </Stack>
 
-          {/* App header */}
-          <Box sx={{ px: 1.75, pt: 1.25, pb: 1.25, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Box sx={{ fontSize: 9.5, color: MUTED, fontWeight: 600 }}>7-stol · Zaytoon</Box>
-                <Box sx={{ fontSize: 16, fontWeight: 800, color: TEXT }}>Menyu</Box>
-              </Box>
-              <Box sx={{ px: 1, py: 0.35, borderRadius: 99, border: `1px solid ${BORDER}`, fontSize: 9, fontWeight: 700, color: MUTED }}>UZ</Box>
-            </Stack>
+          {/* App header - the dark banner the real menu opens with */}
+          <Box sx={{
+            position: 'relative', px: 1.75, pt: 1.5, pb: 2, flexShrink: 0, textAlign: 'center',
+            background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 100%)',
+          }}>
+            <Box sx={{ position: 'absolute', top: 8, right: 8 }}><Flag code="uz" w={19} /></Box>
+            <Box sx={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Zaytoon</Box>
+            <Box sx={{ fontSize: 9, color: 'rgba(255,255,255,0.88)', mt: 0.25 }}>Stol 7 · Shu yerda</Box>
           </Box>
 
-          {/* Category chips */}
-          <Stack direction="row" spacing={0.6} sx={{ px: 1.25, py: 1, flexShrink: 0 }}>
-            {['Hammasi', 'Taomlar', 'Ichimlik'].map((cat, i) => (
+          {/* Category pills */}
+          <Stack direction="row" spacing={0.6} sx={{ px: 1.25, py: 1, flexShrink: 0, borderBottom: '1px solid #F1F5F9' }}>
+            {['Taomlar', 'Ichimliklar', 'Shirinlik'].map((cat, i) => (
               <Box key={cat} sx={{
                 px: 1.1, py: 0.5, borderRadius: 99, fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap',
                 ...(i === 0
-                  ? { background: GRAD, color: '#fff' }
-                  : { bgcolor: CARD2, color: MUTED, border: `1px solid ${BORDER}` }),
+                  ? { bgcolor: ORANGE, color: '#fff' }
+                  : { bgcolor: '#F1F5F9', color: '#475569' }),
               }}>{cat}</Box>
             ))}
           </Stack>
 
-          {/* Items with photos */}
-          <Stack spacing={0.9} sx={{ px: 1.25, flex: 1, overflow: 'hidden' }}>
+          {/* Item cards - same anatomy as the shipped menu: photo, name with a
+              best-seller chip, description, price, round add button */}
+          <Stack spacing={0.9} sx={{ px: 1.25, pt: 1, flex: 1, overflow: 'hidden', bgcolor: '#FAFAFA' }}>
             {items.map((it) => (
-              <Stack key={it.n} direction="row" alignItems="center" spacing={1.15} sx={{ p: 0.9, borderRadius: 2.5, bgcolor: '#fff', border: `1px solid ${BORDER}`, flexShrink: 0 }}>
-                <Box component="img" src={it.img} alt="" sx={{ width: 42, height: 42, borderRadius: 1.75, objectFit: 'cover', flexShrink: 0, bgcolor: CARD2 }} />
+              <Stack key={it.n} direction="row" alignItems="flex-start" spacing={1.15} sx={{ p: 0.9, borderRadius: 2.5, bgcolor: '#fff', border: '1px solid #F1F5F9', flexShrink: 0 }}>
+                <Box component="img" src={it.img} alt="" sx={{ width: 44, height: 44, borderRadius: 1.75, objectFit: 'cover', flexShrink: 0, bgcolor: CARD2 }} />
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Box sx={{ fontSize: 11.5, fontWeight: 800, color: TEXT }}>{it.n}</Box>
-                    {it.best && <Box sx={{ fontSize: 8, fontWeight: 800, color: '#C2410C', bgcolor: 'rgba(249,115,22,0.12)', px: 0.6, py: 0.15, borderRadius: 99, whiteSpace: 'nowrap' }}>🔥 Xit</Box>}
+                    <Box sx={{ fontSize: 11, fontWeight: 700, color: '#0F172A', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.n}</Box>
+                    {it.best && <Box sx={{ fontSize: 7.5, fontWeight: 800, color: '#C2410C', bgcolor: '#FFF1E4', px: 0.6, py: 0.15, borderRadius: 99, whiteSpace: 'nowrap', flexShrink: 0 }}>🔥 Mashhur</Box>}
                   </Stack>
-                  <Box sx={{ fontSize: 8.5, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.d}</Box>
-                  <Box sx={{ fontSize: 10.5, fontWeight: 800, color: PRIMARY }}>{it.p}</Box>
+                  <Box sx={{ fontSize: 8, color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.d}</Box>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" mt={0.5}>
+                    <Box sx={{ fontSize: 10.5, fontWeight: 800, color: ORANGE }}>{it.p}</Box>
+                    <Box sx={{ width: 20, height: 20, borderRadius: '50%', bgcolor: ORANGE, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Add sx={{ fontSize: 13 }} />
+                    </Box>
+                  </Stack>
                 </Box>
-                <Box sx={{ width: 24, height: 24, borderRadius: '50%', background: GRAD, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, flexShrink: 0 }}>+</Box>
               </Stack>
             ))}
           </Stack>
 
-          {/* Order button + home indicator */}
-          <Box sx={{ px: 1.25, pt: 1.25, flexShrink: 0 }}>
-            <Box sx={{ py: 1.15, borderRadius: 99, background: GRAD, textAlign: 'center', fontSize: 11.5, fontWeight: 800, color: '#fff', boxShadow: `0 8px 18px ${GLOW}` }}>
-              Buyurtma berish · ₩30 500
-            </Box>
+          {/* Floating cart bar, as the menu shows it once something is added */}
+          <Box sx={{ px: 1.25, pt: 1, pb: 0.25, flexShrink: 0, bgcolor: '#FAFAFA' }}>
+            <Stack
+              direction="row" alignItems="center" justifyContent="center" spacing={0.75}
+              sx={{ py: 1, borderRadius: 99, bgcolor: ORANGE, color: '#fff', boxShadow: `0 8px 18px ${GLOW}` }}
+            >
+              <ShoppingCart sx={{ fontSize: 13 }} />
+              <Box sx={{ fontSize: 11, fontWeight: 700 }}>Savat (3)</Box>
+              <Box sx={{ fontSize: 11, fontWeight: 800 }}>₩30 500</Box>
+            </Stack>
           </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1, flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1, flexShrink: 0, bgcolor: '#FAFAFA' }}>
             <Box sx={{ width: 88, height: 4, borderRadius: 99, bgcolor: 'rgba(0,0,0,0.25)' }} />
           </Box>
+          {/* The device is deliberately cropped by the stage below it, so this
+              spacer lifts the cart bar back above the cut. */}
+          <Box sx={{ height: 74, flexShrink: 0, bgcolor: '#FAFAFA' }} />
         </Box>
       </Box>
     </Box>
   );
 }
 
-/** Mini kitchen-display preview, light like the rest of the page. */
+/**
+ * The kitchen display as it actually ships - dark board, the same three
+ * columns and colours as pages/kitchen.tsx, with orders on it.
+ */
 function KitchenMock() {
   const cols = [
-    { h: 'Yangi', c: '#B45309', bar: '#F59E0B', cards: ['5-stol · 2 taom', '9-stol · 1 taom'] },
-    { h: 'Tayyorlanmoqda', c: '#1D4ED8', bar: '#60A5FA', cards: ['12-stol · 3 taom'] },
-    { h: 'Tayyor', c: '#15803D', bar: '#4ADE80', cards: ['3-stol · 2 taom'] },
+    {
+      h: 'Yangi buyurtmalar', c: '#F59E0B',
+      cards: [
+        { t: 5, ago: '2 daqiqa', items: [['2', 'Palov'], ['1', 'Lag‘mon']], sum: '₩34 500', note: 'piyozsiz' },
+        { t: 9, ago: '5 daqiqa', items: [['1', 'Shashlik']], sum: '₩8 000' },
+      ],
+    },
+    {
+      h: 'Tayyorlanmoqda', c: '#3B82F6',
+      cards: [
+        { t: 12, ago: '9 daqiqa', items: [['3', 'Somsa'], ['2', 'Choy']], sum: '₩27 000' },
+      ],
+    },
+    {
+      h: 'Berildi - to‘lov kutilmoqda', c: '#22C55E',
+      cards: [
+        { t: 3, ago: '21 daqiqa', items: [['2', 'Manti']], sum: '₩19 000', due: true },
+      ],
+    },
   ];
   return (
     <Box sx={{ position: 'relative' }}>
       <Box sx={{ position: 'absolute', inset: '-8%', background: `radial-gradient(ellipse, ${GLOW}, transparent 68%)`, filter: 'blur(28px)' }} />
-      <Box sx={{ position: 'relative', borderRadius: '16px', border: `1px solid ${BORDER}`, bgcolor: '#fff', p: { xs: 1.5, sm: 2 }, boxShadow: '0 30px 70px rgba(157,67,0,0.16)' }}>
-        <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-          <Kitchen sx={{ fontSize: 16, color: PRIMARY }} />
-          <Box sx={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Oshxona ekrani</Box>
-          <Box sx={{ ml: 'auto', width: 7, height: 7, borderRadius: '50%', bgcolor: '#22C55E', animation: `${pulse} 2s infinite` }} />
+      <Box sx={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', bgcolor: '#12121C', boxShadow: '0 30px 70px rgba(157,67,0,0.16)' }}>
+        {/* Board top bar */}
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2, py: 1.35, bgcolor: '#0D0D18', borderBottom: '1px solid #1E1E2E' }}>
+          <Kitchen sx={{ fontSize: 15, color: ORANGE_L }} />
+          <Box sx={{ fontSize: 11.5, fontWeight: 800, color: '#fff' }}>Oshxona ekrani</Box>
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 0.6 }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22C55E', animation: `${pulse} 2s infinite` }} />
+            <Box sx={{ fontSize: 9, fontWeight: 700, color: '#22C55E' }}>Jonli</Box>
+          </Box>
         </Stack>
-        <Grid container spacing={1}>
+
+        <Grid container spacing={1} sx={{ p: { xs: 1.25, sm: 1.75 } }}>
           {cols.map((col) => (
             <Grid item xs={4} key={col.h}>
-              <Box sx={{ fontSize: 9, fontWeight: 800, color: col.c, mb: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{col.h}</Box>
-              <Stack spacing={0.75}>
+              <Stack direction="row" alignItems="center" spacing={0.6} mb={1}>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: col.c, flexShrink: 0 }} />
+                <Box sx={{ fontSize: 8.5, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{col.h}</Box>
+                <Box sx={{ fontSize: 8, fontWeight: 800, color: col.c, bgcolor: `${col.c}22`, px: 0.55, borderRadius: 99, flexShrink: 0 }}>{col.cards.length}</Box>
+              </Stack>
+              <Stack spacing={0.85}>
                 {col.cards.map((card) => (
-                  <Box key={card} sx={{ p: 1, borderRadius: 2, bgcolor: CARD2, border: `1px solid ${BORDER}`, borderLeft: `2.5px solid ${col.bar}`, fontSize: 9.5, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {card}
+                  <Box key={card.t} sx={{ p: 1, borderRadius: 2, bgcolor: '#1E1E2E', border: '1px solid #2A2A3E' }}>
+                    <Stack direction="row" alignItems="center" spacing={0.6} mb={0.6}>
+                      <Box sx={{
+                        width: 15, height: 15, borderRadius: '50%', flexShrink: 0,
+                        bgcolor: `${col.c}22`, color: col.c, fontSize: 7.5, fontWeight: 800,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>{card.t}</Box>
+                      <Box sx={{ fontSize: 9, fontWeight: 700, color: '#fff' }}>{card.t}-stol</Box>
+                      <Box sx={{ ml: 'auto', fontSize: 7.5, color: '#64748B', whiteSpace: 'nowrap' }}>{card.ago}</Box>
+                    </Stack>
+                    {card.items.map(([q, n]) => (
+                      <Stack key={n} direction="row" spacing={0.5} sx={{ py: 0.15 }}>
+                        <Box sx={{ fontSize: 8.5, fontWeight: 800, color: '#fff', flexShrink: 0 }}>×{q}</Box>
+                        <Box sx={{ fontSize: 8.5, color: '#CBD5E1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n}</Box>
+                      </Stack>
+                    ))}
+                    {card.note && (
+                      <Box sx={{ mt: 0.5, fontSize: 7.5, color: '#FBBF24', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        Izoh: {card.note}
+                      </Box>
+                    )}
+                    <Box sx={{ mt: 0.6, pt: 0.5, borderTop: '1px solid #2A2A3E', fontSize: 9, fontWeight: 800, color: card.due ? '#22C55E' : '#94A3B8', textAlign: 'right' }}>
+                      {card.sum}
+                    </Box>
                   </Box>
                 ))}
               </Stack>
@@ -452,18 +516,9 @@ const Home: NextPage = () => {
               <Grid container spacing={{ xs: 5, md: 8 }} alignItems="center" direction={{ xs: 'column-reverse', md: 'row' }}>
                 <Grid item xs={12} md={6} sx={{ width: '100%' }}>
                   <Reveal delay={0.15}>
-                    {/* Working-kitchen photo with the kitchen board overlapping it */}
-                    <Box>
-                      <Box
-                        component="img"
-                        src="https://images.unsplash.com/photo-1581349485608-9469926a8e5e?w=900&q=80&auto=format&fit=crop"
-                        alt="Oshxona"
-                        sx={{ display: { xs: 'none', md: 'block' }, width: '100%', height: 300, objectFit: 'cover', borderRadius: '2rem', boxShadow: '0 30px 60px rgba(157,67,0,0.15)' }}
-                      />
-                      <Box sx={{ mt: { xs: 0, md: 2.5 } }}>
-                        <KitchenMock />
-                      </Box>
-                    </Box>
+                    {/* The kitchen board itself - a stock photo of someone
+                        else's kitchen says nothing about the product */}
+                    <KitchenMock />
                   </Reveal>
                 </Grid>
                 <Grid item xs={12} md={6}>
