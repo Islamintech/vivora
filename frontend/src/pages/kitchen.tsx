@@ -11,6 +11,7 @@ import {
 import {
   Kitchen, Notifications, LocalDining, Check, Close, DoneAll, Payments,
   PlaylistAdd, Add, Remove, Restaurant, ShoppingBag, ArrowBack, Phone,
+  VolumeUp, VolumeOff,
 } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
@@ -25,6 +26,7 @@ import {
   PUBLIC_MENU_QUERY, PLACE_ORDER_MUTATION,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useKitchenAlarm } from '@/hooks/useKitchenAlarm';
 import { useCurrency } from '@/hooks/useCurrency';
 import { formatMoney } from '@/lib/money';
 import { MenuItem, Order, OrderStatus, Table } from '@/types';
@@ -299,13 +301,26 @@ const KitchenPage: NextPage = () => {
         .filter((c) => c.quantity > 0),
     );
 
+  const orders: Order[] = data?.orders ?? [];
+  const byStatus = (status: OrderStatus) => orders.filter((o) => o.status === status);
+  const pendingCount = byStatus('PENDING').length;
+  const awaitingTotal = byStatus('SERVED').reduce((sum, o) => sum + o.totalAmount, 0);
+
+  // Nobody is watching this screen. The alarm keeps ringing until every new
+  // order has been accepted.
+  const alarm = useKitchenAlarm(pendingCount);
+
   useSubscription(ORDER_CREATED_SUBSCRIPTION, {
     variables: { restaurantId },
     skip: !restaurantId,
     onData({ data }) {
       const order = data.data?.orderCreated;
       if (order) {
-        toast.success(`Yangi buyurtma! ${order.tableNumber}-stol`, { duration: 5000 });
+        alarm.play();
+        toast.success(
+          order.tableNumber ? `Yangi buyurtma! ${order.tableNumber}-stol` : 'Yangi telefon buyurtma!',
+          { duration: 5000, icon: '🔔' },
+        );
         refetch();
       }
     },
@@ -316,11 +331,6 @@ const KitchenPage: NextPage = () => {
     skip: !restaurantId,
     onData() { refetch(); },
   });
-
-  const orders: Order[] = data?.orders ?? [];
-  const byStatus = (status: OrderStatus) => orders.filter((o) => o.status === status);
-  const pendingCount = byStatus('PENDING').length;
-  const awaitingTotal = byStatus('SERVED').reduce((sum, o) => sum + o.totalAmount, 0);
 
   // Staff need to see that a tap landed. Without this the card just vanishes
   // and there is no telling a successful reject from a dead button.
@@ -346,7 +356,13 @@ const KitchenPage: NextPage = () => {
   return (
     <ThemeProvider theme={kitchenTheme}>
       <CssBaseline />
-      <Head><title>Oshxona ekrani - Vivora</title></Head>
+      {/* The count in the tab title is the only alert visible when the board
+          is not the tablet's active tab. */}
+      <Head>
+        <title>
+          {pendingCount > 0 ? `(${pendingCount}) Yangi buyurtma! - Vivora` : 'Oshxona ekrani - Vivora'}
+        </title>
+      </Head>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
 
         {/* Header */}
@@ -401,9 +417,28 @@ const KitchenPage: NextPage = () => {
                 </Typography>
               </Box>
               <Divider orientation="vertical" flexItem sx={{ borderColor: '#1E1E2E', display: { xs: 'none', sm: 'block' } }} />
-              <Badge badgeContent={pendingCount} color="warning">
-                <Notifications sx={{ color: 'grey.400' }} />
-              </Badge>
+              {/* The bell is also the mute switch. Staff reach for it the
+                  moment the sound annoys them, so that is where the control
+                  belongs - and while it is off the icon says so, because a
+                  silently muted board loses orders. */}
+              <Tooltip title={alarm.enabled ? 'Ovozni o‘chirish' : 'Ovozni yoqish'}>
+                <IconButton onClick={alarm.toggle} sx={{ color: alarm.enabled ? 'grey.400' : '#F87171' }}>
+                  <Badge badgeContent={pendingCount} color="warning">
+                    {alarm.enabled ? <VolumeUp /> : <VolumeOff />}
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+              {/* Nothing has been tapped yet, so the browser is still blocking
+                  audio. Say it plainly - the alarm is silent until then. */}
+              {alarm.enabled && !alarm.audioReady && (
+                <Chip
+                  icon={<Notifications sx={{ fontSize: 16, color: 'inherit !important' }} />}
+                  label="Ovoz uchun bosing"
+                  size="small"
+                  onClick={() => { /* the click itself unlocks audio */ }}
+                  sx={{ bgcolor: '#7F1D1D', color: '#FECACA', fontWeight: 700 }}
+                />
+              )}
               <Typography variant="caption" sx={{ color: 'grey.400', display: { xs: 'none', sm: 'block' } }}>
                 {dayjs().format('HH:mm')}
               </Typography>
