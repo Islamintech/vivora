@@ -225,6 +225,11 @@ const KitchenPage: NextPage = () => {
   // the header updates instantly.
   const [collected, setCollected] = useState(0);
 
+  // Rejecting asks first, through a real dialog rather than window.confirm:
+  // kiosk browsers and Android WebViews routinely suppress native dialogs, and
+  // a suppressed confirm() returns false, so the button would appear dead.
+  const [rejectTarget, setRejectTarget] = useState<Order | null>(null);
+
   // "Ovqat qo'shish": append verbally-requested items to an existing bill.
   const [addTarget, setAddTarget] = useState<Order | null>(null);
   const [pick, setPick] = useState<{ menuItemId: string; name: string; price: number; quantity: number }[]>([]);
@@ -282,17 +287,17 @@ const KitchenPage: NextPage = () => {
   const pendingCount = byStatus('PENDING').length;
   const awaitingTotal = byStatus('SERVED').reduce((sum, o) => sum + o.totalAmount, 0);
 
-  const setStatus = (orderId: string, status: OrderStatus) =>
-    updateStatus({ variables: { input: { orderId, status } } });
+  // Staff need to see that a tap landed. Without this the card just vanishes
+  // and there is no telling a successful reject from a dead button.
+  const setStatus = (orderId: string, status: OrderStatus, done?: string) =>
+    updateStatus({ variables: { input: { orderId, status } } })
+      .then(() => { if (done) toast.success(done); })
+      .catch(() => { /* onError already reports it */ });
 
   const actions: Actions = {
-    onAccept: (id) => setStatus(id, 'PREPARING'),
-    onReject: (id) => {
-      if (confirm('Bu buyurtma rad etilsinmi? Taomlar omborga qaytariladi.')) {
-        setStatus(id, 'CANCELLED');
-      }
-    },
-    onDone: (id) => setStatus(id, 'SERVED'),
+    onAccept: (id) => setStatus(id, 'PREPARING', 'Buyurtma qabul qilindi'),
+    onReject: (id) => setRejectTarget(orders.find((o) => o._id === id) ?? null),
+    onDone: (id) => setStatus(id, 'SERVED', 'Berildi deb belgilandi'),
     onPaid: (id) => {
       const order = orders.find((o) => o._id === id);
       if (order) setCollected((c) => c + order.totalAmount);
@@ -409,6 +414,44 @@ const KitchenPage: NextPage = () => {
         </Box>
 
         {/* Add items to an existing bill */}
+        {/* Reject confirmation */}
+        <Dialog open={!!rejectTarget} onClose={() => setRejectTarget(null)} maxWidth="xs" fullWidth>
+          <DialogTitle fontWeight={800}>
+            {rejectTarget?.tableNumber}-stol buyurtmasi rad etilsinmi?
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={0.5} mb={2}>
+              {rejectTarget?.items.map((it, i) => (
+                <Typography key={i} variant="body2" color="grey.300">
+                  <Typography component="span" fontWeight={700} color="white">×{it.quantity}</Typography>{' '}
+                  {it.name}
+                </Typography>
+              ))}
+            </Stack>
+            <Typography variant="body2" color="text.secondary">
+              Taomlar omborga qaytariladi va mijoz hisobidan chiqariladi.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setRejectTarget(null)}>Bekor qilish</Button>
+            {/* color="error", not an sx background-color: the theme paints
+                containedPrimary with a `background` shorthand, which would win
+                and leave a destructive action looking like the primary one. */}
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<Close />}
+              onClick={() => {
+                if (rejectTarget) setStatus(rejectTarget._id, 'CANCELLED', 'Buyurtma rad etildi');
+                setRejectTarget(null);
+              }}
+              sx={{ fontWeight: 800 }}
+            >
+              Ha, rad etish
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Dialog open={!!addTarget} onClose={() => setAddTarget(null)} maxWidth="xs" fullWidth>
           <DialogTitle fontWeight={800}>
             {addTarget?.tableNumber}-stol - ovqat qo‘shish
