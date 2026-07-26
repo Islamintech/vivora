@@ -90,7 +90,7 @@ const FeedbackPage: NextPage = () => {
                       </Stack>
                       {fb.comment && (
                         <Typography variant="body2" color="text.secondary" mt={1.5}>
-                          "{fb.comment}"
+                          &ldquo;{fb.comment}&rdquo;
                         </Typography>
                       )}
                     </CardContent>
