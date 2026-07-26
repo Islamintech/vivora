@@ -67,7 +67,12 @@ export class MenuService {
     restaurantId: string,
     input: CreateCategoryInput,
   ): Promise<MenuCategoryDocument> {
-    const cat = await this.categoryModel.create({ restaurantId, ...input });
+    // Land new categories at the bottom. Without this every category keeps the
+    // schema default of 0, and a sort on a column where every value is equal
+    // puts them in whatever order Mongo feels like - so the owner's arrangement
+    // would silently rearrange itself.
+    const order = input.order ?? (await this.nextCategoryOrder(restaurantId));
+    const cat = await this.categoryModel.create({ restaurantId, ...input, order });
     this.translateCategoryInBackground(cat._id.toString(), cat.name);
     return cat;
   }
@@ -100,6 +105,42 @@ export class MenuService {
     if (!cat) throw new NotFoundException('Category not found');
     await this.itemModel.deleteMany({ categoryId, restaurantId });
     return true;
+  }
+
+  private async nextCategoryOrder(restaurantId: string): Promise<number> {
+    const last = await this.categoryModel
+      .findOne({ restaurantId })
+      .sort({ order: -1 })
+      .select('order')
+      .exec();
+    return last ? last.order + 1 : 0;
+  }
+
+  /**
+   * Persist a drag-and-drop rearrangement: `categoryIds` is the full list in
+   * the order the owner wants them.
+   *
+   * One bulkWrite rather than an update per category - a half-applied reorder
+   * leaves duplicate positions, and the owner would see the list jump back to
+   * something they never asked for. The restaurantId sits in every filter, so
+   * ids belonging to another restaurant simply match nothing.
+   */
+  async reorderCategories(
+    restaurantId: string,
+    categoryIds: string[],
+  ): Promise<MenuCategoryDocument[]> {
+    const valid = categoryIds.filter((id) => Types.ObjectId.isValid(id));
+    if (valid.length) {
+      await this.categoryModel.bulkWrite(
+        valid.map((id, index) => ({
+          updateOne: {
+            filter: { _id: id, restaurantId },
+            update: { $set: { order: index } },
+          },
+        })),
+      );
+    }
+    return this.getCategories(restaurantId);
   }
 
   async getCategories(restaurantId: string): Promise<MenuCategoryDocument[]> {

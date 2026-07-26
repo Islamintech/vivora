@@ -88,6 +88,20 @@ export class MenuResolver {
     return this.menuService.updateCategory(user.restaurantId?.toString(), input);
   }
 
+  // Returns the categories in their new order, so the caller can settle its
+  // list on what was actually stored rather than on its own guess.
+  @Mutation(() => [MenuCategoryModel])
+  @UseGuards(GqlAuthGuard)
+  async reorderCategories(
+    @Args('categoryIds', { type: () => [ID] }) categoryIds: string[],
+    @CurrentUser() user: any,
+  ) {
+    return this.menuService.reorderCategories(
+      user.restaurantId?.toString(),
+      categoryIds,
+    );
+  }
+
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async deleteCategory(

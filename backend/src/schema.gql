@@ -252,6 +252,7 @@ type Mutation {
   regenerateQrCode(tableId: ID!): TableModel!
   register(input: RegisterInput!): AuthPayload!
   rejectRestaurant(reason: String, restaurantId: ID!): RestaurantModel!
+  reorderCategories(categoryIds: [ID!]!): [MenuCategoryModel!]!
   reportInvoicePaid(invoiceId: ID!): BillingInvoiceModel!
   submitFeedback(input: SubmitFeedbackInput!): FeedbackModel!
   updateCategory(input: UpdateCategoryInput!): MenuCategoryModel!

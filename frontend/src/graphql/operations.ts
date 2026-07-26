@@ -131,6 +131,15 @@ export const UPDATE_CATEGORY_MUTATION = gql`
   }
 `;
 
+export const REORDER_CATEGORIES_MUTATION = gql`
+  mutation ReorderCategories($categoryIds: [ID!]!) {
+    reorderCategories(categoryIds: $categoryIds) {
+      _id order isActive
+      name
+    }
+  }
+`;
+
 export const DELETE_CATEGORY_MUTATION = gql`
   mutation DeleteCategory($categoryId: ID!) {
     deleteCategory(categoryId: $categoryId)

@@ -1,6 +1,6 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import {
   Box, Grid, Card, CardContent, Typography, Button, Stack, Chip,
@@ -11,14 +11,14 @@ import {
 } from '@mui/material';
 import {
   Add, Edit, Delete, ExpandMore, DragIndicator,
-  PhotoCamera, Close, Translate,
+  PhotoCamera, Close, Translate, ArrowUpward, ArrowDownward,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
   CATEGORIES_QUERY, MENU_ITEMS_QUERY, CREATE_CATEGORY_MUTATION,
   CREATE_MENU_ITEM_MUTATION, UPDATE_MENU_ITEM_MUTATION, DELETE_MENU_ITEM_MUTATION,
-  DELETE_CATEGORY_MUTATION,
+  DELETE_CATEGORY_MUTATION, REORDER_CATEGORIES_MUTATION, UPDATE_CATEGORY_MUTATION,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { MenuItem, MenuCategory } from '@/types';
@@ -42,12 +42,60 @@ const MenuPage: NextPage = () => {
   const { data: catData, refetch: refetchCats } = useQuery(CATEGORIES_QUERY, { skip: !user });
   const { data: itemData, refetch: refetchItems } = useQuery(MENU_ITEMS_QUERY, { skip: !user });
 
-  const categories: MenuCategory[] = catData?.categories ?? [];
   const items: MenuItem[] = itemData?.menuItems ?? [];
 
-  // Category dialog
+  // --- Category order ----------------------------------------------------
+  // The server sorts by `order`, but a drag has to look instant, so the list
+  // is held locally while the mutation is in flight and handed back to the
+  // query result once the new order is stored.
+  const serverCats: MenuCategory[] = catData?.categories ?? [];
+  const [draftCats, setDraftCats] = useState<MenuCategory[] | null>(null);
+  const categories = draftCats ?? serverCats;
+
+  // dragIndex drives the styling; dragIndexRef is what the drop handler trusts.
+  // Same reason as the grip: drag events can fire faster than React commits, so
+  // the handler's closure may still hold the pre-drag value.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+  // A whole accordion being draggable would fight with expanding it and with
+  // selecting the title, so dragging is armed only from the grip handle.
+  // A ref, not state: mousedown and dragstart can arrive in the same frame, and
+  // a state update would not have been committed yet - dragstart would read the
+  // stale value and cancel every drag.
+  const gripArmed = useRef(false);
+
+  const [reorderCategories] = useMutation(REORDER_CATEGORIES_MUTATION, {
+    onCompleted() { setDraftCats(null); refetchCats(); },
+    onError(e) {
+      // Snap back to the stored order - leaving the dragged position on screen
+      // would tell the owner it saved when it did not.
+      setDraftCats(null);
+      toast.error(e.message);
+    },
+  });
+
+  const moveCategory = (from: number, to: number) => {
+    if (to < 0 || to >= categories.length || from === to) return;
+    const next = [...categories];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setDraftCats(next);
+    reorderCategories({ variables: { categoryIds: next.map((c) => c._id) } });
+  };
+
+  // Category dialog - the same dialog creates and renames, like the item one.
   const [catDialog, setCatDialog] = useState(false);
+  const [editingCat, setEditingCat] = useState<MenuCategory | null>(null);
   const [catForm, setCatForm] = useState({ name: '' });
+
+  const openCreateCategory = () => { setEditingCat(null); setCatForm({ name: '' }); setCatDialog(true); };
+  const openRenameCategory = (cat: MenuCategory) => {
+    setEditingCat(cat);
+    setCatForm({ name: cat.name });
+    setCatDialog(true);
+  };
+  const closeCatDialog = () => { setCatDialog(false); setEditingCat(null); };
 
   // Item dialog
   const [itemDialog, setItemDialog] = useState<'create' | 'edit' | null>(null);
@@ -100,18 +148,63 @@ const MenuPage: NextPage = () => {
   const makePrimary = (url: string) =>
     setItemForm((p) => ({ ...p, images: [url, ...p.images.filter((u) => u !== url)] }));
 
+  // Translation runs in the background on the server so that saving a dish
+  // never waits on a network call, and it lands a few seconds after the
+  // mutation returns. Refetching only once - immediately - therefore always
+  // draws the row untranslated, and nothing ever asks again, so it looks like
+  // translation is broken when it simply had not finished yet. These follow-up
+  // reads cover that window; the timers are cleared on unmount so leaving the
+  // page mid-translation does not set state on a dead component.
+  const settleTimers = useRef<number[]>([]);
+  useEffect(() => () => settleTimers.current.forEach(clearTimeout), []);
+
+  const refetchAfterTranslation = (refetch: () => void) => {
+    settleTimers.current.forEach(clearTimeout);
+    settleTimers.current = [3000, 7000, 12000].map((ms) =>
+      window.setTimeout(refetch, ms),
+    );
+  };
+
   const [createCategory] = useMutation(CREATE_CATEGORY_MUTATION, {
-    onCompleted() { toast.success('Kategoriya yaratildi'); setCatDialog(false); refetchCats(); },
+    onCompleted() {
+      toast.success('Kategoriya yaratildi. Tarjima bir necha soniyada tayyor bo‘ladi.');
+      closeCatDialog();
+      refetchCats();
+      refetchAfterTranslation(refetchCats);
+    },
+    onError(e) { toast.error(e.message); },
+  });
+
+  const [updateCategory] = useMutation(UPDATE_CATEGORY_MUTATION, {
+    onCompleted() {
+      // A renamed category is re-translated server-side, on the same few-second
+      // delay as a new one, so it needs the same follow-up reads.
+      toast.success('Kategoriya yangilandi. Tarjima bir necha soniyada tayyor bo‘ladi.');
+      closeCatDialog();
+      refetchCats();
+      refetchAfterTranslation(refetchCats);
+    },
     onError(e) { toast.error(e.message); },
   });
 
   const [createItem] = useMutation(CREATE_MENU_ITEM_MUTATION, {
-    onCompleted() { toast.success('Taom qo‘shildi'); setItemDialog(null); refetchItems(); },
+    onCompleted() {
+      toast.success('Taom qo‘shildi. Tarjima bir necha soniyada tayyor bo‘ladi.');
+      setItemDialog(null);
+      refetchItems();
+      refetchAfterTranslation(refetchItems);
+    },
     onError(e) { toast.error(e.message); },
   });
 
   const [updateItem] = useMutation(UPDATE_MENU_ITEM_MUTATION, {
-    onCompleted() { toast.success('Taom yangilandi'); setItemDialog(null); refetchItems(); },
+    onCompleted() {
+      toast.success('Taom yangilandi');
+      setItemDialog(null);
+      refetchItems();
+      // A rename re-translates, so the same delay applies here.
+      refetchAfterTranslation(refetchItems);
+    },
     onError(e) { toast.error(e.message); },
   });
 
@@ -124,6 +217,18 @@ const MenuPage: NextPage = () => {
     onCompleted() { toast.success('Kategoriya o‘chirildi'); refetchCats(); refetchItems(); },
     onError(e) { toast.error(e.message); },
   });
+
+  const submitCategory = () => {
+    const name = catForm.name.trim();
+    if (!name) return;
+    if (editingCat) {
+      // Nothing changed - don't spend a translation call on a no-op save.
+      if (name === editingCat.name) { closeCatDialog(); return; }
+      updateCategory({ variables: { input: { categoryId: editingCat._id, name } } });
+    } else {
+      createCategory({ variables: { input: { name } } });
+    }
+  };
 
   const openCreateItem = (categoryId: string) => {
     setEditingItem(null);
@@ -187,7 +292,7 @@ const MenuPage: NextPage = () => {
               <Typography variant="h4" fontWeight={800}>Menyu boshqaruvi</Typography>
               <Typography color="text.secondary">Kategoriyalar va taomlarni boshqaring</Typography>
             </Box>
-            <Button variant="contained" startIcon={<Add />} onClick={() => setCatDialog(true)}>
+            <Button variant="contained" startIcon={<Add />} onClick={openCreateCategory}>
               Kategoriya qo‘shish
             </Button>
           </Stack>
@@ -196,20 +301,117 @@ const MenuPage: NextPage = () => {
             <Card sx={{ textAlign: 'center', py: 8 }}>
               <Typography variant="h6" color="text.secondary">Hali kategoriyalar yo‘q</Typography>
               <Typography variant="body2" color="text.secondary" mb={2}>Boshlash uchun birinchi menyu kategoriyasini yarating</Typography>
-              <Button variant="contained" startIcon={<Add />} onClick={() => setCatDialog(true)}>Kategoriya qo‘shish</Button>
+              <Button variant="contained" startIcon={<Add />} onClick={openCreateCategory}>Kategoriya qo‘shish</Button>
             </Card>
           )}
 
-          {categories.map((cat) => (
-            <Accordion key={cat._id} defaultExpanded sx={{ mb: 2, borderRadius: '16px !important', '&:before': { display: 'none' } }}>
+          {categories.length > 1 && (
+            <Typography variant="body2" color="text.secondary" mb={1.5}>
+              Kategoriyalarni suring yoki strelkalar bilan ko‘chiring - mijoz menyuni shu tartibda ko‘radi.
+            </Typography>
+          )}
+
+          {categories.map((cat, index) => (
+            <Accordion
+              key={cat._id}
+              defaultExpanded
+              // Always draggable, then cancelled unless the grip was the thing
+              // grabbed. Flipping the attribute on mousedown instead loses a
+              // race: the browser decides draggability when the drag starts,
+              // which can be before React has committed the state change.
+              draggable
+              onDragStart={(e) => {
+                if (!gripArmed.current) { e.preventDefault(); return; }
+                dragIndexRef.current = index;
+                setDragIndex(index);
+                e.dataTransfer.effectAllowed = 'move';
+                // Firefox starts no drag at all without data on the transfer.
+                e.dataTransfer.setData('text/plain', cat._id);
+              }}
+              onDragOver={(e) => {
+                if (dragIndexRef.current === null) return;
+                // Without preventDefault the browser refuses the drop outright.
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                setOverIndex(index);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const from = dragIndexRef.current;
+                if (from !== null) moveCategory(from, index);
+                dragIndexRef.current = null;
+                setDragIndex(null); setOverIndex(null); gripArmed.current = false;
+              }}
+              onDragEnd={() => {
+                dragIndexRef.current = null;
+                setDragIndex(null); setOverIndex(null); gripArmed.current = false;
+              }}
+              sx={{
+                mb: 2, borderRadius: '16px !important', '&:before': { display: 'none' },
+                opacity: dragIndex === index ? 0.4 : 1,
+                // Show where it will land rather than only what is being moved.
+                outline: overIndex === index && dragIndex !== index ? '2px solid' : 'none',
+                outlineColor: 'primary.main',
+                transition: 'opacity .15s',
+              }}
+            >
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%', pr: 2 }}>
-                  <DragIndicator sx={{ color: 'text.disabled' }} />
+                  {/* Arming on mouse-down means the accordion is inert until the
+                      grip is actually grabbed. Touch screens get no HTML5 drag
+                      at all, which is why the arrows below are not optional. */}
+                  <Tooltip title="Tartibni o‘zgartirish uchun suring">
+                    <DragIndicator
+                      onMouseDown={() => { gripArmed.current = true; }}
+                      onMouseUp={() => { gripArmed.current = false; }}
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{ color: 'text.disabled', cursor: 'grab', '&:active': { cursor: 'grabbing' } }}
+                    />
+                  </Tooltip>
                   <Typography fontWeight={700} noWrap sx={{ flex: 1, minWidth: 0 }}>
                     {cat.name || 'Nomsiz kategoriya'}
                   </Typography>
                   <Stack direction="row" spacing={1}>
+                    {categories.length > 1 && (
+                      <Stack direction="row">
+                        <Tooltip title="Yuqoriga">
+                          {/* span: a disabled button fires no events, and a
+                              Tooltip with nothing to listen to warns. */}
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={index === 0}
+                              aria-label={`${cat.name} - yuqoriga`}
+                              onClick={(e) => { e.stopPropagation(); moveCategory(index, index - 1); }}
+                            >
+                              <ArrowUpward fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="Pastga">
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={index === categories.length - 1}
+                              aria-label={`${cat.name} - pastga`}
+                              onClick={(e) => { e.stopPropagation(); moveCategory(index, index + 1); }}
+                            >
+                              <ArrowDownward fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Stack>
+                    )}
                     <Chip label={`${items.filter((i) => i.categoryId === cat._id).length} ta taom`} size="small" />
+                    <Tooltip title="Nomini o‘zgartirish">
+                      <IconButton
+                        size="small"
+                        aria-label={`${cat.name} - tahrirlash`}
+                        onClick={(e) => { e.stopPropagation(); openRenameCategory(cat); }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Kategoriyani o‘chirish">
                       <IconButton
                         size="small"
@@ -286,22 +488,31 @@ const MenuPage: NextPage = () => {
           ))}
         </Box>
 
-        {/* Category Dialog */}
-        <Dialog open={catDialog} onClose={() => setCatDialog(false)} fullWidth maxWidth="sm">
-          <DialogTitle fontWeight={700}>Yangi kategoriya</DialogTitle>
+        {/* Category Dialog - creates a category, or renames an existing one */}
+        <Dialog open={catDialog} onClose={closeCatDialog} fullWidth maxWidth="sm">
+          <DialogTitle fontWeight={700}>
+            {editingCat ? 'Kategoriyani tahrirlash' : 'Yangi kategoriya'}
+          </DialogTitle>
           <DialogContent>
             <TextField
               label="Kategoriya nomi"
               value={catForm.name}
               onChange={(e) => setCatForm({ name: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitCategory(); }}
               fullWidth
+              autoFocus
               sx={{ mt: 1 }}
             />
+            {editingCat && (
+              <Typography variant="body2" color="text.secondary" mt={1.5}>
+                Nom o‘zgartirilsa, tarjimalar qayta tayyorlanadi.
+              </Typography>
+            )}
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button onClick={() => setCatDialog(false)}>Bekor qilish</Button>
-            <Button variant="contained" onClick={() => createCategory({ variables: { input: catForm } })}>
-              Kategoriya yaratish
+            <Button onClick={closeCatDialog}>Bekor qilish</Button>
+            <Button variant="contained" disabled={!catForm.name.trim()} onClick={submitCategory}>
+              {editingCat ? 'Saqlash' : 'Kategoriya yaratish'}
             </Button>
           </DialogActions>
         </Dialog>
