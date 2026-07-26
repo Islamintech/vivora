@@ -4,65 +4,62 @@ import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Box, Grid, Card, CardContent, Typography, Stack,
-  Chip, Skeleton, Avatar, LinearProgress,
+  Chip, LinearProgress,
 } from '@mui/material';
-import {
-  TrendingUp, ShoppingBag, TableRestaurant, Star,
-} from '@mui/icons-material';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { ANALYTICS_QUERY, FEEDBACK_SUMMARY_QUERY } from '@/graphql/operations';
+import { ANALYTICS_QUERY, FEEDBACK_SUMMARY_QUERY, ORDERS_QUERY } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { formatMoney } from '@/lib/money';
 import { useCurrency } from '@/hooks/useCurrency';
 import dayjs from 'dayjs';
-import { statusColor, statusLabel } from '@/types';
-
-// All four cards must render at the same height, so the card fills its grid
-// cell and the label/value/sub block stretches inside it.
-const StatCard = ({ label, value, icon, color, sub }: any) => (
-  <Card sx={{ height: '100%' }}>
-    <CardContent sx={{ height: '100%', display: 'flex' }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ width: '100%' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Typography variant="body2" color="text.secondary" fontWeight={500} mb={0.5}>
-            {label}
-          </Typography>
-          <Typography variant="h4" fontWeight={800} noWrap>{value}</Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto', pt: 0.5 }}>
-            {sub ?? ' '}
-          </Typography>
-        </Box>
-        <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.dark`, width: 48, height: 48, flexShrink: 0 }}>
-          {icon}
-        </Avatar>
-      </Stack>
-    </CardContent>
-  </Card>
-);
+import {
+  StatTile, WeeklyRevenue, RecentOrders, delta, fillDays, todayAndYesterday,
+} from '@/components/dashboard/TodayPanel';
 
 const DashboardPage: NextPage = () => {
   const { user } = useRequireAuth();
   const currency = useCurrency();
 
   // Memoized: fresh Date objects on every render make Apollo see "new
-  // variables" and refetch in an endless loop.
+  // variables" and refetch in an endless loop. The viewer's own timezone so
+  // "today" means their midnight, not UTC's.
   const period = useMemo(
     () => ({
       startDate: dayjs().subtract(30, 'day').startOf('day').toDate(),
       endDate: dayjs().endOf('day').toDate(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }),
     [],
   );
 
+  // Polled, which is what makes the "Jonli" badge honest.
   const { data: analyticsData, loading: aLoading } = useQuery(ANALYTICS_QUERY, {
     variables: { period },
     skip: !user,
+    pollInterval: 60_000,
   });
 
   const { data: feedbackData } = useQuery(FEEDBACK_SUMMARY_QUERY, { skip: !user });
 
+  const { data: ordersData } = useQuery(ORDERS_QUERY, {
+    variables: { limit: 5 },
+    skip: !user,
+    pollInterval: 30_000,
+  });
+
   const analytics = analyticsData?.analytics;
   const feedbackSummary = feedbackData?.feedbackSummary;
+
+  const daily = analytics?.dailyRevenue ?? [];
+  const week = useMemo(() => fillDays(daily, 7), [daily]);
+  const { today, yesterday } = useMemo(() => todayAndYesterday(daily), [daily]);
+
+  // Average cheque is derived, so it needs its own comparison rather than
+  // inheriting either of the other two deltas.
+  const todayAvg = today.orderCount ? today.revenue / today.orderCount : 0;
+  const yestAvg = yesterday.orderCount ? yesterday.revenue / yesterday.orderCount : 0;
+
+  const recentOrders = (ordersData?.orders ?? []).slice(0, 3);
 
   if (!user) return null;
 
@@ -71,54 +68,57 @@ const DashboardPage: NextPage = () => {
       <Head><title>Boshqaruv paneli - Vivora</title></Head>
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, md: 4 } }}>
-          <Box mb={4}>
-            <Typography variant="h4" fontWeight={800}>Xush kelibsiz 👋</Typography>
-            <Typography color="text.secondary">Bugun restoraningizda nimalar bo‘layotganiga bir nazar tashlang.</Typography>
-          </Box>
-
-          {/* Stat cards */}
-          <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={3}>
-              {aLoading ? <Skeleton variant="rounded" height={130} /> : (
-                <StatCard
-                  label="Umumiy daromad (30 kun)"
-                  value={formatMoney(analytics?.totalRevenue ?? 0, currency)}
-                  icon={<TrendingUp />}
-                  color="success"
-                  sub={`${analytics?.totalOrders ?? 0} ta buyurtma`}
-                />
-              )}
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              {aLoading ? <Skeleton variant="rounded" height={130} /> : (
-                <StatCard
-                  label="Bugungi buyurtmalar"
-                  value={analytics?.totalOrders ?? 0}
-                  icon={<ShoppingBag />}
-                  color="primary"
-                  sub={`${analytics?.pendingOrders ?? 0} ta kutilmoqda`}
-                />
-              )}
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              {aLoading ? <Skeleton variant="rounded" height={130} /> : (
-                <StatCard
-                  label="O‘rtacha buyurtma summasi"
-                  value={formatMoney(analytics?.averageOrderValue ?? 0, currency)}
-                  icon={<TableRestaurant />}
-                  color="info"
-                  sub="So‘nggi 30 kun"
-                />
-              )}
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard
-                label="Mijozlar bahosi"
-                value={feedbackSummary ? `${feedbackSummary.averageRating.toFixed(1)} ★` : '-'}
-                icon={<Star />}
-                color="warning"
-                sub={`${feedbackSummary?.totalCount ?? 0} ta sharh`}
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h5" fontWeight={800}>Bugungi ko‘rsatkichlar</Typography>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Box
+                sx={{
+                  width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main',
+                  animation: 'pulse 2s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { opacity: 1 },
+                    '50%': { opacity: 0.35 },
+                  },
+                }}
               />
+              <Typography variant="body2" color="success.main" fontWeight={700}>Jonli</Typography>
+            </Stack>
+          </Stack>
+
+          {/* Today at a glance, each figure against the same one yesterday */}
+          <Grid container spacing={2.5} mb={2.5}>
+            <Grid item xs={12} sm={4}>
+              <StatTile
+                label="Daromad"
+                value={formatMoney(today.revenue, currency)}
+                deltaPct={delta(today.revenue, yesterday.revenue)}
+                loading={aLoading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <StatTile
+                label="Buyurtmalar"
+                value={String(today.orderCount)}
+                deltaPct={delta(today.orderCount, yesterday.orderCount)}
+                loading={aLoading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <StatTile
+                label="O‘rtacha chek"
+                value={formatMoney(todayAvg, currency)}
+                deltaPct={delta(todayAvg, yestAvg)}
+                loading={aLoading}
+              />
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={2.5} mb={4}>
+            <Grid item xs={12} md={7}>
+              <WeeklyRevenue days={week} currency={currency} />
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <RecentOrders orders={recentOrders} />
             </Grid>
           </Grid>
 
