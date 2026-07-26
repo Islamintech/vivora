@@ -163,5 +163,22 @@ export const kitchenTheme = responsiveFontSizes(
       background: { default: '#0A0A0F', paper: '#13131A' },
       text: { primary: '#F8FAFC', secondary: '#94A3B8' },
     },
+    components: {
+      ...baseTheme.components,
+      // Spreading baseTheme carries its light input fill (#F8FAFC), which on
+      // this dark board renders a white box with an unreadable label sitting
+      // over it. Inputs follow the dark surface instead.
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 10,
+              backgroundColor: '#1E1E2E',
+              '&.Mui-focused': { backgroundColor: '#252535' },
+            },
+          },
+        },
+      },
+    },
   }),
 );

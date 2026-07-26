@@ -212,7 +212,7 @@ export const REGENERATE_QR_MUTATION = gql`
 export const ORDERS_QUERY = gql`
   query Orders($status: OrderStatus, $limit: Float, $unpaidOnly: Boolean) {
     orders(status: $status, limit: $limit, unpaidOnly: $unpaidOnly) {
-      _id tableNumber status orderType totalAmount customerNote language createdAt updatedAt
+      _id tableNumber status orderType totalAmount customerNote customerName customerPhone scheduledFor language createdAt updatedAt
       isPaid paidAt
       items {
         menuItemId quantity price notes
@@ -262,7 +262,7 @@ export const UPDATE_ORDER_STATUS_MUTATION = gql`
 export const ORDER_CREATED_SUBSCRIPTION = gql`
   subscription OrderCreated($restaurantId: ID!) {
     orderCreated(restaurantId: $restaurantId) {
-      _id tableNumber status orderType totalAmount customerNote createdAt
+      _id tableNumber status orderType totalAmount customerNote customerName customerPhone scheduledFor createdAt
       items {
         menuItemId quantity price notes
         name

@@ -17,8 +17,9 @@ export class Order {
   @Prop({ type: Types.ObjectId, ref: 'Restaurant', required: true })
   restaurantId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Table', required: true })
-  tableId: Types.ObjectId;
+  // Null for a collection order phoned in: nobody is sitting anywhere.
+  @Prop({ type: Types.ObjectId, ref: 'Table', default: null })
+  tableId: Types.ObjectId | null;
 
   // The visit (tab) this order belongs to; null for orders that predate
   // table sessions. SchemaTypes.ObjectId (not Types.ObjectId, which mongoose
@@ -26,8 +27,9 @@ export class Order {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'TableSession', default: null })
   sessionId: Types.ObjectId | null;
 
-  @Prop({ required: true })
-  tableNumber: number;
+  // Null alongside tableId for collection orders.
+  @Prop({ default: null })
+  tableNumber: number | null;
 
   @Prop({ type: [Object], required: true })
   items: OrderItem[];
@@ -47,6 +49,20 @@ export class Order {
 
   @Prop({ default: 'en' })
   language: string;
+
+  // --- Orders taken over the phone by staff ---
+  // Who called, so whoever greets them can match the order to the person.
+  @Prop({ default: '' })
+  customerName: string;
+
+  @Prop({ default: '' })
+  customerPhone: string;
+
+  // When the caller said they would arrive. Until then the order waits on
+  // its own part of the kitchen board instead of being cooked, so the food
+  // is not sitting under a lamp for half an hour.
+  @Prop({ type: Date, default: null })
+  scheduledFor: Date | null;
 
   // Cash collected: staff tap "To'landi" on the kitchen board once the guest
   // has paid. Paid orders leave the board and count as collected income.

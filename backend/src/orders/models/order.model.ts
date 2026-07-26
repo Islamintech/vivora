@@ -51,8 +51,8 @@ export class OrderModel {
   @Field(() => ID, { nullable: true })
   sessionId?: any;
 
-  @Field(() => Int)
-  tableNumber: number;
+  @Field(() => Int, { nullable: true })
+  tableNumber?: number | null;
 
   @Field(() => [OrderItemModel])
   items: OrderItemModel[];
@@ -68,6 +68,15 @@ export class OrderModel {
 
   @Field({ nullable: true })
   customerNote?: string;
+
+  @Field({ nullable: true })
+  customerName?: string;
+
+  @Field({ nullable: true })
+  customerPhone?: string;
+
+  @Field(() => Date, { nullable: true })
+  scheduledFor?: Date | null;
 
   @Field()
   language: string;
@@ -108,9 +117,11 @@ export class PlaceOrderInput {
   @Field(() => ID)
   restaurantId: any;
 
-  @Field(() => Int)
+  // Omitted for a collection order phoned in - there is no table.
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
   @Min(1)
-  tableNumber: number;
+  tableNumber?: number;
 
   @Field(() => [OrderItemInput])
   @ArrayMinSize(1)
@@ -133,6 +144,21 @@ export class PlaceOrderInput {
   @IsOptional()
   @IsEnum(OrderType)
   orderType?: OrderType;
+
+  // --- Set when staff take the order over the phone ---
+  @Field({ nullable: true })
+  @IsOptional()
+  @MaxLength(120)
+  customerName?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @MaxLength(40)
+  customerPhone?: string;
+
+  @Field(() => Date, { nullable: true })
+  @IsOptional()
+  scheduledFor?: Date;
 }
 
 // Staff-side: append items (taken verbally by a waiter) to an open table

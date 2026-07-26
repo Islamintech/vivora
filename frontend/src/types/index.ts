@@ -80,12 +80,18 @@ export interface Order {
   _id: string;
   restaurantId: string;
   tableId: string;
-  tableNumber: number;
+  /** Null for a collection order phoned in - nobody is sitting anywhere. */
+  tableNumber: number | null;
   items: OrderItem[];
   status: OrderStatus;
   orderType?: OrderType;
   totalAmount: number;
   customerNote?: string;
+  /** Set when staff took the order over the phone. */
+  customerName?: string;
+  customerPhone?: string;
+  /** When the caller said they would arrive; null for a walk-in order. */
+  scheduledFor?: string | null;
   language: string;
   /** Staff collected payment; paid orders leave the kitchen board. */
   isPaid?: boolean;

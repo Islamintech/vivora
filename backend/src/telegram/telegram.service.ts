@@ -105,12 +105,15 @@ export class TelegramService {
   /** Build a formatted new-order alert message (HTML). */
   formatNewOrder(opts: {
     restaurantName: string;
-    tableNumber: number;
+    /** Null for a collection order phoned in - there is no table. */
+    tableNumber?: number | null;
     items: { name: string; quantity: number }[];
     totalAmount: number;
     currency: string;
     customerNote?: string;
     takeOut?: boolean;
+    customerName?: string;
+    scheduledFor?: Date | null;
   }): string {
     const lines = opts.items
       .map((i) => `• ${i.quantity}× ${this.escapeHtml(i.name)}`)
@@ -120,12 +123,21 @@ export class TelegramService {
       ? `\n📝 <i>${this.escapeHtml(opts.customerNote)}</i>`
       : '';
     const serving = opts.takeOut ? '🥡 <b>TAKE-OUT</b>\n' : '';
+    // A phoned-in collection order has no table, so head it with the caller.
+    const heading = opts.tableNumber
+      ? `Table ${opts.tableNumber}`
+      : opts.customerName
+        ? `Phone order — ${this.escapeHtml(opts.customerName)}`
+        : 'Phone order';
+    const when = opts.scheduledFor
+      ? `\n⏰ <b>For ${opts.scheduledFor.toISOString().slice(11, 16)}</b>`
+      : '';
     return (
-      `🧾 <b>New order — Table ${opts.tableNumber}</b>\n` +
+      `🧾 <b>New order — ${heading}</b>\n` +
       `<b>${this.escapeHtml(opts.restaurantName)}</b>\n` +
       `${serving}\n` +
       `${lines}\n\n` +
-      `💰 <b>Total: ${total}</b>${note}`
+      `💰 <b>Total: ${total}</b>${note}${when}`
     );
   }
 

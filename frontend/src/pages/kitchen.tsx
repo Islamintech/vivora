@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import {
   Kitchen, Notifications, LocalDining, Check, Close, DoneAll, Payments,
-  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag, ArrowBack,
+  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag, ArrowBack, Phone, Person, Schedule,
 } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
@@ -21,12 +21,14 @@ import {
   ORDERS_QUERY, UPDATE_ORDER_STATUS_MUTATION, MARK_ORDER_PAID_MUTATION,
   ADD_ITEMS_TO_ORDER_MUTATION, MENU_ITEMS_QUERY,
   ORDER_CREATED_SUBSCRIPTION, ORDER_STATUS_UPDATED_SUBSCRIPTION,
-  MY_RESTAURANT_QUERY,
+  MY_RESTAURANT_QUERY, TABLES_QUERY, OPEN_TABLE_SESSIONS_QUERY,
+  PUBLIC_MENU_QUERY, PLACE_ORDER_MUTATION,
 } from '@/graphql/operations';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useCurrency } from '@/hooks/useCurrency';
 import { formatMoney } from '@/lib/money';
-import { MenuItem, Order, OrderStatus } from '@/types';
+import { MenuItem, Order, OrderStatus, Table } from '@/types';
+import PhoneOrderDialog from '@/components/kitchen/PhoneOrderDialog';
 
 dayjs.extend(relativeTime);
 
@@ -66,9 +68,11 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: `${col?.color}20`, color: col?.color, fontSize: '0.8rem', fontWeight: 800 }}>
-              {order.tableNumber}
+              {order.tableNumber ?? <Phone sx={{ fontSize: 16 }} />}
             </Avatar>
-            <Typography fontWeight={700} color="white">{order.tableNumber}-stol</Typography>
+            <Typography fontWeight={700} color="white">
+              {order.tableNumber ? `${order.tableNumber}-stol` : 'Telefon'}
+            </Typography>
             {/* Packing a dine-in order, or plating a takeaway, is a mistake the
                 kitchen only catches at the pass - so say which every time,
                 with an icon rather than the absence of a chip. */}
@@ -92,6 +96,34 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
             {dayjs(order.createdAt).fromNow()}
           </Typography>
         </Stack>
+
+        {/* Who phoned it in, and when they are due */}
+        {(order.customerName || order.customerPhone || order.scheduledFor) && (
+          <Box sx={{ mb: 1.5, p: 1.25, bgcolor: '#252535', borderRadius: 1.5 }}>
+            {(order.customerName || order.customerPhone) && (
+              <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Person sx={{ fontSize: 15, color: 'grey.500' }} />
+                <Typography variant="body2" color="white" fontWeight={700} noWrap>
+                  {order.customerName || 'Telefon buyurtma'}
+                </Typography>
+                {order.customerPhone && (
+                  <Typography variant="caption" color="grey.400" noWrap>{order.customerPhone}</Typography>
+                )}
+              </Stack>
+            )}
+            {order.scheduledFor && (
+              <Stack direction="row" alignItems="center" spacing={0.75} mt={0.5}>
+                <Schedule sx={{ fontSize: 15, color: '#FBBF24' }} />
+                <Typography variant="body2" sx={{ color: '#FBBF24', fontWeight: 800 }}>
+                  {dayjs(order.scheduledFor).format('HH:mm')}
+                </Typography>
+                <Typography variant="caption" color="grey.500">
+                  ({dayjs(order.scheduledFor).fromNow()})
+                </Typography>
+              </Stack>
+            )}
+          </Box>
+        )}
 
         {/* Items */}
         <Box sx={{ mb: 1.5 }}>
@@ -225,6 +257,30 @@ const KitchenPage: NextPage = () => {
   // the header updates instantly.
   const [collected, setCollected] = useState(0);
 
+  // Taking an order over the phone: needs the table list (to show what is
+  // free), the open tabs (to know what is busy) and the menu as a guest sees
+  // it. All three are staff-readable already.
+  const [phoneOrderOpen, setPhoneOrderOpen] = useState(false);
+  const { data: tablesData } = useQuery(TABLES_QUERY, { skip: !user });
+  const { data: sessionsData } = useQuery(OPEN_TABLE_SESSIONS_QUERY, {
+    skip: !user,
+    pollInterval: 30000,
+  });
+  const { data: publicMenuData } = useQuery(PUBLIC_MENU_QUERY, {
+    variables: { restaurantId },
+    skip: !restaurantId,
+  });
+
+  const [placeOrder, { loading: placingPhoneOrder }] = useMutation(PLACE_ORDER_MUTATION, {
+    onCompleted(res) {
+      const o = res?.placeOrder;
+      toast.success(o?.tableNumber ? `${o.tableNumber}-stol buyurtmasi qabul qilindi` : 'Telefon buyurtma qabul qilindi');
+      setPhoneOrderOpen(false);
+      refetch();
+    },
+    onError(e) { toast.error(e.message); },
+  });
+
   // Rejecting asks first, through a real dialog rather than window.confirm:
   // kiosk browsers and Android WebViews routinely suppress native dialogs, and
   // a suppressed confirm() returns false, so the button would appear dead.
@@ -283,7 +339,18 @@ const KitchenPage: NextPage = () => {
   });
 
   const orders: Order[] = data?.orders ?? [];
-  const byStatus = (status: OrderStatus) => orders.filter((o) => o.status === status);
+  // A phone order due later waits in its own column instead of the kitchen
+  // starting it now: cooking at 18:00 for a 19:00 arrival just means cold
+  // food. It is still PENDING - the hold is a view, not a new status.
+  const isWaiting = (o: Order) =>
+    o.status === 'PENDING' && !!o.scheduledFor && new Date(o.scheduledFor).getTime() > Date.now();
+
+  const waiting = orders
+    .filter(isWaiting)
+    .sort((a, b) => new Date(a.scheduledFor!).getTime() - new Date(b.scheduledFor!).getTime());
+
+  const byStatus = (status: OrderStatus) =>
+    orders.filter((o) => o.status === status && !isWaiting(o));
   const pendingCount = byStatus('PENDING').length;
   const awaitingTotal = byStatus('SERVED').reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -347,6 +414,16 @@ const KitchenPage: NextPage = () => {
             </Box>
 
             <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} alignItems="center">
+              {/* Taking an order over the phone, without leaving the board */}
+              <Button
+                variant="contained"
+                startIcon={<Phone />}
+                onClick={() => setPhoneOrderOpen(true)}
+                sx={{ fontWeight: 800, borderRadius: 2, whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Telefon buyurtma</Box>
+                <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Buyurtma</Box>
+              </Button>
               <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
                 <Typography variant="caption" sx={{ color: 'grey.500', display: 'block', lineHeight: 1.2 }}>
                   Yig‘ilgan
@@ -375,6 +452,27 @@ const KitchenPage: NextPage = () => {
             '& > *': { scrollSnapAlign: 'start' },
           }}
         >
+          {/* Phone orders due later. Only appears when there are any, so the
+              board is unchanged for a restaurant that never takes them. */}
+          {waiting.length > 0 && (
+            <Box sx={{ flex: { xs: '0 0 82%', sm: '0 0 45%', md: 1 }, minWidth: 0 }}>
+              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#A855F7', flexShrink: 0 }} />
+                <Typography fontWeight={700} color="white" noWrap sx={{ minWidth: 0 }}>Kutilmoqda</Typography>
+                <Chip
+                  label={waiting.length}
+                  size="small"
+                  sx={{ bgcolor: '#A855F720', color: '#A855F7', fontWeight: 700, height: 22, flexShrink: 0 }}
+                />
+              </Stack>
+              <Stack spacing={2}>
+                {waiting.map((order) => (
+                  <OrderCard key={order._id} order={order} actions={actions} />
+                ))}
+              </Stack>
+            </Box>
+          )}
+
           {COLUMNS.map((col) => {
             const list = byStatus(col.status);
             return (
@@ -414,6 +512,33 @@ const KitchenPage: NextPage = () => {
         </Box>
 
         {/* Add items to an existing bill */}
+        <PhoneOrderDialog
+          open={phoneOrderOpen}
+          tables={(tablesData?.tables ?? []).filter((t: Table) => t.isActive)}
+          openSessions={sessionsData?.openTableSessions ?? []}
+          sections={publicMenuData?.publicMenu ?? []}
+          currency={currency}
+          submitting={placingPhoneOrder}
+          onClose={() => setPhoneOrderOpen(false)}
+          onSubmit={(r) =>
+            placeOrder({
+              variables: {
+                input: {
+                  restaurantId,
+                  tableNumber: r.tableNumber ?? undefined,
+                  items: r.items,
+                  orderType: r.orderType,
+                  customerName: r.customerName || undefined,
+                  customerPhone: r.customerPhone || undefined,
+                  scheduledFor: r.scheduledFor ?? undefined,
+                  customerNote: r.customerNote || undefined,
+                  language: 'uz',
+                },
+              },
+            })
+          }
+        />
+
         {/* Reject confirmation */}
         <Dialog open={!!rejectTarget} onClose={() => setRejectTarget(null)} maxWidth="xs" fullWidth>
           <DialogTitle fontWeight={800}>

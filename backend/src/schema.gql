@@ -276,17 +276,20 @@ type OrderItemModel {
 type OrderModel {
   _id: ID!
   createdAt: DateTime!
+  customerName: String
   customerNote: String
+  customerPhone: String
   isPaid: Boolean!
   items: [OrderItemModel!]!
   language: String!
   orderType: OrderType!
   paidAt: DateTime
   restaurantId: ID!
+  scheduledFor: DateTime
   sessionId: ID
   status: OrderStatus!
   tableId: ID!
-  tableNumber: Int!
+  tableNumber: Int
   totalAmount: Float!
   updatedAt: DateTime!
 }
@@ -305,12 +308,15 @@ enum OrderType {
 }
 
 input PlaceOrderInput {
+  customerName: String
   customerNote: String
+  customerPhone: String
   items: [OrderItemInput!]!
   language: String = "en"
   orderType: OrderType = DINE_IN
   restaurantId: ID!
-  tableNumber: Int!
+  scheduledFor: DateTime
+  tableNumber: Int
 }
 
 type PlatformStats {

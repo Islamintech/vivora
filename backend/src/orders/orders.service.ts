@@ -128,9 +128,21 @@ export class OrdersService {
     const servable = await this.restaurantsService.assertServable(restaurantId.toString());
     this.restaurantsService.assertOpen(servable);
 
-    // Resolve table
-    const table = await this.tablesService.findByNumber(restaurantId, tableNumber);
-    if (!table) throw new NotFoundException(`Table ${tableNumber} not found`);
+    // A collection order phoned in has no table: nobody is sitting anywhere,
+    // so it neither resolves a table nor joins a tab. Everything else must
+    // still name a real one.
+    const isCollection =
+      (input.orderType ?? OrderType.DINE_IN) === OrderType.TAKE_OUT &&
+      (tableNumber === undefined || tableNumber === null);
+
+    let table: { _id: any } | null = null;
+    if (!isCollection) {
+      if (tableNumber === undefined || tableNumber === null) {
+        throw new BadRequestException('A table is required for a dine-in order');
+      }
+      table = await this.tablesService.findByNumber(restaurantId, tableNumber);
+      if (!table) throw new NotFoundException(`Table ${tableNumber} not found`);
+    }
 
     const { resolvedItems, totalAmount, rollbackReservations } =
       await this.resolveAndReserveItems(restaurantId.toString(), items);
@@ -139,22 +151,27 @@ export class OrdersService {
     // the same sitting share one bill.
     let order: OrderDocument;
     try {
-      const session = await this.tableSessionsService.findOrCreateOpen(
-        restaurantId,
-        table._id,
-        tableNumber,
-      );
+      const session = isCollection
+        ? null
+        : await this.tableSessionsService.findOrCreateOpen(
+            restaurantId,
+            table!._id,
+            tableNumber as number,
+          );
       order = await this.orderModel.create({
         restaurantId,
-        tableId: table._id,
-        sessionId: session._id,
-        tableNumber,
+        tableId: table?._id ?? null,
+        sessionId: session?._id ?? null,
+        tableNumber: isCollection ? null : tableNumber,
         items: resolvedItems,
         totalAmount,
         customerNote: customerNote || '',
         language: language || 'en',
         orderType: orderType || OrderType.DINE_IN,
         status: OrderStatus.PENDING,
+        customerName: input.customerName || '',
+        customerPhone: input.customerPhone || '',
+        scheduledFor: input.scheduledFor ?? null,
       });
     } catch (err) {
       await rollbackReservations();
@@ -178,6 +195,8 @@ export class OrdersService {
         currency: restaurant.currency,
         customerNote: customerNote || '',
         takeOut: order.orderType === OrderType.TAKE_OUT,
+        customerName: order.customerName,
+        scheduledFor: order.scheduledFor,
       });
       // Include the "Served" button so waiters can close the order from Telegram.
       void this.telegram.sendMessage(
@@ -476,7 +495,15 @@ export class OrdersService {
         .find({
           // PENDING deliberately excluded - it needs an accept/reject decision.
           status: { $in: [OrderStatus.PREPARING, OrderStatus.READY] },
-          createdAt: { $lt: serveCutoff },
+          // Measured from the later of "placed" and "wanted for": a phone
+          // order taken at 18:00 for 19:00 must not be counted stale the
+          // moment the kitchen starts it.
+          $expr: {
+            $lt: [
+              { $max: ['$createdAt', { $ifNull: ['$scheduledFor', '$createdAt'] }] },
+              serveCutoff,
+            ],
+          },
         })
         .limit(200);
 
