@@ -21,6 +21,7 @@ import { formatMoney } from '@/lib/money';
 import { Lang, LANGUAGES, getStrings, UIStrings } from '@/lib/i18n';
 import WelcomeGate, { OrderType } from '@/components/customer/WelcomeGate';
 import ItemSheet from '@/components/customer/ItemSheet';
+import Flag from '@/components/Flag';
 
 // Which of the 3 calm stages an order is at (READY folds into "preparing").
 const orderStep = (s: OrderStatus): number =>
@@ -339,7 +340,8 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                 {LANGUAGES.map((l) => (
                   <Chip
                     key={l.code}
-                    label={`${l.flag} ${l.code.toUpperCase()}`}
+                    icon={<Box component="span" sx={{ display: 'flex', ml: 0.75 }}><Flag code={l.code} w={18} /></Box>}
+                    label={l.code.toUpperCase()}
                     size="small"
                     variant={l.code === closedLang ? 'filled' : 'outlined'}
                     color={l.code === closedLang ? 'primary' : 'default'}
@@ -415,9 +417,9 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
             aria-label={t.chooseLanguage}
             sx={{ position: 'absolute', top: 8, right: 8, color: 'white' }}
           >
-            <Typography component="span" sx={{ fontSize: '1.3rem', lineHeight: 1 }}>
-              {LANGUAGES.find((l) => l.code === prefs?.lang)?.flag ?? '🌐'}
-            </Typography>
+            {/* SVG flag, not the emoji - Android renders flag emoji as bare
+                country letters ("UZ"), which looks like a broken glyph. */}
+            <Flag code={prefs?.lang ?? 'en'} w={26} />
           </IconButton>
           <Menu
             anchorEl={langMenuAnchor}
@@ -433,7 +435,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                   setLangMenuAnchor(null);
                 }}
               >
-                <Typography component="span" sx={{ fontSize: '1.2rem', mr: 1.5 }}>{l.flag}</Typography>
+                <Box component="span" sx={{ mr: 1.5, display: 'flex' }}><Flag code={l.code} w={24} /></Box>
                 {l.label}
               </MuiMenuItem>
             ))}
@@ -568,8 +570,18 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                           </Box>
 
                           <Box flex={1} minWidth={0}>
-                            <Stack direction="row" alignItems="center" spacing={0.75} mb={0.3}>
-                              <Typography fontWeight={700} fontSize="0.98rem" noWrap sx={{ minWidth: 0 }}>
+                            <Stack direction="row" alignItems="flex-start" spacing={0.75} mb={0.3}>
+                              {/* Wraps to a second line rather than truncating -
+                                  a half-shown dish name is no use to the guest. */}
+                              <Typography
+                                fontWeight={700}
+                                fontSize="0.98rem"
+                                sx={{
+                                  minWidth: 0, flex: 1, lineHeight: 1.3,
+                                  display: '-webkit-box', WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                }}
+                              >
                                 {item.name}
                               </Typography>
                               {item.isBestSeller ? (
@@ -632,7 +644,10 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
 
         {/* Floating cart + running tab buttons - slide up rather than pop in */}
         <Slide direction="up" in={cartCount > 0 || placedOrders.length > 0} mountOnEnter unmountOnExit>
-          <Box sx={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 200, width: 'calc(100% - 32px)', maxWidth: 448 }}>
+          {/* Centered with left/right + mx:auto rather than translateX(-50%):
+              Slide animates via an inline transform, which would override an
+              sx transform and leave the bar hanging off the right edge. */}
+          <Box sx={{ position: 'fixed', bottom: 24, left: 16, right: 16, mx: 'auto', zIndex: 200, maxWidth: 448 }}>
             <Stack direction="row" spacing={1.5}>
               {placedOrders.length > 0 && (
                 <Button
@@ -641,10 +656,14 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                   onClick={() => setTabOpen(true)}
                   startIcon={<ReceiptLong />}
                   sx={{
-                    py: 1.8, borderRadius: 3, fontSize: '1rem', whiteSpace: 'nowrap',
+                    py: 1.6, borderRadius: 3, fontSize: '0.95rem', whiteSpace: 'nowrap',
+                    // Sharing the row with the cart button: shrink to just the
+                    // total so both fit on a narrow phone.
                     flex: cartCount > 0 ? '0 0 auto' : 1,
+                    minWidth: 0, px: cartCount > 0 ? 1.75 : 2,
                     bgcolor: '#0F172A', '&:hover': { bgcolor: '#1E293B' },
                     boxShadow: '0 8px 30px rgba(15,23,42,0.35)',
+                    '& .MuiButton-startIcon': { mr: cartCount > 0 ? 0.5 : 1 },
                   }}
                 >
                   {cartCount > 0 ? fmt(tabTotal) : `${t.myOrders} - ${fmt(tabTotal)}`}
@@ -652,14 +671,27 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
               )}
               {cartCount > 0 && (
                 <Button
-                  fullWidth
                   variant="contained"
                   size="large"
                   onClick={() => setCartOpen(true)}
-                  sx={{ py: 1.8, borderRadius: 3, flex: 1, boxShadow: '0 8px 30px rgba(249,115,22,0.4)', fontSize: '1rem' }}
+                  sx={{
+                    py: 1.6, borderRadius: 3, flex: 1, minWidth: 0,
+                    boxShadow: '0 8px 30px rgba(249,115,22,0.4)',
+                    '& .MuiButton-startIcon': { mr: 0.75, flexShrink: 0 },
+                  }}
                   startIcon={<ShoppingCart />}
                 >
-                  {t.cart} ({cartCount}) - {fmt(cartTotal)}
+                  {/* Sharing the row with the tab button leaves no room for the
+                      word in longer languages - the cart icon already says it,
+                      so only the count and total stay. */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, width: '100%', justifyContent: 'center' }}>
+                    <Box component="span" sx={{ fontSize: '0.95rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {placedOrders.length > 0 ? `(${cartCount})` : `${t.cart} (${cartCount})`}
+                    </Box>
+                    <Box component="span" sx={{ fontSize: '0.95rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                      {fmt(cartTotal)}
+                    </Box>
+                  </Box>
                 </Button>
               )}
             </Stack>

@@ -250,7 +250,7 @@ const uz: UIStrings = {
   thanks: 'Fikringiz uchun rahmat!',
   close: 'Yopish',
   popular: 'Ommabop',
-  bestSeller: 'Eng mashxurlar taomlar',
+  bestSeller: 'Mashhur',
   allergens: 'Allergenlar',
   quantity: 'Miqdori',
   itemNote: 'Oshxona uchun izoh',

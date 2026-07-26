@@ -149,7 +149,7 @@ export default function ItemSheet({
                 direction="row"
                 alignItems="center"
                 spacing={0.5}
-                sx={{ border: '1px solid #E2E8F0', borderRadius: 3, px: 0.5, py: 0.25 }}
+                sx={{ border: '1px solid #E2E8F0', borderRadius: 3, px: 0.5, py: 0.25, flexShrink: 0 }}
               >
                 <IconButton size="small" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1}>
                   <Remove fontSize="small" />
@@ -159,14 +159,27 @@ export default function ItemSheet({
                   <Add fontSize="small" />
                 </IconButton>
               </Stack>
+              {/* Label and price are separate spans: the label may wrap to a
+                  second line in longer languages, the price never does. */}
               <Button
-                fullWidth
                 variant="contained"
                 size="large"
                 onClick={() => onConfirm(qty, note.trim())}
-                sx={{ py: 1.6, borderRadius: 3, fontSize: '1rem' }}
+                sx={{ flex: 1, minWidth: 0, py: 1.4, borderRadius: 3, lineHeight: 1.25 }}
               >
-                {inCart > 0 ? t.updateOrder : t.addToOrder} · {fmt(item.price * qty)}
+                <Box
+                  sx={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: 1, width: '100%', minWidth: 0,
+                  }}
+                >
+                  <Box component="span" sx={{ fontSize: '0.95rem', fontWeight: 700, minWidth: 0 }}>
+                    {inCart > 0 ? t.updateOrder : t.addToOrder}
+                  </Box>
+                  <Box component="span" sx={{ fontSize: '0.95rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                    {fmt(item.price * qty)}
+                  </Box>
+                </Box>
               </Button>
             </Stack>
           )}
