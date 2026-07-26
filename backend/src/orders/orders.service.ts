@@ -349,6 +349,22 @@ export class OrdersService {
       { new: true },
     );
     if (order) {
+      // Paying the last outstanding order on the tab frees the table, so the
+      // next guests to scan that QR code start their own bill instead of
+      // joining one that has already been settled.
+      if (order.sessionId) {
+        try {
+          await this.tableSessionsService.closeIfFullySettled(
+            order.sessionId.toString(),
+          );
+        } catch (err: any) {
+          // The payment is recorded; failing to free the table must not undo
+          // that, and the 20-minute sweep will pick it up anyway.
+          this.logger.warn(
+            `Freeing table for order ${orderId} failed: ${err.message}`,
+          );
+        }
+      }
       await this.pubSub.publish(ORDER_STATUS_UPDATED, {
         orderStatusUpdated: order,
         restaurantId: order.restaurantId.toString(),
@@ -388,6 +404,7 @@ export class OrdersService {
     }
 
     order.status = status;
+    if (status === OrderStatus.SERVED) order.servedAt = new Date();
     await order.save();
     await this.pubSub.publish(ORDER_STATUS_UPDATED, {
       orderStatusUpdated: order,
@@ -509,6 +526,7 @@ export class OrdersService {
 
       for (const order of toServe) {
         order.status = OrderStatus.SERVED;
+        order.servedAt = new Date();
         await order.save();
         await this.pubSub.publish(ORDER_STATUS_UPDATED, {
           orderStatusUpdated: order,

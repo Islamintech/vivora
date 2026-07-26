@@ -72,6 +72,12 @@ export class Order {
   @Prop({ type: Date, default: null })
   paidAt: Date | null;
 
+  // When the food reached the guest. The table is freed automatically a while
+  // after this, so it needs its own stamp: updatedAt moves on any edit, which
+  // would keep pushing the deadline back every time the bill is touched.
+  @Prop({ type: Date, default: null })
+  servedAt: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 }

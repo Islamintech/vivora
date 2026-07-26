@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import {
   TableSession,
@@ -21,6 +22,8 @@ export type SessionWithOrders = {
 
 @Injectable()
 export class TableSessionsService {
+  private readonly logger = new Logger(TableSessionsService.name);
+
   constructor(
     @InjectModel(TableSession.name)
     private sessionModel: Model<TableSessionDocument>,
@@ -165,6 +168,92 @@ export class TableSessionsService {
     if (!session) throw new NotFoundException('Open table session not found');
     const closed = await this.closeById(sessionId);
     return this.withOrders(closed);
+  }
+
+  /**
+   * Free the table once its whole tab is settled.
+   *
+   * Staff tap "To'landi" per order, but a tab often holds several - a starter
+   * ordered at the QR code, a dessert added later. Closing on the first
+   * payment would free a table whose guests are still eating, and the next
+   * party scanning that QR code would be handed the leftovers of this one.
+   * So the session closes only when nothing unpaid is left on it.
+   *
+   * Returns true if this call was the one that freed the table.
+   */
+  async closeIfFullySettled(sessionId: string): Promise<boolean> {
+    if (!Types.ObjectId.isValid(sessionId)) return false;
+    const session = await this.sessionModel.findOne({
+      _id: sessionId,
+      status: TableSessionStatus.OPEN,
+    });
+    if (!session) return false;
+
+    const outstanding = await this.orderModel.countDocuments({
+      sessionId,
+      status: { $ne: OrderStatus.CANCELLED },
+      isPaid: { $ne: true },
+    });
+    if (outstanding > 0) return false;
+
+    await this.closeById(sessionId);
+    return true;
+  }
+
+  /**
+   * Free tables that were served and then forgotten.
+   *
+   * Guests get up and leave without anyone tapping anything, and the table
+   * then reads as occupied until the 4-hour stale guard expires - long enough
+   * that staff seating the next party see a busy table and the guests scanning
+   * the QR code inherit a stranger's tab. Twenty minutes after the last dish
+   * reached the table, the tab closes itself.
+   *
+   * Only fully-served tabs qualify: anything still cooking means the guests
+   * are demonstrably still there. Payment is deliberately not required, since
+   * the point is to free the table, not to declare the money collected - the
+   * orders keep their own isPaid state either way.
+   */
+  private static readonly AUTO_FREE_AFTER_MS = 20 * 60_000;
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async autoFreeServedTables(): Promise<void> {
+    try {
+      const cutoff = new Date(Date.now() - TableSessionsService.AUTO_FREE_AFTER_MS);
+      const sessions = await this.sessionModel
+        .find({ status: TableSessionStatus.OPEN })
+        .limit(500)
+        .exec();
+
+      let freed = 0;
+      for (const session of sessions) {
+        const id = session._id.toString();
+        const orders = await this.orderModel
+          .find({ sessionId: id, status: { $ne: OrderStatus.CANCELLED } })
+          .select('status servedAt updatedAt')
+          .exec();
+
+        // An empty tab is left alone: it has nothing to have been served, and
+        // the stale guard already covers a tab nobody ever ordered on.
+        if (!orders.length) continue;
+        if (orders.some((o) => o.status !== OrderStatus.SERVED)) continue;
+
+        // servedAt was added later, so orders served before it existed fall
+        // back to updatedAt rather than being freed instantly on a null.
+        const lastServed = orders.reduce((latest, o) => {
+          const at = o.servedAt ?? o.updatedAt;
+          return at > latest ? at : latest;
+        }, new Date(0));
+        if (lastServed > cutoff) continue;
+
+        await this.closeById(id);
+        freed++;
+      }
+
+      if (freed) this.logger.log(`Auto-freed ${freed} served table(s)`);
+    } catch (err: any) {
+      this.logger.error(`autoFreeServedTables failed: ${err.message}`);
+    }
   }
 
   private async closeById(sessionId: string): Promise<TableSessionDocument> {
