@@ -12,6 +12,11 @@ export class MenuCategory {
   @Prop({ required: true })
   name: string;
 
+  // Same arrangement as menu items: the Uzbek name is canonical, translations
+  // sit beside it keyed by language code.
+  @Prop({ type: Object, default: {} })
+  translations: Record<string, { name?: string }>;
+
   @Prop({ default: 0 })
   order: number;
 
@@ -42,6 +47,12 @@ export class MenuItem {
 
   @Prop({ default: '' })
   description: string;
+
+  // Machine translations of name/description, keyed by language code.
+  // 'name' above stays the Uzbek original: it is what the kitchen ticket, the
+  // receipt and the analytics report show, and staff must read those.
+  @Prop({ type: Object, default: {} })
+  translations: Record<string, { name?: string; description?: string }>;
 
   @Prop({ required: true, min: 0 })
   price: number;

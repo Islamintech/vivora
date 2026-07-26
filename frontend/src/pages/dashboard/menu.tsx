@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import {
   Add, Edit, Delete, ExpandMore, DragIndicator,
-  PhotoCamera, Close,
+  PhotoCamera, Close, Translate,
 } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -25,6 +25,13 @@ import { MenuItem, MenuCategory } from '@/types';
 import { formatMoney } from '@/lib/money';
 import { useCurrency } from '@/hooks/useCurrency';
 import { uploadImage, cloudinaryConfigured } from '@/lib/cloudinary';
+
+// The customer menu's languages other than Uzbek, which is the original.
+const TRANSLATION_LANGS = [
+  { code: 'en' as const, label: 'English' },
+  { code: 'ru' as const, label: 'Русский' },
+  { code: 'ko' as const, label: '한국어' },
+];
 
 const MenuPage: NextPage = () => {
   const { user } = useRequireAuth();
@@ -51,6 +58,7 @@ const MenuPage: NextPage = () => {
     description: '',
     price: '',
     images: [] as string[],
+    translations: {} as Partial<Record<'en' | 'ru' | 'ko', { name?: string; description?: string }>>,
     tags: '',
     isAvailable: true,
     isPopular: false,
@@ -58,6 +66,8 @@ const MenuPage: NextPage = () => {
     quantity: '',
   });
   const [uploading, setUploading] = useState(false);
+  // Whether the owner typed in the translation boxes during this edit.
+  const [translationsTouched, setTranslationsTouched] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Several photos at once: a dish is usually shot from a few angles in one
@@ -117,7 +127,8 @@ const MenuPage: NextPage = () => {
 
   const openCreateItem = (categoryId: string) => {
     setEditingItem(null);
-    setItemForm({ categoryId, name: '', description: '', price: '', images: [], tags: '', isAvailable: true, isPopular: false, trackQuantity: false, quantity: '' });
+    setItemForm({ categoryId, name: '', description: '', price: '', images: [], translations: {}, tags: '', isAvailable: true, isPopular: false, trackQuantity: false, quantity: '' });
+    setTranslationsTouched(false);
     setItemDialog('create');
   };
 
@@ -130,22 +141,34 @@ const MenuPage: NextPage = () => {
       price: String(item.price),
       // Items saved before galleries existed have only imageUrl.
       images: item.images?.length ? item.images : (item.imageUrl ? [item.imageUrl] : []),
+      // Strip __typename so the object can go straight back as an input.
+      translations: {
+        en: item.translations?.en ? { name: item.translations.en.name ?? '', description: item.translations.en.description ?? '' } : undefined,
+        ru: item.translations?.ru ? { name: item.translations.ru.name ?? '', description: item.translations.ru.description ?? '' } : undefined,
+        ko: item.translations?.ko ? { name: item.translations.ko.name ?? '', description: item.translations.ko.description ?? '' } : undefined,
+      },
       tags: item.tags.join(', '),
       isAvailable: item.isAvailable,
       isPopular: item.isPopular,
       trackQuantity: item.trackQuantity,
       quantity: String(item.quantity ?? 0),
     });
+    setTranslationsTouched(false);
     setItemDialog('edit');
   };
 
   const handleSaveItem = () => {
-    const payload = {
-      ...itemForm,
+    const { translations, ...rest } = itemForm;
+    const payload: Record<string, unknown> = {
+      ...rest,
       price: parseFloat(itemForm.price),
       quantity: parseInt(itemForm.quantity, 10) || 0,
       tags: itemForm.tags.split(',').map((s) => s.trim()).filter(Boolean),
     };
+    // Sending translations tells the server they were corrected by hand, which
+    // stops it re-translating. Only say that when the owner actually typed in
+    // the box - otherwise renaming a dish would never update its translation.
+    if (translationsTouched) payload.translations = translations;
     if (itemDialog === 'create') {
       createItem({ variables: { input: payload } });
     } else if (editingItem) {
@@ -402,6 +425,63 @@ const MenuPage: NextPage = () => {
                   />
                 )}
               </Box>
+              {/* Translations. Filled in automatically a moment after saving;
+                  editable because a machine will occasionally mangle a dish
+                  name, and the owner is the one who knows what it should say. */}
+              {itemDialog === 'edit' && (
+                <Box sx={{ bgcolor: 'background.default', borderRadius: 2, p: 2 }}>
+                  <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
+                    <Translate sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2" fontWeight={700}>Tarjimalar</Typography>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+                    Avtomatik tarjima qilinadi. Noto‘g‘ri bo‘lsa, o‘zgartiring.
+                  </Typography>
+                  {TRANSLATION_LANGS.map(({ code, label }) => (
+                    <Box key={code} mb={1.5}>
+                      <Typography variant="caption" fontWeight={700} color="text.secondary">
+                        {label}
+                      </Typography>
+                      <TextField
+                        size="small"
+                        placeholder={`${itemForm.name || 'Nomi'} - ${label}`}
+                        value={itemForm.translations[code]?.name ?? ''}
+                        onChange={(e) => {
+                          setTranslationsTouched(true);
+                          setItemForm((p) => ({
+                            ...p,
+                            translations: {
+                              ...p.translations,
+                              [code]: { ...p.translations[code], name: e.target.value },
+                            },
+                          }));
+                        }}
+                        fullWidth
+                        sx={{ mt: 0.5 }}
+                      />
+                      <TextField
+                        size="small"
+                        placeholder="Tavsifi"
+                        value={itemForm.translations[code]?.description ?? ''}
+                        onChange={(e) => {
+                          setTranslationsTouched(true);
+                          setItemForm((p) => ({
+                            ...p,
+                            translations: {
+                              ...p.translations,
+                              [code]: { ...p.translations[code], description: e.target.value },
+                            },
+                          }));
+                        }}
+                        fullWidth
+                        multiline
+                        sx={{ mt: 0.75 }}
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
               <TextField
                 label="Teglar (vergul bilan ajrating)"
                 value={itemForm.tags}

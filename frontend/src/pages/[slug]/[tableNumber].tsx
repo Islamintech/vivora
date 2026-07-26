@@ -18,6 +18,7 @@ import {
 } from '@/graphql/operations';
 import { CartItem, MenuItem, Order, OrderStatus, TableSession } from '@/types';
 import { formatMoney } from '@/lib/money';
+import { localizedName, localizedDescription, localizedCategory } from '@/lib/localize';
 import { Lang, LANGUAGES, getStrings, UIStrings } from '@/lib/i18n';
 import WelcomeGate, { OrderType } from '@/components/customer/WelcomeGate';
 import ItemSheet from '@/components/customer/ItemSheet';
@@ -110,6 +111,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
   };
 
   const t = getStrings(prefs?.lang ?? 'en');
+  const lang = prefs?.lang ?? 'uz';
 
   // Item detail sheet + the "just added" bump on a card.
   const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
@@ -201,7 +203,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
         if (existing.quantity >= max) return prev; // already at the stock limit
         return prev.map((c) => c.menuItemId === item._id ? { ...c, quantity: c.quantity + 1 } : c);
       }
-      return [...prev, { menuItemId: item._id, name: item.name, price: item.price, quantity: 1 }];
+      return [...prev, { menuItemId: item._id, name: localizedName(item, lang).primary, price: item.price, quantity: 1 }];
     });
   };
 
@@ -250,7 +252,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           c.menuItemId === item._id ? { ...c, quantity: q, notes: note || undefined } : c);
       }
       return [...prev, {
-        menuItemId: item._id, name: item.name, price: item.price,
+        menuItemId: item._id, name: localizedName(item, lang).primary, price: item.price,
         quantity: q, notes: note || undefined,
       }];
     });
@@ -478,7 +480,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                 <Chip
                   key={section.category._id}
                   data-pill={section.category._id}
-                  label={section.category.name}
+                  label={localizedCategory(section.category, lang)}
                   onClick={() => scrollToSection(section.category._id)}
                   color={active ? 'primary' : 'default'}
                   sx={{
@@ -521,12 +523,12 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
               sx={{ mb: 3, scrollMarginTop: '110px' }}
             >
               <Typography variant="h6" fontWeight={800} mb={1.5} mt={1}>
-                {section.category.name}
+                {localizedCategory(section.category, lang)}
               </Typography>
               <Stack spacing={1.5}>
                 {section.items.map((item: MenuItem) => {
                   const cartItem = cart.find((c) => c.menuItemId === item._id);
-                  const desc = item.description ?? '';
+                  const desc = localizedDescription(item, lang);
                   // Stock signalling for tracked items: show the count at 5 or
                   // fewer left, "Sold out" at 0 (which also blocks ordering),
                   // and stop the cart from exceeding what's in stock.
@@ -582,17 +584,31 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                             <Stack direction="row" alignItems="flex-start" spacing={0.75} mb={0.3}>
                               {/* Wraps to a second line rather than truncating -
                                   a half-shown dish name is no use to the guest. */}
-                              <Typography
-                                fontWeight={700}
-                                fontSize="0.98rem"
-                                sx={{
-                                  minWidth: 0, flex: 1, lineHeight: 1.3,
-                                  display: '-webkit-box', WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                                }}
-                              >
-                                {item.name}
-                              </Typography>
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  fontWeight={700}
+                                  fontSize="0.98rem"
+                                  sx={{
+                                    lineHeight: 1.3,
+                                    display: '-webkit-box', WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                  }}
+                                >
+                                  {localizedName(item, lang).primary}
+                                </Typography>
+                                {/* The Uzbek name underneath, so a guest can
+                                    still say it to the waiter. */}
+                                {localizedName(item, lang).original && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: 'block', lineHeight: 1.2, fontSize: '0.7rem' }}
+                                    noWrap
+                                  >
+                                    {localizedName(item, lang).original}
+                                  </Typography>
+                                )}
+                              </Box>
                               {item.isBestSeller ? (
                                 <Chip
                                   label={`🔥 ${t.bestSeller}`}
@@ -712,6 +728,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           item={sheetItem}
           open={!!sheetItem}
           t={t}
+          lang={lang}
           fmt={fmt}
           max={sheetItem ? maxFor(sheetItem._id) : 0}
           inCart={cart.find((c) => c.menuItemId === sheetItem?._id)?.quantity ?? 0}

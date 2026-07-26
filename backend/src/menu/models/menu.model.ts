@@ -1,6 +1,61 @@
 import { Field, Float, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsOptional, MaxLength, Min, MinLength } from 'class-validator';
 
+/** One language's version of a menu entry. */
+@ObjectType()
+export class LocalizedText {
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  description?: string;
+}
+
+/**
+ * Translations of a menu entry, keyed by the languages the customer menu
+ * offers. Uzbek is absent on purpose - it lives in `name`/`description`, which
+ * stay the original and are what staff-facing screens read.
+ */
+@ObjectType()
+export class Translations {
+  @Field(() => LocalizedText, { nullable: true })
+  en?: LocalizedText;
+
+  @Field(() => LocalizedText, { nullable: true })
+  ru?: LocalizedText;
+
+  @Field(() => LocalizedText, { nullable: true })
+  ko?: LocalizedText;
+}
+
+@InputType()
+export class LocalizedTextInput {
+  @Field({ nullable: true })
+  @IsOptional()
+  @MaxLength(300)
+  name?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @MaxLength(1500)
+  description?: string;
+}
+
+@InputType()
+export class TranslationsInput {
+  @Field(() => LocalizedTextInput, { nullable: true })
+  @IsOptional()
+  en?: LocalizedTextInput;
+
+  @Field(() => LocalizedTextInput, { nullable: true })
+  @IsOptional()
+  ru?: LocalizedTextInput;
+
+  @Field(() => LocalizedTextInput, { nullable: true })
+  @IsOptional()
+  ko?: LocalizedTextInput;
+}
+
 @ObjectType()
 export class MenuCategoryModel {
   @Field(() => ID)
@@ -11,6 +66,9 @@ export class MenuCategoryModel {
 
   @Field()
   name: string;
+
+  @Field(() => Translations, { nullable: true })
+  translations?: Translations;
 
   @Field(() => Int)
   order: number;
@@ -35,6 +93,9 @@ export class MenuItemModel {
 
   @Field({ nullable: true })
   description?: string;
+
+  @Field(() => Translations, { nullable: true })
+  translations?: Translations;
 
   @Field(() => Float)
   price: number;
@@ -131,6 +192,10 @@ export class CreateMenuItemInput {
   @IsOptional()
   images?: string[];
 
+  @Field(() => TranslationsInput, { nullable: true })
+  @IsOptional()
+  translations?: TranslationsInput;
+
   @Field(() => [String], { nullable: true })
   allergens?: string[];
 
@@ -181,6 +246,12 @@ export class UpdateMenuItemInput {
   @Field(() => [String], { nullable: true })
   @IsOptional()
   images?: string[];
+
+  // Supplying this marks the translation as hand-corrected, and the machine
+  // stops overwriting it on later edits.
+  @Field(() => TranslationsInput, { nullable: true })
+  @IsOptional()
+  translations?: TranslationsInput;
 
   @Field(() => [String], { nullable: true })
   allergens?: string[];

@@ -4,12 +4,14 @@ import {
 } from '@mui/material';
 import { Add, Remove, Close, Star } from '@mui/icons-material';
 import { MenuItem } from '@/types';
-import { UIStrings } from '@/lib/i18n';
+import { Lang, UIStrings } from '@/lib/i18n';
+import { localizedName, localizedDescription } from '@/lib/localize';
 
 interface Props {
   item: MenuItem | null;
   open: boolean;
   t: UIStrings;
+  lang: Lang;
   fmt: (n: number) => string;
   /** Remaining stock; Infinity when the item isn't quantity-tracked. */
   max: number;
@@ -27,7 +29,7 @@ interface Props {
  * the card itself stays compact and scannable.
  */
 export default function ItemSheet({
-  item, open, t, fmt, max, inCart, cartNote, onClose, onConfirm,
+  item, open, t, lang, fmt, max, inCart, cartNote, onClose, onConfirm,
 }: Props) {
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
@@ -105,7 +107,14 @@ export default function ItemSheet({
 
         <Box sx={{ p: 2.5, pb: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
-            <Typography variant="h6" fontWeight={800} sx={{ flex: 1 }}>{item.name}</Typography>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="h6" fontWeight={800}>{localizedName(item, lang).primary}</Typography>
+              {localizedName(item, lang).original && (
+                <Typography variant="caption" color="text.secondary">
+                  {localizedName(item, lang).original}
+                </Typography>
+              )}
+            </Box>
             {item.isBestSeller ? (
               <Chip label={`🔥 ${t.bestSeller}`} size="small" sx={{ fontWeight: 800, bgcolor: '#FFF1E4', color: '#C2410C' }} />
             ) : item.isPopular ? (
@@ -117,9 +126,9 @@ export default function ItemSheet({
             {fmt(item.price)}
           </Typography>
 
-          {item.description && (
+          {localizedDescription(item, lang) && (
             <Typography variant="body2" color="text.secondary" mb={2}>
-              {item.description}
+              {localizedDescription(item, lang)}
             </Typography>
           )}
 

@@ -131,6 +131,7 @@ input CreateMenuItemInput {
   quantity: Int
   tags: [String!]
   trackQuantity: Boolean
+  translations: TranslationsInput
 }
 
 input CreateTableInput {
@@ -183,6 +184,16 @@ type FeedbackSummary {
   totalCount: Int!
 }
 
+type LocalizedText {
+  description: String
+  name: String
+}
+
+input LocalizedTextInput {
+  description: String
+  name: String
+}
+
 input LoginInput {
   email: String!
   password: String!
@@ -194,6 +205,7 @@ type MenuCategoryModel {
   name: String!
   order: Int!
   restaurantId: ID!
+  translations: Translations
 }
 
 type MenuItemModel {
@@ -212,6 +224,7 @@ type MenuItemModel {
   restaurantId: ID!
   tags: [String!]!
   trackQuantity: Boolean!
+  translations: Translations
 }
 
 type Mutation {
@@ -466,6 +479,18 @@ type TableTurnover {
   totalRevenue: Float!
 }
 
+type Translations {
+  en: LocalizedText
+  ko: LocalizedText
+  ru: LocalizedText
+}
+
+input TranslationsInput {
+  en: LocalizedTextInput
+  ko: LocalizedTextInput
+  ru: LocalizedTextInput
+}
+
 input UpdateCategoryInput {
   categoryId: ID!
   isActive: Boolean
@@ -493,6 +518,7 @@ input UpdateMenuItemInput {
   quantity: Int
   tags: [String!]
   trackQuantity: Boolean
+  translations: TranslationsInput
 }
 
 input UpdateOrderStatusInput {

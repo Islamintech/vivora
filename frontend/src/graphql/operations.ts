@@ -78,6 +78,7 @@ export const CATEGORIES_QUERY = gql`
     categories {
       _id restaurantId order isActive
       name
+      translations { en { name } ru { name } ko { name } }
     }
   }
 `;
@@ -88,6 +89,7 @@ export const MENU_ITEMS_QUERY = gql`
       _id categoryId restaurantId price imageUrl images isAvailable isPopular tags trackQuantity quantity
       name
       description
+      translations { en { name description } ru { name description } ko { name description } }
     }
   }
 `;
@@ -98,12 +100,14 @@ export const PUBLIC_MENU_QUERY = gql`
       category {
         _id order
         name
+        translations { en { name } ru { name } ko { name } }
       }
       items {
         _id price imageUrl images isAvailable isPopular isBestSeller tags
         trackQuantity quantity
         name
         description
+        translations { en { name description } ru { name description } ko { name description } }
       }
     }
   }
@@ -139,6 +143,7 @@ export const CREATE_MENU_ITEM_MUTATION = gql`
       _id price imageUrl images isAvailable isPopular tags trackQuantity quantity
       name
       description
+      translations { en { name description } ru { name description } ko { name description } }
     }
   }
 `;
@@ -149,6 +154,7 @@ export const UPDATE_MENU_ITEM_MUTATION = gql`
       _id price imageUrl images isAvailable isPopular tags trackQuantity quantity
       name
       description
+      translations { en { name description } ru { name description } ko { name description } }
     }
   }
 `;

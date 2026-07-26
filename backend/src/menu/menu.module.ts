@@ -4,6 +4,7 @@ import { MenuCategory, MenuCategorySchema } from './schemas/menu.schema';
 import { MenuItem, MenuItemSchema } from './schemas/menu.schema';
 import { MenuService } from './menu.service';
 import { MenuResolver } from './menu.resolver';
+import { TranslationService } from './translation.service';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
 
@@ -16,7 +17,7 @@ import { AnalyticsModule } from '../analytics/analytics.module';
     RestaurantsModule,
     AnalyticsModule,
   ],
-  providers: [MenuService, MenuResolver],
+  providers: [MenuService, MenuResolver, TranslationService],
   exports: [MenuService],
 })
 export class MenuModule {}

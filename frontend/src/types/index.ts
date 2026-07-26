@@ -35,10 +35,24 @@ export interface Restaurant {
   createdAt?: string;
 }
 
+/** One language's version of a menu entry; Uzbek lives in the plain fields. */
+export interface LocalizedText {
+  name?: string | null;
+  description?: string | null;
+}
+
+/** Machine translations keyed by the customer languages other than Uzbek. */
+export interface Translations {
+  en?: LocalizedText | null;
+  ru?: LocalizedText | null;
+  ko?: LocalizedText | null;
+}
+
 export interface MenuCategory {
   _id: string;
   restaurantId: string;
   name: string;
+  translations?: Translations | null;
   order: number;
   isActive: boolean;
 }
@@ -49,6 +63,7 @@ export interface MenuItem {
   categoryId: string;
   name: string;
   description?: string;
+  translations?: Translations | null;
   price: number;
   /** The photo used wherever a single one is needed; mirrors images[0]. */
   imageUrl?: string;

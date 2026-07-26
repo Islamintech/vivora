@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -14,15 +14,48 @@ import {
   UpdateMenuItemInput,
   UpdateItemAvailabilityInput,
 } from './models/menu.model';
+import { TranslationService } from './translation.service';
 
 @Injectable()
 export class MenuService {
+  private readonly logger = new Logger(MenuService.name);
+
   constructor(
     @InjectModel(MenuCategory.name)
     private categoryModel: Model<MenuCategoryDocument>,
     @InjectModel(MenuItem.name)
     private itemModel: Model<MenuItemDocument>,
+    private translation: TranslationService,
   ) {}
+
+  /**
+   * Translate in the background and write the result back.
+   *
+   * Deliberately not awaited by the mutation: an owner typing up a menu
+   * should not wait on a network call per dish, and a translation that fails
+   * must leave the dish saved and readable in Uzbek.
+   */
+  private translateItemInBackground(id: string, name: string, description: string): void {
+    if (!this.translation.configured) return;
+    void this.translation
+      .translateMenuText(name, description)
+      .then((translations) => {
+        if (!Object.keys(translations).length) return;
+        return this.itemModel.updateOne({ _id: id }, { $set: { translations } });
+      })
+      .catch((err) => this.logger.warn(`Translating item ${id} failed: ${err.message}`));
+  }
+
+  private translateCategoryInBackground(id: string, name: string): void {
+    if (!this.translation.configured) return;
+    void this.translation
+      .translateCategoryName(name)
+      .then((translations) => {
+        if (!Object.keys(translations).length) return;
+        return this.categoryModel.updateOne({ _id: id }, { $set: { translations } });
+      })
+      .catch((err) => this.logger.warn(`Translating category ${id} failed: ${err.message}`));
+  }
 
   async countItemsByRestaurant(restaurantId: string): Promise<number> {
     return this.itemModel.countDocuments({ restaurantId });
@@ -34,7 +67,9 @@ export class MenuService {
     restaurantId: string,
     input: CreateCategoryInput,
   ): Promise<MenuCategoryDocument> {
-    return this.categoryModel.create({ restaurantId, ...input });
+    const cat = await this.categoryModel.create({ restaurantId, ...input });
+    this.translateCategoryInBackground(cat._id.toString(), cat.name);
+    return cat;
   }
 
   async updateCategory(
@@ -42,12 +77,18 @@ export class MenuService {
     input: UpdateCategoryInput,
   ): Promise<MenuCategoryDocument> {
     const { categoryId, ...update } = input;
+    const before = await this.categoryModel.findOne({ _id: categoryId, restaurantId });
     const cat = await this.categoryModel.findOneAndUpdate(
       { _id: categoryId, restaurantId },
       { $set: update },
       { new: true },
     );
     if (!cat) throw new NotFoundException('Category not found');
+    // Only when the name actually changed - renaming is rare, and reordering
+    // or hiding a category should not spend a translation call.
+    if (before && before.name !== cat.name) {
+      this.translateCategoryInBackground(cat._id.toString(), cat.name);
+    }
     return cat;
   }
 
@@ -84,7 +125,12 @@ export class MenuService {
     restaurantId: string,
     input: CreateMenuItemInput,
   ): Promise<MenuItemDocument> {
-    return this.itemModel.create({ restaurantId, ...this.withPrimaryImage(input) });
+    const item = await this.itemModel.create({
+      restaurantId,
+      ...this.withPrimaryImage(input),
+    });
+    this.translateItemInBackground(item._id.toString(), item.name, item.description);
+    return item;
   }
 
   async updateItem(
@@ -92,12 +138,22 @@ export class MenuService {
     input: UpdateMenuItemInput,
   ): Promise<MenuItemDocument> {
     const { itemId, ...update } = this.withPrimaryImage(input);
+    const before = await this.itemModel.findOne({ _id: itemId, restaurantId });
     const item = await this.itemModel.findOneAndUpdate(
       { _id: itemId, restaurantId },
       { $set: update },
       { new: true },
     );
     if (!item) throw new NotFoundException('Menu item not found');
+
+    // A hand-edited translation wins: the owner corrected it, so do not let
+    // the machine overwrite them on the next price change.
+    const editedByHand = update.translations !== undefined;
+    const textChanged =
+      !!before && (before.name !== item.name || before.description !== item.description);
+    if (!editedByHand && textChanged) {
+      this.translateItemInBackground(item._id.toString(), item.name, item.description);
+    }
     return item;
   }
 
