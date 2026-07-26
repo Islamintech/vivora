@@ -6,12 +6,13 @@ import {
   Box, Card, CardContent, Typography, Stack, Chip, Button,
   ThemeProvider, CssBaseline, AppBar, Toolbar, Avatar, Badge, Divider,
   Dialog, DialogTitle, DialogContent, DialogActions, Autocomplete,
-  TextField, IconButton,
+  TextField, IconButton, Tooltip,
 } from '@mui/material';
 import {
   Kitchen, Notifications, LocalDining, Check, Close, DoneAll, Payments,
-  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag,
+  PlaylistAdd, Add, Remove, Restaurant, ShoppingBag, ArrowBack,
 } from '@mui/icons-material';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -197,6 +198,7 @@ function OrderCard({ order, actions }: { order: Order; actions: Actions }) {
 
 const KitchenPage: NextPage = () => {
   const { user } = useRequireAuth();
+  const router = useRouter();
   const currency = useCurrency();
   const restaurantId = user?.restaurantId;
 
@@ -310,11 +312,28 @@ const KitchenPage: NextPage = () => {
         {/* Header */}
         <AppBar position="sticky" elevation={0} sx={{ bgcolor: '#0D0D18', borderBottom: '1px solid #1E1E2E' }}>
           <Toolbar>
-            {restaurant?.logo ? (
-              <Avatar src={restaurant.logo} sx={{ width: 34, height: 34, mr: 1.5 }} />
-            ) : (
-              <Kitchen sx={{ mr: 1.5, color: 'primary.main' }} />
-            )}
+            {/* The way back. A kitchen screen is usually a wall-mounted tablet
+                with no browser chrome, so without this there is no way out
+                short of knowing the URL. The arrow is always visible rather
+                than on hover, because these screens are touch-only. */}
+            <Tooltip title="Boshqaruv paneliga qaytish">
+              <IconButton
+                onClick={() => router.push('/dashboard')}
+                aria-label="Boshqaruv paneliga qaytish"
+                sx={{
+                  mr: 1.5, p: 0.75, borderRadius: 2, gap: 0.75,
+                  color: 'grey.400',
+                  '&:hover': { bgcolor: '#1E1E2E', color: 'white' },
+                }}
+              >
+                <ArrowBack sx={{ fontSize: 20 }} />
+                {restaurant?.logo ? (
+                  <Avatar src={restaurant.logo} sx={{ width: 34, height: 34 }} />
+                ) : (
+                  <Kitchen sx={{ color: 'primary.main' }} />
+                )}
+              </IconButton>
+            </Tooltip>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h6" fontWeight={800} noWrap sx={{ color: 'white', lineHeight: 1.2 }}>
                 {restaurant?.name || 'Oshxona ekrani'}
