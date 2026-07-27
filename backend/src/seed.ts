@@ -199,6 +199,20 @@ async function run() {
   console.log(`  Customer menu: http://localhost:3000/${slug}/1`);
   console.log('========================================\n');
 
+  // Menu translation is fire-and-forget, so exiting here kills whatever is
+  // still in flight - which is why a fresh seed used to come out mostly
+  // untranslated. Run the backfill until it has nothing left to do rather
+  // than sleeping and hoping.
+  for (let pass = 0; pass < 12; pass++) {
+    const before = await menu.countUntranslated();
+    if (!before) break;
+    if (pass === 0) log.log(`Translating ${before} menu row(s) before exit...`);
+    await menu.backfillMissingTranslations();
+    if ((await menu.countUntranslated()) === before) break; // making no progress
+  }
+  const left = await menu.countUntranslated();
+  log.log(left ? `${left} menu row(s) still untranslated` : 'All menu rows translated');
+
   await app.close();
   process.exit(0);
 }

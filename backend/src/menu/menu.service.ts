@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import {
   MenuCategory,
@@ -14,11 +15,21 @@ import {
   UpdateMenuItemInput,
   UpdateItemAvailabilityInput,
 } from './models/menu.model';
-import { TranslationService } from './translation.service';
+import { TranslationService, TARGET_LANGS } from './translation.service';
 
 @Injectable()
-export class MenuService {
+export class MenuService implements OnModuleInit {
   private readonly logger = new Logger(MenuService.name);
+
+  onModuleInit(): void {
+    // A missing key made translation skip silently, which is indistinguishable
+    // from a translator that is merely slow - say it once at boot instead.
+    if (!this.translation.configured) {
+      this.logger.warn(
+        'GEMINI_API_KEY is not set - menu translation is disabled and menus will stay in Uzbek.',
+      );
+    }
+  }
 
   constructor(
     @InjectModel(MenuCategory.name)
@@ -104,6 +115,119 @@ export class MenuService {
     });
     if (!cat) throw new NotFoundException('Category not found');
     await this.itemModel.deleteMany({ categoryId, restaurantId });
+    return true;
+  }
+
+  // --- Translation backfill ------------------------------------------------
+
+  /**
+   * Re-translate anything the fire-and-forget path lost.
+   *
+   * Translation is deliberately not awaited by the mutation, so a dish saves
+   * instantly - but that also means an in-flight call dies with the process.
+   * A deploy, a crash, a dev-server rebuild, a 20-second timeout or a missing
+   * API key all leave a row untranslated permanently, with nothing to retry it
+   * and nothing to notice. That is why menus had untranslated entries: the
+   * seed alone loses most of them, since it calls process.exit as soon as the
+   * documents are written.
+   *
+   * This sweep is the durability the original design lacked. It only fills
+   * languages that are actually missing, so a translation an owner corrected
+   * by hand is never overwritten.
+   */
+  private static readonly BACKFILL_BATCH = 8;
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async backfillMissingTranslations(): Promise<void> {
+    if (!this.translation.configured) return;
+    try {
+      const cats = await this.findUntranslatedCategories(
+        MenuService.BACKFILL_BATCH,
+      );
+      const items = await this.findUntranslatedItems(
+        MenuService.BACKFILL_BATCH - cats.length,
+      );
+      if (!cats.length && !items.length) return;
+
+      let done = 0;
+      // Sequential on purpose: a burst of parallel calls is what trips the
+      // free-tier rate limit, and this is background work with no deadline.
+      for (const cat of cats) {
+        const fresh = await this.translation.translateCategoryName(cat.name);
+        if (await this.mergeTranslations(this.categoryModel, cat, fresh)) done++;
+      }
+      for (const item of items) {
+        const fresh = await this.translation.translateMenuText(
+          item.name,
+          item.description || '',
+        );
+        if (await this.mergeTranslations(this.itemModel, item, fresh)) done++;
+      }
+      if (done) this.logger.log(`Backfilled translations for ${done} menu row(s)`);
+    } catch (err: any) {
+      this.logger.warn(`Translation backfill failed: ${err.message}`);
+    }
+  }
+
+  /** How many menu rows are still missing a translation. */
+  async countUntranslated(): Promise<number> {
+    const [cats, items] = await Promise.all([
+      this.categoryModel.countDocuments(this.missingFilter()),
+      this.itemModel.countDocuments(this.missingFilter()),
+    ]);
+    return cats + items;
+  }
+
+  /** Rows where at least one target language has no name yet. */
+  private missingFilter() {
+    return {
+      $or: TARGET_LANGS.flatMap((lang) => [
+        { [`translations.${lang}`]: { $exists: false } },
+        { [`translations.${lang}.name`]: { $in: [null, ''] } },
+      ]),
+    };
+  }
+
+  private async findUntranslatedCategories(limit: number) {
+    if (limit <= 0) return [];
+    return this.categoryModel
+      .find(this.missingFilter())
+      .sort({ createdAt: 1 })
+      .limit(limit)
+      .exec();
+  }
+
+  private async findUntranslatedItems(limit: number) {
+    if (limit <= 0) return [];
+    return this.itemModel
+      .find(this.missingFilter())
+      .sort({ createdAt: 1 })
+      .limit(limit)
+      .exec();
+  }
+
+  /**
+   * Write only the languages that were missing. Merging rather than replacing
+   * keeps a hand-corrected translation intact, and stops a failed language
+   * from wiping the ones that did come back.
+   */
+  private async mergeTranslations(
+    model: Model<any>,
+    doc: { _id: any; name: string; translations?: Record<string, any> },
+    fresh: Record<string, { name?: string; description?: string }>,
+  ): Promise<boolean> {
+    const existing = doc.translations ?? {};
+    const set: Record<string, any> = {};
+    for (const lang of TARGET_LANGS) {
+      if (existing?.[lang]?.name?.trim()) continue; // hand-written or already good
+      if (!fresh?.[lang]?.name) continue;
+      set[`translations.${lang}`] = fresh[lang];
+    }
+    if (!Object.keys(set).length) {
+      this.logger.warn(`Backfill produced nothing for "${doc.name}"`);
+      return false;
+    }
+    await model.updateOne({ _id: doc._id }, { $set: set });
     return true;
   }
 
