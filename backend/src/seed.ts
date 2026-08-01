@@ -10,14 +10,14 @@ import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { AuthService } from './auth/auth.service';
-import { UsersService } from './users/users.service';
-import { RestaurantsService } from './restaurants/restaurants.service';
-import { MenuService } from './menu/menu.service';
-import { TablesService } from './tables/tables.service';
-import { OrdersService } from './orders/orders.service';
-import { FeedbackService } from './feedback/feedback.service';
-import { OrderStatus } from './common/enums';
+import { AuthService } from './components/auth/auth.service';
+import { UsersService } from './components/users/users.service';
+import { RestaurantsService } from './components/restaurants/restaurants.service';
+import { MenuService } from './components/menu/menu.service';
+import { TablesService } from './components/tables/tables.service';
+import { OrdersService } from './components/orders/orders.service';
+import { FeedbackService } from './components/feedback/feedback.service';
+import { OrderStatus } from './libs/enums/order.enum';
 
 const log = new Logger('Seed');
 
