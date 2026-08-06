@@ -65,6 +65,7 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
 
     let context = 'GraphQL';
     let restaurantId: string | undefined;
+    let authenticated = false;
     try {
       const gqlHost = GqlArgumentsHost.create(host);
       const info: any = gqlHost.getInfo();
@@ -72,6 +73,7 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
       if (info?.fieldName) {
         context = `${info.parentType?.name ?? 'GraphQL'}.${info.fieldName}`;
       }
+      authenticated = !!ctx?.req?.user;
       restaurantId = ctx?.req?.user?.restaurantId?.toString();
     } catch {
       /* non-GraphQL context */
@@ -82,7 +84,13 @@ export class GqlExceptionFilter implements NestGqlExceptionFilter {
     if (status >= 500) {
       const svc = this.getErrorLogs();
       svc?.error(message, { context, stack, restaurantId, meta: { code } }).catch(() => {});
-    } else if (status === 403) {
+    } else if (status === 403 && authenticated) {
+      // Only a signed-in user's 403 is worth keeping: it means someone reached
+      // for data that is not theirs. An anonymous 403 is the public menu doing
+      // its job - a closed restaurant, a suspended one, one still awaiting
+      // approval - and logging those buries real incidents under routine
+      // refusals, one row per scan.
+      //
       // 401s stay console-only: a logged-out dashboard is expected, and a
       // client-side refetch loop can flood the DB with warn writes.
       const svc = this.getErrorLogs();
