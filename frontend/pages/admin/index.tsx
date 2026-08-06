@@ -13,6 +13,7 @@ import {
   Store, People, ShoppingBag, TrendingUp, AdminPanelSettings,
   Warning, Error as ErrorIcon, Info, Logout, CheckCircle, Cancel,
   HourglassTop, DeleteSweep, Key, Visibility, Block, CheckCircleOutline,
+  ArrowBack, ChevronRight,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
@@ -64,7 +65,14 @@ const AdminPage: NextPage = () => {
     variables: { level: logLevel || undefined },
     skip: !user || tab !== 2,
   });
-  const { data: ordersData, loading: ordersLoading } = useQuery(ALL_ORDERS_QUERY, { variables: { limit: 100 }, skip: !user || tab !== 1 });
+  // Orders tab is two levels: pick a restaurant, then read its orders. Nothing
+  // is fetched until one is picked - the platform-wide list was unreadable
+  // once more than a couple of restaurants were live.
+  const [ordersRest, setOrdersRest] = useState<{ _id: string; name: string } | null>(null);
+  const { data: ordersData, loading: ordersLoading } = useQuery(ALL_ORDERS_QUERY, {
+    variables: { limit: 200, restaurantId: ordersRest?._id },
+    skip: !user || tab !== 1 || !ordersRest,
+  });
   const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useQuery(ADMIN_USERS_QUERY, { skip: !user || tab !== 4 });
   const { data: trendsData, loading: trendsLoading } = useQuery(PLATFORM_TIMESERIES_QUERY, {
     variables: { days: 30, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
@@ -337,15 +345,85 @@ const AdminPage: NextPage = () => {
               </Box>
             )}
 
-            {/* Orders Tab */}
-            {tab === 1 && (
+            {/* Orders Tab - restaurant list first, then that restaurant's orders */}
+            {tab === 1 && !ordersRest && (
               <Box sx={{ overflowX: 'auto' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ p: 2, pb: 1 }}>
+                  Buyurtmalarni ko‘rish uchun restoranni tanlang.
+                </Typography>
+                {restLoading && <LinearProgress />}
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Restoran</TableCell>
+                      <TableCell>Holati</TableCell>
+                      {/* orderCount counts SERVED/READY only - it is the figure
+                          the revenue beside it is summed from. Naming it
+                          "yakunlangan" keeps it from looking wrong next to the
+                          full order list on the next screen. */}
+                      <TableCell align="right">Yakunlangan</TableCell>
+                      <TableCell align="right">Savdo</TableCell>
+                      <TableCell />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {restaurants.map((r: any) => (
+                      <TableRow
+                        key={r._id}
+                        hover
+                        onClick={() => setOrdersRest({ _id: r._id, name: r.name })}
+                        sx={{ cursor: 'pointer' }}
+                      >
+                        <TableCell>
+                          <Stack direction="row" alignItems="center" spacing={1.5}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 14 }}>
+                              {r.name?.[0]?.toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>{r.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">/{r.slug}</Typography>
+                            </Box>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            label={r.isActive ? 'Faol' : 'O‘chirilgan'}
+                            color={r.isActive ? 'success' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>{r.orderCount}</TableCell>
+                        <TableCell align="right">{formatMoney(r.revenue)}</TableCell>
+                        <TableCell align="right"><ChevronRight color="disabled" /></TableCell>
+                      </TableRow>
+                    ))}
+                    {restaurants.length === 0 && !restLoading && (
+                      <TableRow><TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>Hali restoran yo‘q</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Box>
+            )}
+
+            {tab === 1 && ordersRest && (
+              <Box sx={{ overflowX: 'auto' }}>
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ p: 2, pb: 1 }}>
+                  <Button size="small" startIcon={<ArrowBack />} onClick={() => setOrdersRest(null)}>
+                    Restoranlar
+                  </Button>
+                  <Divider orientation="vertical" flexItem />
+                  <Typography variant="subtitle1" fontWeight={700}>{ordersRest.name}</Typography>
+                  {!ordersLoading && (
+                    <Typography variant="body2" color="text.secondary">
+                      {orders.length} ta buyurtma
+                    </Typography>
+                  )}
+                </Stack>
                 {ordersLoading && <LinearProgress />}
                 <Table>
                   <TableHead>
                     <TableRow>
                       <TableCell>Buyurtma ID</TableCell>
-                      <TableCell>Restoran</TableCell>
                       <TableCell>Stol</TableCell>
                       <TableCell>Taomlar</TableCell>
                       <TableCell>Holati</TableCell>
@@ -357,9 +435,8 @@ const AdminPage: NextPage = () => {
                     {orders.map((o: any) => (
                       <TableRow key={o._id} hover>
                         <TableCell><Typography variant="caption" fontFamily="monospace">{o._id.slice(-8)}</Typography></TableCell>
-                        <TableCell>{o.restaurantId?.slice(-6)}</TableCell>
-                        <TableCell>{o.tableNumber}-stol</TableCell>
-                        <TableCell>{o.items.length} items</TableCell>
+                        <TableCell>{o.tableNumber ? `${o.tableNumber}-stol` : 'Olib ketish'}</TableCell>
+                        <TableCell>{o.items.length} ta</TableCell>
                         <TableCell>
                           <Chip label={statusLabel[o.status as OrderStatus]} color={statusColor[o.status as OrderStatus]} size="small" />
                         </TableCell>
@@ -368,7 +445,7 @@ const AdminPage: NextPage = () => {
                       </TableRow>
                     ))}
                     {orders.length === 0 && !ordersLoading && (
-                      <TableRow><TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>Hali buyurtma yo‘q</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>Bu restoranda hali buyurtma yo‘q</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>

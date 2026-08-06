@@ -107,8 +107,16 @@ export class AdminService {
     return this.errorLogsService.purge(olderThanDays);
   }
 
-  async getAllOrders(limit = 100) {
-    return this.orderModel.find().sort({ createdAt: -1 }).limit(limit).exec();
+  // The console lists orders one restaurant at a time; passing no id keeps the
+  // old platform-wide behaviour. restaurantId is stored as a string, so it is
+  // matched as one (see docs/er-model.md).
+  async getAllOrders(limit = 100, restaurantId?: string) {
+    const filter = restaurantId ? { restaurantId } : {};
+    return this.orderModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
   }
 
   // --- Users ---

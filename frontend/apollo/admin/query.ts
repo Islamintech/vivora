@@ -37,8 +37,8 @@ export const ERROR_LOGS_QUERY = gql`
   }
 `;
 export const ALL_ORDERS_QUERY = gql`
-  query AllOrders($limit: Float) {
-    allOrders(limit: $limit) {
+  query AllOrders($limit: Float, $restaurantId: ID) {
+    allOrders(limit: $limit, restaurantId: $restaurantId) {
       _id restaurantId tableNumber status totalAmount createdAt
       items { quantity price name }
     }

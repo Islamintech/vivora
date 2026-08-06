@@ -367,7 +367,7 @@ type Query {
   adminRestaurants: [AdminRestaurantView!]!
   adminUsers: [AdminUserView!]!
   allInvoices(period: String): [BillingInvoiceModel!]!
-  allOrders(limit: Float): [OrderModel!]!
+  allOrders(limit: Float, restaurantId: ID): [OrderModel!]!
   allRestaurants: [RestaurantModel!]!
   analytics(period: AnalyticsPeriodInput!): AnalyticsOverview!
   categories: [MenuCategoryModel!]!

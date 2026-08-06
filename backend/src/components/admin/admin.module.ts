@@ -51,8 +51,13 @@ export class AdminResolver {
   @Query(() => [OrderModel])
   async allOrders(
     @Args('limit', { nullable: true }) limit?: number,
+    @Args('restaurantId', { type: () => ID, nullable: true })
+    restaurantId?: string,
   ): Promise<OrderModel[]> {
-    return this.adminService.getAllOrders(Math.min(Math.max(limit || 100, 1), 500));
+    return this.adminService.getAllOrders(
+      Math.min(Math.max(limit || 100, 1), 500),
+      restaurantId,
+    );
   }
 
   @Query(() => [AdminUserView])
