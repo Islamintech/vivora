@@ -3,6 +3,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { GqlExceptionFilter } from './libs/filters/gql-exception.filter';
 import { DatabaseModule } from './database/database.module';
+import { HealthModule } from './components/health/health.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -26,6 +27,7 @@ import { TelegramBotModule } from './components/telegram/telegram-bot.module';
 @Module({
   imports: [
     DatabaseModule,
+    HealthModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       // In production the schema is generated in memory: writing it to src/
