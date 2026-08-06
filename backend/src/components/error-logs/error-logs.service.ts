@@ -3,11 +3,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ErrorLog, ErrorLogDocument } from '../../schemas/ErrorLog.model';
 import { ErrorLogLevel } from '../../libs/enums/error-log.enum';
+import { AlertService } from '../telegram/alert.service';
 
 @Injectable()
 export class ErrorLogsService {
   constructor(
     @InjectModel(ErrorLog.name) private logModel: Model<ErrorLogDocument>,
+    private readonly alerts: AlertService,
   ) {}
 
   async log(
@@ -24,6 +26,11 @@ export class ErrorLogsService {
 
   async error(message: string, opts?: any) {
     console.error(`[ERROR] ${message}`);
+    // Every server-side failure already funnels through here, so this is the
+    // one place worth hooking. Fire-and-forget by design: an alert must never
+    // delay or break the request that failed. WARN stays out of it - only
+    // things that need somebody tonight are worth a phone buzzing.
+    this.alerts.capture(message, opts);
     return this.log(ErrorLogLevel.ERROR, message, opts);
   }
 

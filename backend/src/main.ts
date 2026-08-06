@@ -2,9 +2,33 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { AlertService } from './components/telegram/alert.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // A rejected promise or a throw outside a request never reaches the GraphQL
+  // exception filter, so it would otherwise be invisible until someone reads
+  // the container logs. uncaughtException leaves the process in an undefined
+  // state - we report and let it die rather than limping on.
+  const alerts = app.get(AlertService);
+  process.on('unhandledRejection', (reason: any) => {
+    const message = reason?.message ?? String(reason);
+    console.error('[unhandledRejection]', reason);
+    alerts.capture(message, {
+      context: 'process.unhandledRejection',
+      stack: reason?.stack,
+    });
+  });
+  process.on('uncaughtException', (err: Error) => {
+    console.error('[uncaughtException]', err);
+    alerts.capture(err.message, {
+      context: 'process.uncaughtException',
+      stack: err.stack,
+    });
+    // Give the alert a moment to leave the process before exiting.
+    setTimeout(() => process.exit(1), 2000).unref();
+  });
 
   // Comma-separated so a deployment can allow both the apex domain and a
   // preview/staging origin without a code change.

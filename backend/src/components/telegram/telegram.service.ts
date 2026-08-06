@@ -52,10 +52,15 @@ export class TelegramService {
     }
   }
 
+  /**
+   * `threadId` targets a topic inside a supergroup, which is how one alert
+   * chat can carry several projects without them mixing.
+   */
   async sendMessage(
     chatId: string,
     text: string,
     replyMarkup?: InlineKeyboardMarkup,
+    threadId?: string,
   ): Promise<void> {
     if (!this.token || !chatId) return; // not configured for this restaurant — skip silently
     await this.call('sendMessage', {
@@ -63,6 +68,7 @@ export class TelegramService {
       text,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
+      ...(threadId ? { message_thread_id: Number(threadId) } : {}),
       ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
     });
   }
