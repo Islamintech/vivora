@@ -253,6 +253,7 @@ type Mutation {
   register(input: RegisterInput!): AuthPayload!
   rejectRestaurant(reason: String, restaurantId: ID!): RestaurantModel!
   reorderCategories(categoryIds: [ID!]!): [MenuCategoryModel!]!
+  reportClientError(input: ReportClientErrorInput!): Boolean!
   reportInvoicePaid(invoiceId: ID!): BillingInvoiceModel!
   submitFeedback(input: SubmitFeedbackInput!): FeedbackModel!
   updateCategory(input: UpdateCategoryInput!): MenuCategoryModel!
@@ -395,6 +396,13 @@ input RegisterInput {
   name: String!
   password: String!
   restaurantName: String!
+}
+
+input ReportClientErrorInput {
+  kind: String!
+  page: String
+  restaurantSlug: String
+  url: String!
 }
 
 type RestaurantModel {

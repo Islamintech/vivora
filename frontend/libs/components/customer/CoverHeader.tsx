@@ -1,6 +1,8 @@
 import { Box } from '@mui/material';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { reportImageError } from '../../report-image-error';
 
 /** The plain header when a restaurant hasn't uploaded a cover photo. */
 const PLAIN = 'linear-gradient(160deg, #0F172A 0%, #1E293B 100%)';
@@ -24,6 +26,20 @@ export default function CoverHeader({
   children: ReactNode;
   sx?: SxProps<Theme>;
 }) {
+  // The cover is a CSS background, which fires no error event - a dead URL
+  // just leaves the scrim over nothing and looks deliberate. Loading the same
+  // URL through an Image element gets us the failure; the browser serves both
+  // from one request, so this costs nothing extra.
+  useEffect(() => {
+    if (!image) return;
+    const probe = new Image();
+    probe.onerror = () => reportImageError(image);
+    probe.src = image;
+    return () => {
+      probe.onerror = null;
+    };
+  }, [image]);
+
   return (
     <Box sx={{ position: 'relative', overflow: 'hidden', ...sx }}>
       {image ? (

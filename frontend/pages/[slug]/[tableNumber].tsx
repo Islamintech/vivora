@@ -16,6 +16,7 @@ import { PLACE_ORDER_MUTATION, SUBMIT_FEEDBACK_MUTATION } from '../../apollo/use
 import { PUBLIC_MENU_QUERY, PUBLIC_RESTAURANT_QUERY, TABLE_SESSION_QUERY } from '../../apollo/user/query';
 import { TABLE_ORDER_CHANGED_SUBSCRIPTION } from '../../apollo/user/subscription';
 import { CartItem, MenuItem, Order, OrderStatus, TableSession } from '../../libs/types';
+import { onImageError } from '../../libs/report-image-error';
 import { formatMoney } from '../../libs/money';
 import { localizedName, localizedDescription, localizedCategory } from '../../libs/localize';
 import { Lang, LANGUAGES, getStrings, UIStrings } from '../../libs/i18n';
@@ -325,7 +326,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           <Card sx={{ width: '100%', textAlign: 'center' }}>
             <CardContent sx={{ p: 4 }}>
               {restaurant.logo
-                ? <Box component="img" src={restaurant.logo} alt="" sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
+                ? <Box component="img" src={restaurant.logo} alt="" onError={onImageError(restaurant.logo)} sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
                 : <Typography sx={{ fontSize: 44, mb: 1 }}>🌙</Typography>}
 
               <Typography variant="h6" fontWeight={800}>{restaurant.name}</Typography>
@@ -559,6 +560,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                                 src={item.imageUrl}
                                 alt={item.name}
                                 loading="lazy"
+                                onError={onImageError(item.imageUrl)}
                                 sx={{ width: 88, height: 88, borderRadius: 3, objectFit: 'cover', display: 'block' }}
                               />
                             ) : (

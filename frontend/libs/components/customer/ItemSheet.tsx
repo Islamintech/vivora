@@ -6,6 +6,7 @@ import { Add, Remove, Close, Star } from '@mui/icons-material';
 import { MenuItem } from '../../types';
 import { Lang, UIStrings } from '../../i18n';
 import { localizedName, localizedDescription } from '../../localize';
+import { onImageError } from '../../report-image-error';
 
 interface Props {
   item: MenuItem | null;
@@ -73,6 +74,7 @@ export default function ItemSheet({
                 component="img"
                 src={url}
                 alt={i === 0 ? item.name : ''}
+                onError={onImageError(url)}
                 sx={{
                   width: '100%', height: 220, objectFit: 'cover',
                   flex: '0 0 100%', scrollSnapAlign: 'start', display: 'block',
@@ -85,6 +87,7 @@ export default function ItemSheet({
             component="img"
             src={gallery[0]}
             alt={item.name}
+            onError={onImageError(gallery[0])}
             sx={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }}
           />
         ) : (

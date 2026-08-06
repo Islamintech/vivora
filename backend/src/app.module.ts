@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { GqlExceptionFilter } from './libs/filters/gql-exception.filter';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './components/health/health.module';
+import { ClientErrorsModule } from './components/client-errors/client-errors.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -69,6 +70,7 @@ import { TelegramBotModule } from './components/telegram/telegram-bot.module';
     ErrorLogsModule,
     AdminModule,
     BillingModule,
+    ClientErrorsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GqlExceptionFilter },

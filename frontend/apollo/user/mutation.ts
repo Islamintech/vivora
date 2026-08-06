@@ -183,3 +183,9 @@ export const REPORT_INVOICE_PAID_MUTATION = gql`
     reportInvoicePaid(invoiceId: $invoiceId) { _id status }
   }
 `;
+
+export const REPORT_CLIENT_ERROR_MUTATION = gql`
+  mutation ReportClientError($input: ReportClientErrorInput!) {
+    reportClientError(input: $input)
+  }
+`;
