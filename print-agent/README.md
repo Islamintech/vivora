@@ -46,14 +46,11 @@ straight to the printer.
    node index.js --test-print
    ```
    If a test ticket comes out, you're set. If not, see Troubleshooting below.
-6. Start it for real:
-   ```
-   node index.js
-   ```
-   or double-click `start.bat` on Windows.
+6. Double-click **`install-service.bat`** and approve the administrator
+   prompt.
 
-Leave this window running — closing it stops printing. See "Run it
-automatically" below to have it start with the computer.
+That's it - step 6 is the last thing anyone has to do. See the next section
+for what it sets up.
 
 ## Finding the printer's IP address
 
@@ -69,11 +66,46 @@ If the printer only has a USB cable (no network/ethernet port), this version
 of the agent can't reach it directly — let the platform maintainer know and
 we'll set up USB support for that printer instead.
 
-## Run it automatically (so it survives a restart)
+## Running automatically (the normal way to run it)
 
-Windows: press `Win + R`, type `shell:startup`, press Enter — this opens your
-Startup folder. Copy a shortcut to `start.bat` into that folder. Next time
-the computer restarts, the agent starts on its own.
+`install-service.bat` registers the agent as a Windows service. Once that's
+done:
+
+- It starts on its own every time the computer is switched on, **before
+  anyone logs in**. Staff never have to open or click anything.
+- There is no window to accidentally close.
+- If it crashes, or the internet drops, Windows restarts it.
+- It waits patiently at boot. The PC finishes starting up before the WiFi
+  connects, so the agent retries the connection until it succeeds instead of
+  giving up.
+
+To check on it: press `Win + R`, type `services.msc`, and look for **Vivora
+Print Agent**. You can stop, start, or restart it from there. Or just read
+`print-agent.log` in this folder.
+
+To remove it, double-click `uninstall-service.bat`.
+
+`start.bat` is still there if you want to run the agent by hand in a window
+(useful when testing) - but don't run both at once, or every ticket prints
+twice.
+
+## Uzbek text on the ticket
+
+Thermal printers do not understand Unicode - they print one byte per
+character from a fixed character set. So the agent converts every menu name
+and note to plain ASCII before sending it:
+
+- `oʻ` and `gʻ` (and any curly quote a phone keyboard inserts) become `o'`
+  and `g'`. Menus typed with a normal apostrophe are already fine and are
+  left exactly as they are.
+- Cyrillic is transliterated to Latin: `Қовурма Лағмон` prints as
+  `Qovurma Lag'mon`, `Шўрва` as `Sho'rva`.
+
+This means a Cyrillic menu prints in Latin letters, not Cyrillic. That is
+deliberate: it is readable on every printer, whereas sending Cyrillic bytes
+depends on the printer's character-set setting and often comes out as
+nonsense. If the kitchen would rather see real Cyrillic, tell the platform
+maintainer - it can be done for a specific printer model that supports it.
 
 ## Troubleshooting
 
@@ -84,8 +116,16 @@ the computer restarts, the agent starts on its own.
 - **Test print times out / connection refused** — double check `printerIp`
   and that the computer and printer are on the same WiFi/network. Try
   pinging the printer's IP from the same computer.
-- **Tickets print with garbled special characters** — some printers use a
-  different default character set; message the platform maintainer with your
-  printer's exact model number.
+- **Nothing prints after a restart** — check the service is running in
+  `services.msc` (see above). If it isn't listed at all, `install-service.bat`
+  was never run, or it was run without approving the administrator prompt.
+- **"install-service.bat" closes instantly** — it needs `config.json` to
+  exist first (step 4 of Setup).
+- **Every ticket prints twice** — the service and a manual `start.bat` window
+  are both running. Close the window.
+- **Tickets print with garbled special characters** — the agent folds text
+  down to plain ASCII before printing (see "Uzbek text" below), so this
+  should not happen. If it still does, message the platform maintainer with
+  the printer's exact model number and a photo of the ticket.
 - Everything the agent does is written to `print-agent.log` in this folder —
   attach it when asking for help.

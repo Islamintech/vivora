@@ -18,11 +18,76 @@ const DOUBLE_OFF = Buffer.from([GS, 0x21, 0x00]);
 // instead of dropping it, and works across the common printer brands.
 const FEED_AND_CUT = Buffer.from([0x0a, 0x0a, 0x0a, GS, 0x56, 0x01]);
 
+// Uzbek Cyrillic -> Latin, so a menu typed in Cyrillic still prints something
+// the kitchen can read. Multi-character replacements first, since 'ch'/'sh'
+// must not be produced one letter at a time.
+const CYRILLIC_TO_LATIN = {
+  а: 'a', б: 'b', в: 'v', г: 'g', ғ: "g'", д: 'd', е: 'e', ё: 'yo', ж: 'j',
+  з: 'z', и: 'i', й: 'y', к: 'k', қ: 'q', л: 'l', м: 'm', н: 'n', о: 'o',
+  п: 'p', р: 'r', с: 's', т: 't', у: 'u', ў: "o'", ф: 'f', х: 'x', ҳ: 'h',
+  ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sh', ъ: "'", ы: 'i', ь: '', э: 'e',
+  ю: 'yu', я: 'ya',
+};
+
+/**
+ * Thermal printers speak a single-byte codepage, not Unicode, so anything
+ * outside ASCII has to be folded down before it is sent or it prints as
+ * garbage (a proper Uzbek 'ʻ' came out as '»', Cyrillic as '>@8=').
+ *
+ * Menus are typed by restaurant staff on whatever keyboard they have, so we
+ * cannot rely on them using the ASCII apostrophe - normalise instead of
+ * hoping.
+ */
+function sanitize(str) {
+  const chars = [...String(str)];
+  let out = '';
+  for (let idx = 0; idx < chars.length; idx++) {
+    const ch = chars[idx];
+    if (ch.charCodeAt(0) <= 126) {
+      out += ch;
+      continue;
+    }
+    // The turned/straight commas and curly quotes Uzbek Latin uses for oʻ/gʻ,
+    // plus the apostrophes phone keyboards substitute automatically.
+    if ('ʻʼ‘’`´'.includes(ch)) {
+      out += "'";
+      continue;
+    }
+    if (ch === '“' || ch === '”') { out += '"'; continue; }
+    if (ch === '–' || ch === '—') { out += '-'; continue; }
+
+    const lower = ch.toLowerCase();
+    const mapped = CYRILLIC_TO_LATIN[lower];
+    if (mapped !== undefined) {
+      if (ch === lower) {
+        out += mapped;
+      } else {
+        // Preserve casing, but only shout when the word itself is shouting:
+        // ЛАҒМОН -> LAG'MON, while Шўрва -> Sho'rva rather than SHo'rva.
+        const isUpperLetter = (c) =>
+          !!c && c !== c.toLowerCase() && c === c.toUpperCase();
+        // Look both ways, so the last letter of an all-caps word (the second
+        // Ч of ЧЧ, with nothing after it) still shouts.
+        const shouting =
+          isUpperLetter(chars[idx + 1]) || isUpperLetter(chars[idx - 1]);
+        out += shouting
+          ? mapped.toUpperCase()
+          : mapped.charAt(0).toUpperCase() + mapped.slice(1);
+      }
+      continue;
+    }
+
+    // Strip accents (é -> e) as a last resort before giving up on the char.
+    const stripped = ch.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    out += stripped.charCodeAt(0) <= 126 ? stripped : '?';
+  }
+  return out;
+}
+
 function text(str) {
-  // Default printer codepage is ASCII/CP437-ish; this covers plain Latin
-  // text fine. Extended Uzbek Latin characters (oʻ, gʻ) may not render
-  // correctly on every printer model — a known limitation of raw ESC/POS.
-  return Buffer.from(str + '\n', 'latin1');
+  // Sanitised above to plain ASCII, so latin1 is a safe byte-per-char encode
+  // on every printer's default codepage.
+  return Buffer.from(sanitize(str) + '\n', 'latin1');
 }
 
 function line(width, char = '-') {
@@ -89,6 +154,20 @@ function buildTicket(opts) {
   const fmt = (n) => money(n, opts.currency);
   const chunks = [INIT];
 
+  // Normalise every staff-typed string up front: transliteration changes a
+  // string's length (ё -> yo), so the column arithmetic below has to run on
+  // the text that will actually be printed, not the original.
+  opts = {
+    ...opts,
+    restaurantName: opts.restaurantName && sanitize(opts.restaurantName),
+    customerNote: opts.customerNote && sanitize(opts.customerNote),
+    items: (opts.items || []).map((i) => ({
+      ...i,
+      name: sanitize(i.name),
+      notes: i.notes && sanitize(i.notes),
+    })),
+  };
+
   chunks.push(ALIGN_CENTER, BOLD_ON, DOUBLE_ON);
   chunks.push(text(opts.restaurantName || 'Restaurant'));
   chunks.push(DOUBLE_OFF);
@@ -140,4 +219,4 @@ function buildTicket(opts) {
   return Buffer.concat(chunks);
 }
 
-module.exports = { buildTicket };
+module.exports = { buildTicket, sanitize };
