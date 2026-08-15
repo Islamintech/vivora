@@ -74,6 +74,22 @@ function effectivePrinter() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// At boot the PC is up well before the network is, so the first login almost
+// always fails on a machine that starts the agent automatically. Never give
+// up: back off up to a minute and keep trying until the connection comes back.
+async function authenticateWithRetry() {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await authenticate();
+      return;
+    } catch (err) {
+      const wait = Math.min(60_000, 3000 * attempt);
+      log(`Login failed (${err.message}). Retrying in ${Math.round(wait / 1000)}s…`);
+      await sleep(wait);
+    }
+  }
+}
+
 // A kitchen ticket is worth retrying — the printer is often just momentarily
 // busy, asleep, or mid-reconnect, and a dropped ticket means a missed order.
 async function printWithRetry(ip, port, buffer, attempts = 3) {
@@ -186,13 +202,13 @@ async function main() {
     process.exit(0);
   }
 
-  await authenticate();
+  await authenticateWithRetry();
   startSubscription();
 
   // JWT_EXPIRES_IN defaults to 7d server-side; refresh well before that so
   // the connection never drops due to an expired token.
   setInterval(() => {
-    authenticate().catch((err) => log(`Re-authentication failed: ${err.message}`));
+    authenticateWithRetry();
   }, 6 * 24 * 60 * 60 * 1000);
 
   // Re-read printer settings often, so changing the printer IP (or currency,
@@ -214,6 +230,16 @@ async function main() {
 
   log('Print agent running. Waiting for new orders…');
 }
+
+// Running unattended as a service, a stray rejection must not take the agent
+// down for the rest of the day. Log it and keep the process alive; the
+// subscription client reconnects on its own.
+process.on('unhandledRejection', (err) => {
+  log(`Unhandled rejection: ${err?.message || err}`);
+});
+process.on('uncaughtException', (err) => {
+  log(`Uncaught exception: ${err?.message || err}`);
+});
 
 main().catch((err) => {
   log(`Fatal startup error: ${err.message}`);

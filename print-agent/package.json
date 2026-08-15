@@ -5,13 +5,16 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "install-service": "node install-service.js",
+    "uninstall-service": "node uninstall-service.js"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "graphql-ws": "^5.16.0",
+    "node-windows": "^1.0.0-beta.8",
     "ws": "^8.17.0"
   }
 }
