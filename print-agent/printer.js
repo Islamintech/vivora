@@ -50,7 +50,13 @@ function printToNetwork(ip, port, buffer, timeoutMs = 8000) {
  * garbage rather than failing outright.
  */
 function printToSerial(portName, buffer, opts = {}) {
-  const { baud = 9600, dataBits = 8, parity = 'n', stopBits = 1 } = opts;
+  const {
+    baud = 9600,
+    dataBits = 8,
+    parity = 'n',
+    stopBits = 1,
+    timeoutMs = 10000,
+  } = opts;
   const port = String(portName).toUpperCase();
 
   if (!/^COM\d+$/.test(port)) {
@@ -78,26 +84,54 @@ function printToSerial(portName, buffer, opts = {}) {
         'rts=on',
         'idsr=off',
       ],
-      (modeErr) => {
-        // A failure here is not fatal - the port may already be configured, and
-        // some machines refuse `mode` while still accepting the write.
-        if (modeErr) {
-          // Fall through; the write below is the real test.
-        }
+      // `mode` itself can sit waiting on a wedged port, so cap it too.
+      { timeout: 5000 },
+      () => {
+        // A `mode` failure is not fatal - the port may already be configured,
+        // and some machines refuse it while still accepting the write. The
+        // write below is the real test.
 
         // \\.\COM1 is the Win32 device path. Node opens it like any file.
-        fs.writeFile(`\\\\.\\${port}`, buffer, (err) => {
-          if (err) {
+        fs.open(`\\\\.\\${port}`, 'w', (openErr, fd) => {
+          if (openErr) {
             return reject(
               new Error(
-                `Could not write to ${port}: ${err.message}` +
-                  (err.code === 'EBUSY' || err.code === 'EACCES'
+                `Could not open ${port}: ${openErr.message}` +
+                  (openErr.code === 'EBUSY' || openErr.code === 'EACCES'
                     ? ' - another program (usually the POS software) is holding the port open.'
                     : ''),
               ),
             );
           }
-          resolve();
+
+          let settled = false;
+          const finish = (err) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            // Closing releases the handle and unblocks any write still parked
+            // in the thread pool, so a dead printer cannot leak one per ticket.
+            fs.close(fd, () => (err ? reject(err) : resolve()));
+          };
+
+          // A printer that stops asserting its ready line accepts the handle
+          // and then never takes the bytes: without this the write parks
+          // forever, the ticket neither prints nor errors, and on an
+          // unattended PC it just looks like printing quietly stopped.
+          const timer = setTimeout(
+            () =>
+              finish(
+                new Error(
+                  `Timed out after ${timeoutMs}ms writing to ${port} - the printer ` +
+                    'is switched off, out of paper, or not asserting ready.',
+                ),
+              ),
+            timeoutMs,
+          );
+
+          fs.write(fd, buffer, 0, buffer.length, null, (writeErr) =>
+            finish(writeErr || null),
+          );
         });
       },
     );

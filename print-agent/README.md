@@ -182,6 +182,9 @@ maintainer - it can be done for a specific printer model that supports it.
 - **"another program is holding the port open"** — the till's POS software
   has the COM port. Close it, test again, and tell the maintainer: the two
   programs need to take turns on that port.
+- **"Timed out … writing to COMn"** — the port accepted the connection but
+  the printer never took the bytes: switched off, out of paper, or its cable
+  is loose. The agent retries and keeps running.
 - **Serial ticket prints garbage characters** — the baud rate is wrong. Use
   the number from the self-test slip's `Interface` line in `serialBaud`.
 - **Every price wraps onto its own line** — `paperWidth` is too high. Use the

@@ -77,8 +77,11 @@ function describePrinter(entry, fallbackName) {
   if (entry.serialPort) {
     const port = String(entry.serialPort).toUpperCase();
     const baud = entry.serialBaud || config.serialBaud || 9600;
+    // 10s is generous at 9600 baud (~960 bytes/s against a ~600-byte ticket)
+    // while still failing fast enough for the retry to mean something.
+    const timeoutMs = entry.printTimeoutMs || config.printTimeoutMs || 10000;
     return {
-      kind: 'serial', name, width, port, baud,
+      kind: 'serial', name, width, port, baud, timeoutMs,
       describe: `${name} (${port} @ ${baud} baud)`,
     };
   }
@@ -107,7 +110,10 @@ function effectivePrinters() {
 
 function sendToPrinter(target, buffer) {
   return target.kind === 'serial'
-    ? printToSerial(target.port, buffer, { baud: target.baud })
+    ? printToSerial(target.port, buffer, {
+        baud: target.baud,
+        timeoutMs: target.timeoutMs,
+      })
     : printToNetwork(target.ip, target.port, buffer);
 }
 
