@@ -7,6 +7,7 @@ import {
 import { LocationOn, Phone, QrCodeScanner } from '@mui/icons-material';
 import { PUBLIC_RESTAURANT_QUERY } from '../../apollo/user/query';
 import CoverHeader from '../../libs/components/customer/CoverHeader';
+import { sized } from '../../libs/cloudinary';
 
 interface Props { slug: string }
 
@@ -47,7 +48,7 @@ const RestaurantProfilePage: NextPage<Props> = ({ slug }) => {
         {/* Header - the owner's cover photo when they've set one */}
         <CoverHeader image={restaurant?.coverImage} sx={{ pt: 5, pb: 6, px: 2.5, textAlign: 'center' }}>
           {restaurant?.logo && (
-            <Avatar src={restaurant.logo} sx={{ width: 80, height: 80, mb: 2, mx: 'auto' }} />
+            <Avatar src={sized(restaurant.logo, 200)} sx={{ width: 80, height: 80, mb: 2, mx: 'auto' }} />
           )}
           <Typography variant="h5" fontWeight={800} color="white">
             {restaurant?.name}

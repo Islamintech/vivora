@@ -4,6 +4,7 @@ import { Restaurant, ShoppingBag } from '@mui/icons-material';
 import { LANGUAGES, Lang, getStrings } from '../../i18n';
 import Flag from '../Flag';
 import CoverHeader from './CoverHeader';
+import { sized } from '../../cloudinary';
 
 export type OrderType = 'DINE_IN' | 'TAKE_OUT';
 
@@ -76,7 +77,7 @@ export default function WelcomeGate({ restaurantName, logo, coverImage, tableNum
     <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', maxWidth: 480, mx: 'auto', display: 'flex', flexDirection: 'column' }}>
       {/* Branded header - the first thing a guest sees after scanning */}
       <CoverHeader image={coverImage} sx={{ pt: 5, pb: 5, px: 3, textAlign: 'center' }}>
-        {logo && <Avatar src={logo} sx={{ width: 64, height: 64, mb: 1.5, mx: 'auto' }} />}
+        {logo && <Avatar src={sized(logo, 160)} sx={{ width: 64, height: 64, mb: 1.5, mx: 'auto' }} />}
         <Typography variant="h5" fontWeight={800} color="white">{restaurantName}</Typography>
         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.88)', mt: 0.5 }}>
           {t.table} {tableNumber}

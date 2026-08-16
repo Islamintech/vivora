@@ -27,6 +27,7 @@ import { useCurrency } from '../libs/hooks/useCurrency';
 import { formatMoney } from '../libs/money';
 import { MenuItem, Order, OrderStatus, Table } from '../libs/types';
 import PhoneOrderDialog from '../libs/components/kitchen/PhoneOrderDialog';
+import { sized } from '../libs/cloudinary';
 
 dayjs.extend(relativeTime);
 
@@ -380,7 +381,7 @@ const KitchenPage: NextPage = () => {
               >
                 <ArrowBack sx={{ fontSize: 20 }} />
                 {restaurant?.logo ? (
-                  <Avatar src={restaurant.logo} sx={{ width: 34, height: 34 }} />
+                  <Avatar src={sized(restaurant.logo, 100)} sx={{ width: 34, height: 34 }} />
                 ) : (
                   <Kitchen sx={{ color: 'primary.main' }} />
                 )}

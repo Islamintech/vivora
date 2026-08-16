@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import { MenuItem, Table, TableSession } from '../../types';
 import { formatMoney } from '../../money';
+import { sized } from '../../cloudinary';
 
 type Step = 'where' | 'menu';
 
@@ -209,7 +210,7 @@ export default function PhoneOrderDialog({
                         }}
                       >
                         {item.imageUrl ? (
-                          <Box component="img" src={item.imageUrl} alt="" loading="lazy"
+                          <Box component="img" src={sized(item.imageUrl, 160)} alt="" loading="lazy"
                             sx={{ width: 52, height: 52, borderRadius: 1.5, objectFit: 'cover', flexShrink: 0 }} />
                         ) : (
                           <Avatar variant="rounded" sx={{ width: 52, height: 52, bgcolor: '#FFF7ED', fontSize: '1.4rem' }}>🍽</Avatar>

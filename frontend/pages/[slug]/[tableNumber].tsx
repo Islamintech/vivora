@@ -24,6 +24,7 @@ import WelcomeGate, { OrderType } from '../../libs/components/customer/WelcomeGa
 import ItemSheet from '../../libs/components/customer/ItemSheet';
 import Flag from '../../libs/components/Flag';
 import CoverHeader from '../../libs/components/customer/CoverHeader';
+import { sized } from '../../libs/cloudinary';
 
 // Which of the 3 calm stages an order is at (READY folds into "preparing").
 const orderStep = (s: OrderStatus): number =>
@@ -336,7 +337,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           <Card sx={{ width: '100%', textAlign: 'center' }}>
             <CardContent sx={{ p: 4 }}>
               {restaurant.logo
-                ? <Box component="img" src={restaurant.logo} alt="" onError={onImageError(restaurant.logo)} sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
+                ? <Box component="img" src={sized(restaurant.logo, 160)} alt="" onError={onImageError(restaurant.logo)} sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', mb: 2 }} />
                 : <Typography sx={{ fontSize: 44, mb: 1 }}>🌙</Typography>}
 
               <Typography variant="h6" fontWeight={800}>{restaurant.name}</Typography>
@@ -461,7 +462,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
           </Menu>
 
           {restaurant?.logo && (
-            <Avatar src={restaurant.logo} sx={{ width: 56, height: 56, mb: 1.5, mx: 'auto' }} />
+            <Avatar src={sized(restaurant.logo, 120)} sx={{ width: 56, height: 56, mb: 1.5, mx: 'auto' }} />
           )}
           <Typography variant="h5" fontWeight={800} color="white" textAlign="center">
             {restaurant?.name}
@@ -567,7 +568,7 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                             {item.imageUrl ? (
                               <Box
                                 component="img"
-                                src={item.imageUrl}
+                                src={sized(item.imageUrl, 200)}
                                 alt={item.name}
                                 loading="lazy"
                                 onError={onImageError(item.imageUrl)}

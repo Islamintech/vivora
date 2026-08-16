@@ -21,7 +21,7 @@ import { useRequireAuth } from '../../libs/hooks/useAuth';
 import { MenuItem, MenuCategory } from '../../libs/types';
 import { formatMoney } from '../../libs/money';
 import { useCurrency } from '../../libs/hooks/useCurrency';
-import { uploadImage, cloudinaryConfigured } from '../../libs/cloudinary';
+import { uploadImage, cloudinaryConfigured, sized } from '../../libs/cloudinary';
 
 // The customer menu's languages other than Uzbek, which is the original.
 const TRANSLATION_LANGS = [
@@ -431,7 +431,7 @@ const MenuPage: NextPage = () => {
                             {item.imageUrl ? (
                               <Box
                                 component="img"
-                                src={item.imageUrl}
+                                src={sized(item.imageUrl, 160)}
                                 alt={item.name}
                                 sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
                               />
@@ -549,7 +549,7 @@ const MenuPage: NextPage = () => {
                       <Box key={url} sx={{ position: 'relative' }}>
                         <Box
                           component="img"
-                          src={url}
+                          src={sized(url, 200)}
                           alt=""
                           sx={{
                             width: 84, height: 84, borderRadius: 2, objectFit: 'cover',

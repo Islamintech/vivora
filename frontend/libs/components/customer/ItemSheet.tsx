@@ -7,6 +7,7 @@ import { MenuItem } from '../../types';
 import { Lang, UIStrings } from '../../i18n';
 import { localizedName, localizedDescription } from '../../localize';
 import { onImageError } from '../../report-image-error';
+import { sized } from '../../cloudinary';
 
 interface Props {
   item: MenuItem | null;
@@ -72,7 +73,7 @@ export default function ItemSheet({
               <Box
                 key={url}
                 component="img"
-                src={url}
+                src={sized(url, 800)}
                 alt={i === 0 ? item.name : ''}
                 onError={onImageError(url)}
                 sx={{
@@ -85,7 +86,7 @@ export default function ItemSheet({
         ) : gallery.length === 1 ? (
           <Box
             component="img"
-            src={gallery[0]}
+            src={sized(gallery[0], 800)}
             alt={item.name}
             onError={onImageError(gallery[0])}
             sx={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }}
