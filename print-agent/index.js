@@ -5,7 +5,7 @@ const path = require('path');
 const WebSocket = require('ws');
 const { createClient } = require('graphql-ws');
 const { login, getMyRestaurant, markOrderPreparing } = require('./graphql');
-const { buildTicket, beep } = require('./escpos');
+const { buildTicket, beep, drawerKick } = require('./escpos');
 const { printToNetwork, printToSerial } = require('./printer');
 
 const CONFIG_PATH = process.argv.find((a, i) => i >= 2 && !a.startsWith('--'))
@@ -76,6 +76,7 @@ function describePrinter(entry, fallbackName) {
   // `beep: false` on one printer has to win over a global `beep: true`, so
   // check for the key rather than falling back on truthiness.
   const beepCfg = entry.beep !== undefined ? entry.beep : config.beep;
+  const bellCfg = entry.bell !== undefined ? entry.bell : config.bell;
   const minLines = entry.minTicketLines ?? config.minTicketLines ?? 0;
 
   if (entry.serialPort) {
@@ -85,7 +86,7 @@ function describePrinter(entry, fallbackName) {
     // while still failing fast enough for the retry to mean something.
     const timeoutMs = entry.printTimeoutMs || config.printTimeoutMs || 10000;
     return {
-      kind: 'serial', name, width, port, baud, timeoutMs, beep: beepCfg, minLines,
+      kind: 'serial', name, width, port, baud, timeoutMs, beep: beepCfg, bell: bellCfg, minLines,
       describe: `${name} (${port} @ ${baud} baud)`,
     };
   }
@@ -94,7 +95,7 @@ function describePrinter(entry, fallbackName) {
   const port = entry.printerIp
     ? (entry.printerPort || 9100)
     : (session.restaurant?.printerPort || 9100);
-  return { kind: 'network', name, width, ip, port, beep: beepCfg, minLines, describe: `${name} (${ip}:${port})` };
+  return { kind: 'network', name, width, ip, port, beep: beepCfg, bell: bellCfg, minLines, describe: `${name} (${ip}:${port})` };
 }
 
 /**
@@ -177,6 +178,7 @@ async function printOrder(order) {
   const ticketFor = (t) =>
     buildTicket({
       beep: t.beep,
+      bell: t.bell,
       minLines: t.minLines,
       restaurantName: session.restaurant?.name,
       tableNumber: order.tableNumber,
@@ -276,6 +278,25 @@ async function main() {
       }
     }
     log('Done. Whichever one you heard is the "beepMode" to put in config.json.');
+    process.exit(0);
+  }
+
+  // A bell can be wired to either pin of the drawer connector, and which one
+  // is not written on anything - so try both and let the installer listen.
+  if (process.argv.includes('--test-bell')) {
+    for (const t of effectivePrinters()) {
+      for (const pin of [0, 1]) {
+        log(`Ringing ${t.name} on drawer pin ${pin === 0 ? 2 : 5}...`);
+        try {
+          await sendToPrinter(t, drawerKick(pin, 300, 300, 2));
+        } catch (err) {
+          log(`  failed: ${err.message}`);
+          break;
+        }
+        await sleep(3000);
+      }
+    }
+    log('Done. Whichever pin rang is the pin value for config.json (2 -> 0, 5 -> 1).');
     process.exit(0);
   }
 

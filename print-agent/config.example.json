@@ -24,6 +24,9 @@
   "beep": true,
   "_comment_beep": "Sound the printer's buzzer after each ticket, so a busy kitchen notices it. true = 3 short beeps. For a louder alert: { \"times\": 9, \"duration\": 9, \"repeat\": 3 } - times and duration max out at 9 (9 beeps of 0.9s), so repeat sends that whole burst again for anything longer. mode is \"escB\" (most printers) or \"bel\" (simpler firmware). Run `node index.js --test-beep` to hear which one your printer understands. Set false to keep it silent; a per-printer beep overrides this one.",
 
+  "bell": false,
+  "_comment_bell": "Ring a call bell wired to the printer's cash-drawer socket - far louder than the built-in buzzer, for a kitchen where the beep gets lost. true uses pin 2; { \"pin\": 1, \"onMs\": 300, \"repeat\": 3 } for pin 5 or a longer ring. Run  to hear which pin yours is on. WARNING: if a real cash drawer is on that socket, this opens it.",
+
   "printTimeoutMs": 10000,
   "_comment_timeout": "How long to wait for a printer to accept a ticket before giving up and retrying. Only raise it for very long tickets on a slow baud rate.",
 

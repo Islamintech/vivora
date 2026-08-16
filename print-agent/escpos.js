@@ -46,6 +46,30 @@ function beep(times = 3, duration = 2, mode = 'escB', repeat = 1) {
   return r === 1 ? one : Buffer.concat(new Array(r).fill(one));
 }
 
+/**
+ * Pulse the cash-drawer port (ESC p m t1 t2).
+ *
+ * That RJ11/RJ12 socket - the one that looks like ethernet - is a switched
+ * 12/24V output. Its usual job is popping a till drawer, but a kitchen call
+ * bell wired there is far louder than the printer's own piezo, which is the
+ * point here: an extraction fan drowns a buzzer, not a bell.
+ *
+ * `pin` picks the connector's pin 2 (0) or pin 5 (1) - which one a given bell
+ * is wired to varies, so both are worth trying. On/off times are sent in
+ * units of 2ms and cap at 255, i.e. 510ms; a longer ring means repeating the
+ * command rather than a bigger number.
+ *
+ * Careful: if an actual cash drawer is on this port, this opens it.
+ */
+function drawerKick(pin = 0, onMs = 200, offMs = 200, repeat = 1) {
+  const m = pin === 1 ? 1 : 0;
+  const t1 = Math.max(1, Math.min(255, Math.round(onMs / 2)));
+  const t2 = Math.max(1, Math.min(255, Math.round(offMs / 2)));
+  const r = Math.max(1, Math.min(10, Math.round(repeat)));
+  const one = Buffer.from([ESC, 0x70, m, t1, t2]);
+  return r === 1 ? one : Buffer.concat(new Array(r).fill(one));
+}
+
 // Uzbek Cyrillic -> Latin, so a menu typed in Cyrillic still prints something
 // the kitchen can read. Multi-character replacements first, since 'ch'/'sh'
 // must not be produced one letter at a time.
@@ -263,7 +287,12 @@ function buildTicket(opts) {
     chunks.push(beep(b.times ?? 3, b.duration ?? 2, b.mode ?? 'escB', b.repeat ?? 1));
   }
 
+  if (opts.bell) {
+    const s2 = opts.bell === true ? {} : opts.bell;
+    chunks.push(drawerKick(s2.pin ?? 0, s2.onMs ?? 200, s2.offMs ?? 200, s2.repeat ?? 1));
+  }
+
   return Buffer.concat(chunks);
 }
 
-module.exports = { buildTicket, sanitize, beep };
+module.exports = { buildTicket, sanitize, beep, drawerKick };

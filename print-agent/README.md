@@ -103,6 +103,8 @@ seconds. `repeat` sends that whole burst again for anything longer:
 "beep": { "times": 9, "duration": 9, "repeat": 3 }
 ```
 
+A call bell on the cash-drawer socket is the loudest option - see below.
+
 Beyond that the volume is the printer's own, not something a command can
 change. Two hardware routes: the printer's setup menu (off → hold FEED → on)
 usually has a melody/buzzer entry with a volume or tone setting, and a
@@ -125,6 +127,41 @@ never prints stray characters, so guessing costs nothing.
 
 A `beep` inside a `printers[]` entry overrides the global one, so you can
 have the kitchen printer beep and the one at the pass stay quiet.
+
+## A call bell on the drawer socket
+
+The loudest option, and the one busy kitchens actually use. The printer's
+RJ11/RJ12 cash-drawer socket is a switched 12/24V output, so a call bell
+wired there rings properly rather than chirping.
+
+You need a bell rated for the printer's drawer voltage (12V or 24V - check
+the printer's label) with an RJ11/RJ12 plug. Plug it into the socket marked
+DK / DRAWER, then:
+
+```json
+"bell": true
+```
+
+Which of the connector's two pins a bell uses varies and is written on
+nothing, so try both:
+
+```
+node index.js --test-bell
+```
+
+It rings pin 2, waits, then pin 5, on every configured printer. Whichever
+rang is your setting - pin 2 is `"bell": true`, pin 5 is
+`"bell": { "pin": 1 }`. For a longer ring:
+
+```json
+"bell": { "pin": 0, "onMs": 300, "offMs": 300, "repeat": 3 }
+```
+
+On/off times cap at 510ms each, so `repeat` is what makes a longer ring.
+
+**If a real cash drawer is plugged into that socket, this opens it.** Use a
+bell on a printer that has no drawer, or accept a drawer that pops on every
+order.
 
 ## More than one printer
 
