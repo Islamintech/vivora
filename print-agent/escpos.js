@@ -223,10 +223,10 @@ function buildTicket(opts) {
   chunks.push(ALIGN_CENTER, BOLD_ON, DOUBLE_ON);
   chunks.push(text(opts.restaurantName || 'Restaurant'));
   chunks.push(DOUBLE_OFF);
-  chunks.push(text(`TABLE ${opts.tableNumber}`));
+  chunks.push(text(`${opts.tableNumber}-STOL`));
   // Take-out has to be impossible to miss — the kitchen packs it differently.
   if (opts.takeOut) {
-    chunks.push(DOUBLE_ON, text('** TAKE-OUT **'), DOUBLE_OFF);
+    chunks.push(DOUBLE_ON, text('** OLIB KETISH **'), DOUBLE_OFF);
   }
   chunks.push(BOLD_OFF, ALIGN_LEFT);
   chunks.push(line(width));
@@ -255,12 +255,12 @@ function buildTicket(opts) {
 
   chunks.push(line(width));
   chunks.push(BOLD_ON);
-  chunks.push(row(width, 'TOTAL', fmt(opts.totalAmount)));
+  chunks.push(row(width, 'JAMI', fmt(opts.totalAmount)));
   chunks.push(BOLD_OFF);
 
   if (opts.customerNote) {
     chunks.push(line(width));
-    for (const noteLine of wrap(`Note: ${opts.customerNote}`, width)) {
+    for (const noteLine of wrap(`Izoh: ${opts.customerNote}`, width)) {
       chunks.push(text(noteLine));
     }
   }

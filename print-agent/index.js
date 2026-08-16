@@ -306,12 +306,12 @@ async function main() {
       _id: 'testprint',
       tableNumber: 1,
       totalAmount: 12.5,
-      customerNote: 'This is a test ticket from the print agent.',
+      customerNote: 'Bu print-agent yuborgan sinov cheki.',
       createdAt: new Date(),
       orderType: 'TAKE_OUT',
       items: [
-        { name: 'Test Item', quantity: 2, price: 5, notes: 'no onions' },
-        { name: 'Sample Drink', quantity: 1, price: 2.5 },
+        { name: 'Sinov taomi', quantity: 2, price: 5, notes: 'piyozsiz' },
+        { name: 'Sinov ichimligi', quantity: 1, price: 2.5 },
       ],
     });
     process.exit(0);
