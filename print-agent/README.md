@@ -95,6 +95,24 @@ there to tear off. For more control:
 Bixolon command, and the one to try first) or `bel` for simpler firmware
 that only understands a plain ASCII bell.
 
+**If it is not loud enough.** ESC/POS has no volume control - `times` and
+`duration` both cap at 9, so the longest single burst is nine beeps of 0.9
+seconds. `repeat` sends that whole burst again for anything longer:
+
+```json
+"beep": { "times": 9, "duration": 9, "repeat": 3 }
+```
+
+Beyond that the volume is the printer's own, not something a command can
+change. Two hardware routes: the printer's setup menu (off → hold FEED → on)
+usually has a melody/buzzer entry with a volume or tone setting, and a
+proper call bell wired to the cash-drawer port is far louder than any
+built-in buzzer.
+
+Playing a sound through the PC's speakers is not an option here: the agent
+runs as a Windows service in session 0, which has no access to the desktop's
+audio device.
+
 To hear which your printer supports without printing anything:
 
 ```

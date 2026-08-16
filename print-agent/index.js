@@ -267,7 +267,7 @@ async function main() {
       for (const mode of ['escB', 'bel']) {
         log(`Beeping ${t.name} using "${mode}"...`);
         try {
-          await sendToPrinter(t, beep(3, 2, mode));
+          await sendToPrinter(t, beep(9, 9, mode, 2));
         } catch (err) {
           log(`  failed: ${err.message}`);
           break;

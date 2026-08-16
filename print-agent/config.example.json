@@ -22,7 +22,7 @@
   "_comment_minTicketLines": "Pad short tickets to at least this many lines. A one-item order otherwise prints a stub barely longer than a thumb - awkward to tear off and easy to lose. Longer orders are unaffected. Roughly 3 lines per centimetre; 0 turns it off.",
 
   "beep": true,
-  "_comment_beep": "Sound the printer's buzzer after each ticket, so a busy kitchen notices it. true = 3 beeps. For more control: { \"times\": 3, \"duration\": 2, \"mode\": \"escB\" } - duration is in tenths of a second, and mode is \"escB\" (most printers) or \"bel\" (simpler firmware). Run `node index.js --test-beep` to hear which one your printer understands. Set false to keep it silent; a per-printer beep overrides this one.",
+  "_comment_beep": "Sound the printer's buzzer after each ticket, so a busy kitchen notices it. true = 3 short beeps. For a louder alert: { \"times\": 9, \"duration\": 9, \"repeat\": 3 } - times and duration max out at 9 (9 beeps of 0.9s), so repeat sends that whole burst again for anything longer. mode is \"escB\" (most printers) or \"bel\" (simpler firmware). Run `node index.js --test-beep` to hear which one your printer understands. Set false to keep it silent; a per-printer beep overrides this one.",
 
   "printTimeoutMs": 10000,
   "_comment_timeout": "How long to wait for a printer to accept a ticket before giving up and retrying. Only raise it for very long tickets on a slow baud rate.",

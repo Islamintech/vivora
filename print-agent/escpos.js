@@ -32,11 +32,18 @@ const FEED_AND_CUT = Buffer.from([0x0a, 0x0a, 0x0a, GS, 0x56, 0x01]);
  * A printer that knows neither prints nothing extra and stays silent, so
  * guessing wrong is harmless rather than a page of garbage.
  */
-function beep(times = 3, duration = 2, mode = 'escB') {
+function beep(times = 3, duration = 2, mode = 'escB', repeat = 1) {
+  // ESC B takes a single digit for each, so a louder-feeling alert has to come
+  // from repeating the whole command rather than asking for a bigger number.
   const n = Math.max(1, Math.min(9, Math.round(times)));
   const t = Math.max(1, Math.min(9, Math.round(duration)));
-  if (mode === 'bel') return Buffer.from(new Array(n).fill(0x07));
-  return Buffer.from([ESC, 0x42, n, t]);
+  const r = Math.max(1, Math.min(10, Math.round(repeat)));
+
+  const one = mode === 'bel'
+    ? Buffer.from(new Array(n).fill(0x07))
+    : Buffer.from([ESC, 0x42, n, t]);
+
+  return r === 1 ? one : Buffer.concat(new Array(r).fill(one));
 }
 
 // Uzbek Cyrillic -> Latin, so a menu typed in Cyrillic still prints something
@@ -253,7 +260,7 @@ function buildTicket(opts) {
   // be torn off rather than while it is still feeding.
   if (opts.beep) {
     const b = opts.beep === true ? {} : opts.beep;
-    chunks.push(beep(b.times ?? 3, b.duration ?? 2, b.mode ?? 'escB'));
+    chunks.push(beep(b.times ?? 3, b.duration ?? 2, b.mode ?? 'escB', b.repeat ?? 1));
   }
 
   return Buffer.concat(chunks);
