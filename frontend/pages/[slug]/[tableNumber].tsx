@@ -186,7 +186,17 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
     const m = new Map<string, number>();
     for (const section of sections as any[]) {
       for (const it of (section.items ?? []) as MenuItem[]) {
-        m.set(it._id, it.trackQuantity ? Math.max(0, it.quantity ?? 0) : Infinity);
+        // A dish switched off by hand has no stock to speak of, so it has to
+        // read as zero here too - otherwise an untracked sold-out dish comes
+        // back as Infinity and every "can I add this?" check says yes.
+        m.set(
+          it._id,
+          it.isAvailable === false
+            ? 0
+            : it.trackQuantity
+              ? Math.max(0, it.quantity ?? 0)
+              : Infinity,
+        );
       }
     }
     return m;
@@ -561,10 +571,37 @@ const PublicMenuPage: NextPage<Props> = ({ slug, tableNumber }) => {
                                 alt={item.name}
                                 loading="lazy"
                                 onError={onImageError(item.imageUrl)}
-                                sx={{ width: 88, height: 88, borderRadius: 3, objectFit: 'cover', display: 'block' }}
+                                sx={{
+                                  width: 88, height: 88, borderRadius: 3, objectFit: 'cover', display: 'block',
+                                  // Draining the colour reads as "not available"
+                                  // before the label is even read.
+                                  filter: soldOut ? 'grayscale(1)' : 'none',
+                                }}
                               />
                             ) : (
-                              <Avatar variant="rounded" sx={{ width: 88, height: 88, borderRadius: 3, bgcolor: '#FFF7ED', fontSize: '2rem' }}>🍽</Avatar>
+                              <Avatar variant="rounded" sx={{ width: 88, height: 88, borderRadius: 3, bgcolor: '#FFF7ED', fontSize: '2rem', filter: soldOut ? 'grayscale(1)' : 'none' }}>🍽</Avatar>
+                            )}
+                            {/* Stamped across the photo itself: the card is
+                                already dimmed, but on a busy menu the guest
+                                looks at pictures, not at the corner chip. */}
+                            {soldOut && (
+                              <Box
+                                sx={{
+                                  position: 'absolute', inset: 0, borderRadius: 3,
+                                  bgcolor: 'rgba(15,23,42,0.55)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  textAlign: 'center', px: 0.5,
+                                }}
+                              >
+                                <Typography
+                                  sx={{
+                                    color: '#fff', fontWeight: 800, fontSize: '0.68rem',
+                                    lineHeight: 1.15, textTransform: 'uppercase', letterSpacing: '.02em',
+                                  }}
+                                >
+                                  {t.soldOut}
+                                </Typography>
+                              </Box>
                             )}
                             {cartItem && (
                               <Box
