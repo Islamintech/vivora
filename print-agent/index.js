@@ -65,25 +65,44 @@ async function authenticate() {
 }
 
 /**
- * Where this restaurant's tickets go. A serial port wins when one is
- * configured: a printer wired to the till's COM port has no network address
- * to fall back to, and the dashboard's printerIp field cannot describe it.
+ * One printer's settings, from either a `printers[]` entry or the flat
+ * top-level fields. A serial port wins when one is configured: a printer
+ * wired to the till's COM port has no network address to fall back to, and
+ * the dashboard's printerIp field cannot describe it.
  */
-function effectivePrinter() {
-  if (config.serialPort) {
+function describePrinter(entry, fallbackName) {
+  const name = entry.name || fallbackName;
+  const width = entry.paperWidth || config.paperWidth || 48;
+
+  if (entry.serialPort) {
+    const port = String(entry.serialPort).toUpperCase();
+    const baud = entry.serialBaud || config.serialBaud || 9600;
     return {
-      kind: 'serial',
-      port: String(config.serialPort).toUpperCase(),
-      baud: config.serialBaud || 9600,
-      describe: `${String(config.serialPort).toUpperCase()} @ ${config.serialBaud || 9600} baud`,
+      kind: 'serial', name, width, port, baud,
+      describe: `${name} (${port} @ ${baud} baud)`,
     };
   }
 
-  const ip = config.printerIp || session.restaurant?.printerIp;
-  const port = config.printerIp
-    ? (config.printerPort || 9100)
+  const ip = entry.printerIp || session.restaurant?.printerIp;
+  const port = entry.printerIp
+    ? (entry.printerPort || 9100)
     : (session.restaurant?.printerPort || 9100);
-  return { kind: 'network', ip, port, describe: `${ip}:${port}` };
+  return { kind: 'network', name, width, ip, port, describe: `${name} (${ip}:${port})` };
+}
+
+/**
+ * Every printer a ticket should go to.
+ *
+ * A kitchen commonly runs more than one - one at the stove, one at the pass
+ * by the display - and both want the same ticket. `printers[]` lists them;
+ * the older single-printer config keeps working untouched, since a restaurant
+ * that already has a working setup should not have to rewrite it.
+ */
+function effectivePrinters() {
+  if (Array.isArray(config.printers) && config.printers.length) {
+    return config.printers.map((p, i) => describePrinter(p, `Printer ${i + 1}`));
+  }
+  return [describePrinter(config, 'Printer')];
 }
 
 function sendToPrinter(target, buffer) {
@@ -130,41 +149,64 @@ function markPreparing(orderId) {
 }
 
 async function printOrder(order) {
-  const target = effectivePrinter();
-  if (target.kind === 'network' && !target.ip) {
-    log(
-      `Skipped printing order ${order._id}: no printer configured. ` +
-      `Set "serialPort" (e.g. COM1) for a printer wired to this PC, or a ` +
-      `printer IP in config.json or the dashboard's Settings > Kitchen ticket printing.`,
-    );
-    return;
-  }
-
-  const buffer = buildTicket({
-    restaurantName: session.restaurant?.name,
-    tableNumber: order.tableNumber,
-    items: order.items,
-    totalAmount: order.totalAmount,
-    currency: session.restaurant?.currency,
-    customerNote: order.customerNote,
-    orderShortId: order._id?.slice(-6),
-    createdAt: order.createdAt,
-    takeOut: order.orderType === 'TAKE_OUT',
-    width: config.paperWidth || 48,
-  });
-
-  try {
-    await printWithRetry(target, buffer);
-    log(`Printed ticket for table ${order.tableNumber} (order ${order._id}).`);
-    // A printed ticket means the kitchen has the order — advance it to
-    // Preparing so the customer sees progress without any staff tap.
-    if (order._id && order._id !== 'testprint') {
-      markPreparing(order._id).catch((err) =>
-        log(`Could not mark order ${order._id} preparing: ${err.message}`),
+  const targets = effectivePrinters().filter((t) => {
+    if (t.kind === 'network' && !t.ip) {
+      log(
+        `Skipped ${t.name}: no printer configured. Set "serialPort" (e.g. COM1) ` +
+        `for a printer wired to this PC, or a printer IP in config.json or the ` +
+        `dashboard's Settings > Kitchen ticket printing.`,
       );
+      return false;
     }
-  } catch (err) {
-    log(`FAILED to print order ${order._id} to ${target.describe} - ${err.message}`);
+    return true;
+  });
+  if (!targets.length) return;
+
+  // Printers can differ in paper width, so each gets a ticket built for it
+  // rather than one buffer shared between them.
+  const ticketFor = (width) =>
+    buildTicket({
+      restaurantName: session.restaurant?.name,
+      tableNumber: order.tableNumber,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      currency: session.restaurant?.currency,
+      customerNote: order.customerNote,
+      orderShortId: order._id?.slice(-6),
+      createdAt: order.createdAt,
+      takeOut: order.orderType === 'TAKE_OUT',
+      width,
+    });
+
+  // In parallel and independently: one printer being out of paper must not
+  // cost the kitchen the copy that the other one would have printed.
+  const results = await Promise.all(
+    targets.map(async (t) => {
+      try {
+        await printWithRetry(t, ticketFor(t.width));
+        return { t, ok: true };
+      } catch (err) {
+        log(`FAILED to print order ${order._id} to ${t.describe} - ${err.message}`);
+        return { t, ok: false };
+      }
+    }),
+  );
+
+  const printed = results.filter((r) => r.ok);
+  if (!printed.length) return;
+
+  log(
+    `Printed ticket for table ${order.tableNumber} (order ${order._id}) on ` +
+    `${printed.map((r) => r.t.name).join(', ')}` +
+    (printed.length < results.length ? ` (${results.length - printed.length} failed)` : ''),
+  );
+
+  // One printed copy means the kitchen has the order - advance it to
+  // Preparing so the customer sees progress without any staff tap.
+  if (order._id && order._id !== 'testprint') {
+    markPreparing(order._id).catch((err) =>
+      log(`Could not mark order ${order._id} preparing: ${err.message}`),
+    );
   }
 }
 
@@ -238,13 +280,13 @@ async function main() {
   setInterval(async () => {
     try {
       const fresh = await getMyRestaurant(config.apiUrl, session.token);
-      const before = effectivePrinter();
-      // A serially-wired printer is described entirely by config.json, so the
-      // dashboard has nothing to say about it - skip the comparison.
+      // Serially-wired printers are described entirely by config.json, so for
+      // those this comparison simply never fires - only a dashboard IP moves.
+      const before = effectivePrinters().map((t) => t.describe).join(' + ');
       session.restaurant = fresh;
-      const after = effectivePrinter();
-      if (before.describe !== after.describe) {
-        log(`Printer target changed to ${after.describe}.`);
+      const after = effectivePrinters().map((t) => t.describe).join(' + ');
+      if (before !== after) {
+        log(`Printer target changed to ${after}.`);
       }
     } catch {
       // Transient API blip — keep the cached config and try again next tick.

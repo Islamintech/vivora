@@ -6,7 +6,9 @@
 
   "_comment_credentials": "Create this login from the dashboard's Staff page — a dedicated account just for the printer, not the owner's own login.",
 
-  "_comment_connection": "Two ways to reach the printer. Use ONE of them.",
+  "_comment_two_printers": "For more than one printer (say one at the stove and one at the pass), list them under \"printers\" instead of the fields below - every ticket prints on all of them, and one running out of paper does not stop the others. Each entry takes the same serialPort/serialBaud or printerIp/printerPort, plus an optional name and paperWidth. Example: \"printers\": [{ \"name\": \"Kitchen\", \"serialPort\": \"COM1\" }, { \"name\": \"Pass\", \"serialPort\": \"COM4\" }]",
+
+  "_comment_connection": "For a single printer, use ONE of the two blocks below.",
 
   "serialPort": "",
   "serialBaud": 9600,

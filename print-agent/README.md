@@ -61,6 +61,25 @@ straight to the printer.
 That's it - step 6 is the last thing anyone has to do. See the next section
 for what it sets up.
 
+## More than one printer
+
+Kitchens often run two - one at the stove, one at the pass by the display.
+List them instead of the single-printer fields, and every ticket prints on
+all of them:
+
+```json
+"printers": [
+  { "name": "Kitchen", "serialPort": "COM1", "serialBaud": 9600, "paperWidth": 42 },
+  { "name": "Pass",    "serialPort": "COM4", "serialBaud": 9600, "paperWidth": 42 }
+]
+```
+
+Each entry takes the same settings as a single printer, so you can mix a
+serial one with a network one. They print in parallel and independently: if
+one is out of paper the other still prints, and the log names which
+succeeded. The order is marked Preparing as long as at least one copy came
+out.
+
 ## Reading the printer's self-test slip
 
 Switch the printer off, hold the FEED button, switch it on, release after a
