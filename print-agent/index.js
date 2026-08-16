@@ -6,7 +6,7 @@ const WebSocket = require('ws');
 const { createClient } = require('graphql-ws');
 const { login, getMyRestaurant, markOrderPreparing } = require('./graphql');
 const { buildTicket } = require('./escpos');
-const { printToNetwork } = require('./printer');
+const { printToNetwork, printToSerial } = require('./printer');
 
 const CONFIG_PATH = process.argv.find((a, i) => i >= 2 && !a.startsWith('--'))
   || path.join(__dirname, 'config.json');
@@ -64,12 +64,32 @@ async function authenticate() {
   );
 }
 
+/**
+ * Where this restaurant's tickets go. A serial port wins when one is
+ * configured: a printer wired to the till's COM port has no network address
+ * to fall back to, and the dashboard's printerIp field cannot describe it.
+ */
 function effectivePrinter() {
+  if (config.serialPort) {
+    return {
+      kind: 'serial',
+      port: String(config.serialPort).toUpperCase(),
+      baud: config.serialBaud || 9600,
+      describe: `${String(config.serialPort).toUpperCase()} @ ${config.serialBaud || 9600} baud`,
+    };
+  }
+
   const ip = config.printerIp || session.restaurant?.printerIp;
   const port = config.printerIp
     ? (config.printerPort || 9100)
     : (session.restaurant?.printerPort || 9100);
-  return { ip, port };
+  return { kind: 'network', ip, port, describe: `${ip}:${port}` };
+}
+
+function sendToPrinter(target, buffer) {
+  return target.kind === 'serial'
+    ? printToSerial(target.port, buffer, { baud: target.baud })
+    : printToNetwork(target.ip, target.port, buffer);
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -92,10 +112,10 @@ async function authenticateWithRetry() {
 
 // A kitchen ticket is worth retrying — the printer is often just momentarily
 // busy, asleep, or mid-reconnect, and a dropped ticket means a missed order.
-async function printWithRetry(ip, port, buffer, attempts = 3) {
+async function printWithRetry(target, buffer, attempts = 3) {
   for (let i = 1; i <= attempts; i++) {
     try {
-      await printToNetwork(ip, port, buffer);
+      await sendToPrinter(target, buffer);
       return;
     } catch (err) {
       if (i === attempts) throw err;
@@ -110,11 +130,12 @@ function markPreparing(orderId) {
 }
 
 async function printOrder(order) {
-  const { ip, port } = effectivePrinter();
-  if (!ip) {
+  const target = effectivePrinter();
+  if (target.kind === 'network' && !target.ip) {
     log(
-      `Skipped printing order ${order._id}: no printer IP configured. ` +
-      `Set one in config.json or in the dashboard's Settings > Kitchen ticket printing.`,
+      `Skipped printing order ${order._id}: no printer configured. ` +
+      `Set "serialPort" (e.g. COM1) for a printer wired to this PC, or a ` +
+      `printer IP in config.json or the dashboard's Settings > Kitchen ticket printing.`,
     );
     return;
   }
@@ -133,7 +154,7 @@ async function printOrder(order) {
   });
 
   try {
-    await printWithRetry(ip, port, buffer);
+    await printWithRetry(target, buffer);
     log(`Printed ticket for table ${order.tableNumber} (order ${order._id}).`);
     // A printed ticket means the kitchen has the order — advance it to
     // Preparing so the customer sees progress without any staff tap.
@@ -143,7 +164,7 @@ async function printOrder(order) {
       );
     }
   } catch (err) {
-    log(`FAILED to print order ${order._id} to ${ip}:${port} — ${err.message}`);
+    log(`FAILED to print order ${order._id} to ${target.describe} - ${err.message}`);
   }
 }
 
@@ -218,10 +239,12 @@ async function main() {
     try {
       const fresh = await getMyRestaurant(config.apiUrl, session.token);
       const before = effectivePrinter();
+      // A serially-wired printer is described entirely by config.json, so the
+      // dashboard has nothing to say about it - skip the comparison.
       session.restaurant = fresh;
       const after = effectivePrinter();
-      if (before.ip !== after.ip || before.port !== after.port) {
-        log(`Printer target changed to ${after.ip || '(none)'}:${after.port}.`);
+      if (before.describe !== after.describe) {
+        log(`Printer target changed to ${after.describe}.`);
       }
     } catch {
       // Transient API blip — keep the cached config and try again next tick.

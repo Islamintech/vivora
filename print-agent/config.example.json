@@ -1,15 +1,21 @@
 {
-  "apiUrl": "https://your-backend-domain.com/graphql",
-  "wsUrl": "wss://your-backend-domain.com/graphql",
+  "apiUrl": "https://api.vivora.kr/graphql",
+  "wsUrl": "wss://api.vivora.kr/graphql",
   "email": "printer@your-restaurant.com",
   "password": "the-account-password",
 
   "_comment_credentials": "Create this login from the dashboard's Staff page — a dedicated account just for the printer, not the owner's own login.",
 
-  "printerIp": "192.168.1.50",
-  "printerPort": 9100,
-  "_comment_printer": "Leave printerIp empty to use the IP/port saved in Settings > Kitchen ticket printing on the dashboard instead. A value here overrides that.",
+  "_comment_connection": "Two ways to reach the printer. Use ONE of them.",
 
-  "paperWidth": 48,
-  "_comment_paperWidth": "Characters per line: 48 for 80mm paper (default), 32 for 58mm paper."
+  "serialPort": "",
+  "serialBaud": 9600,
+  "_comment_serial": "For a printer cabled to this PC's COM port (most POS printers, including any whose self-test says 'Interface: USB & Serial'). Set e.g. \"COM1\" and the baud rate from that same self-test slip. When this is set it wins over printerIp.",
+
+  "printerIp": "",
+  "printerPort": 9100,
+  "_comment_network": "For a printer with an ethernet port and its own IP. Leave printerIp empty to use the IP/port saved in Settings > Kitchen ticket printing on the dashboard instead.",
+
+  "paperWidth": 42,
+  "_comment_paperWidth": "Characters per line. Take it from the printer's self-test slip: the 'Char line FontA/B' value (often 42 for 80mm paper, 32 for 58mm)."
 }

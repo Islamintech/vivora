@@ -16,9 +16,12 @@ straight to the printer.
 
 - A Windows computer at the restaurant that can stay on (the cashier's PC is
   usually fine), with an internet connection.
-- The kitchen printer's IP address, if it's a network printer (the SAM4S and
-  Sewoo printers in most kitchens support this — see "Finding the printer's
-  IP" below).
+- To know **how the printer is connected**. Print its self-test slip (below)
+  and read the `Interface` line:
+  - `Interface: USB & Serial 9600,n,8,1` — it has no network port. It is
+    cabled to a PC's COM port, and that is the PC the agent must run on. Set
+    `serialPort` in config.json.
+  - An IP address on the slip — it is a network printer. Set `printerIp`.
 - A dedicated login for the printer — **do not** use the owner's own
   email/password. Create one from the dashboard: **Staff → Add staff**, e.g.
   `printer@yourrestaurant.com` with any password. This account only needs to
@@ -37,10 +40,16 @@ straight to the printer.
    - `apiUrl` / `wsUrl` — your backend's address (ask whoever set up the
      platform if you're not sure).
    - `email` / `password` — the dedicated printer login from Staff → Add staff.
-   - `printerIp` — the printer's IP address (see below). You can leave this
-     blank and set it instead in the dashboard under
-     **Settings → Kitchen ticket printing** — either place works, a value in
-     `config.json` just takes priority.
+   - **Either** `serialPort` (e.g. `COM1`) and `serialBaud` for a printer
+     cabled to this PC, **or** `printerIp` for a printer with its own IP
+     address. The self-test slip tells you which — see below. A `serialPort`
+     wins if both are filled in.
+   - `paperWidth` — characters per line, from the slip's `Char line` value.
+
+   A network printer's IP can also be set in the dashboard under
+   **Settings → Kitchen ticket printing**; a value in `config.json` takes
+   priority. A serial port can only be set here, since the dashboard has no
+   way to describe a cable.
 5. Test the connection to the printer without needing a live order:
    ```
    node index.js --test-print
@@ -52,19 +61,54 @@ straight to the printer.
 That's it - step 6 is the last thing anyone has to do. See the next section
 for what it sets up.
 
-## Finding the printer's IP address
+## Reading the printer's self-test slip
 
-Most SAM4S/Sewoo kitchen printers have a small LCD or a self-test button:
+Switch the printer off, hold the FEED button, switch it on, release after a
+couple of seconds. It prints its own settings. Three lines matter:
 
-- Hold the printer's feed button while powering it on (or check the printer's
-  manual for "self-test print" / "network status print") — it prints a
-  ticket showing its IP address.
-- Or check your router's connected-devices list for a device named after the
-  printer brand.
+- **`Interface`** — `USB & Serial 9600,n,8,1` means serial (use `serialPort`);
+  an IP address means network (use `printerIp`).
+- **`Char line FontA/B`** — characters per line, e.g. `42/42`. Put that number
+  in `paperWidth`. Guessing 48 on a 42-column printer wraps every price onto
+  its own line.
+- **Baud rate** — the `9600` in the Interface line, for `serialBaud`.
 
-If the printer only has a USB cable (no network/ethernet port), this version
-of the agent can't reach it directly — let the platform maintainer know and
-we'll set up USB support for that printer instead.
+Careful with the sockets on the back: POS printers have an RJ11/RJ12
+**cash-drawer** port that looks exactly like an ethernet socket. A printer
+whose self-test says `USB & Serial` has no network port no matter what the
+back panel suggests.
+
+## Which COM port is it on?
+
+If the slip says serial but you do not know the port, send a test to each one
+and let the printer tell you — whichever slip comes out names its own port:
+
+```powershell
+foreach ($n in 1..8) {
+  $name = "COM$n"
+  try {
+    $sp = New-Object System.IO.Ports.SerialPort $name,9600,'None',8,'One'
+    $sp.Open(); $sp.Write("`n`n*** TEST $name ***`n`n`n"); Start-Sleep -Milliseconds 800; $sp.Close()
+    Write-Host "$name : sent"
+  } catch { Write-Host "$name : $($_.Exception.Message)" }
+}
+```
+
+## Finding a network printer's IP address
+
+Only relevant if the self-test slip showed one. Check your router's
+connected-devices list, or scan for anything listening on port 9100:
+
+```powershell
+$prefix = "192.168.1"   # first three parts of this PC's IPv4 address
+1..254 | ForEach-Object {
+  $c = New-Object System.Net.Sockets.TcpClient
+  if ($c.BeginConnect("$prefix.$_", 9100, $null, $null).AsyncWaitHandle.WaitOne(150) -and $c.Connected) {
+    Write-Host "PRINTER FOUND: $prefix.$_"
+  }
+  $c.Close()
+}
+```
 
 ## Running automatically (the normal way to run it)
 
@@ -113,9 +157,16 @@ maintainer - it can be done for a specific printer model that supports it.
   `config.json` (not just rename it, both files should exist).
 - **"Authenticated as..." never appears** — check `email`/`password` in
   config.json match a real staff login, and `apiUrl` is correct.
-- **Test print times out / connection refused** — double check `printerIp`
-  and that the computer and printer are on the same WiFi/network. Try
-  pinging the printer's IP from the same computer.
+- **Test print times out / connection refused** — network printers only:
+  double check `printerIp` and that the computer and printer are on the same
+  network. Try pinging the printer's IP from the same computer.
+- **"another program is holding the port open"** — the till's POS software
+  has the COM port. Close it, test again, and tell the maintainer: the two
+  programs need to take turns on that port.
+- **Serial ticket prints garbage characters** — the baud rate is wrong. Use
+  the number from the self-test slip's `Interface` line in `serialBaud`.
+- **Every price wraps onto its own line** — `paperWidth` is too high. Use the
+  slip's `Char line FontA/B` value (often 42, not 48).
 - **Nothing prints after a restart** — check the service is running in
   `services.msc` (see above). If it isn't listed at all, `install-service.bat`
   was never run, or it was run without approving the administrator prompt.
