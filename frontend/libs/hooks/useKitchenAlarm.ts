@@ -74,28 +74,73 @@ export function useKitchenAlarm(pendingCount: number) {
   return { play, enabled, toggle, audioReady: ready };
 }
 
-// Two-tone doorbell, synthesised rather than shipped as an mp3: no asset to
-// load, and it cuts through kitchen noise better than a soft notification ping.
+// A struck counter bell, synthesised rather than shipped as an mp3: no asset
+// to load, and it carries over an extractor fan far better than a soft
+// notification ping. Each strike is one hit of the bell, and the ring is left
+// to fade on its own.
+const BELL_HZ = 1046; // C6 - the bright end of a service bell
+
 function chime(ctx: AudioContext | null, times: number) {
   if (!ctx || ctx.state !== 'running') return;
   const start = ctx.currentTime;
+  const bus = master(ctx);
   for (let i = 0; i < times; i++) {
-    const at = start + i * 0.42;
-    tone(ctx, 988, at, 0.18);        // B5
-    tone(ctx, 1319, at + 0.16, 0.24); // E6
+    strike(ctx, bus, start + i * 0.5);
   }
 }
 
-function tone(ctx: AudioContext, freq: number, at: number, dur: number) {
+// Compressor on the master, not just a bigger gain: partials stacking on top of
+// each other would clip and buzz, and clipping sounds thin rather than loud.
+// Squashing the peaks lets the whole ring sit near full scale.
+function master(ctx: AudioContext) {
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18;
+  comp.knee.value = 6;
+  comp.ratio.value = 12;
+  comp.attack.value = 0.003;
+  comp.release.value = 0.25;
+  const out = ctx.createGain();
+  out.gain.value = 0.9;
+  comp.connect(out).connect(ctx.destination);
+  return comp;
+}
+
+function strike(ctx: AudioContext, bus: AudioNode, at: number) {
+  // What makes it read as metal rather than a beep: partials at inharmonic
+  // ratios, the high ones loud at the moment of the hit but dying first, so
+  // the strike is bright and the tail settles onto the fundamental.
+  const partials: [ratio: number, level: number, decay: number][] = [
+    [1, 1, 1.9],
+    [2.0, 0.6, 1.3],
+    [2.98, 0.5, 0.9],
+    [4.12, 0.32, 0.6],
+    [5.43, 0.22, 0.4],
+    [6.79, 0.14, 0.25],
+  ];
+  for (const [ratio, level, decay] of partials) {
+    tone(ctx, bus, BELL_HZ * ratio, at, level * 0.45, decay);
+  }
+}
+
+function tone(
+  ctx: AudioContext,
+  dest: AudioNode,
+  freq: number,
+  at: number,
+  peak: number,
+  decay: number,
+) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.type = 'triangle';
+  osc.type = 'sine';
   osc.frequency.value = freq;
-  // Ramped rather than switched: an abrupt gain change clicks audibly.
+  // Near-instant attack, long exponential decay: that envelope is the whole
+  // difference between "struck" and "switched on". Still ramped, not stepped,
+  // because an abrupt gain change clicks audibly.
   gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.exponentialRampToValueAtTime(0.35, at + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-  osc.connect(gain).connect(ctx.destination);
+  gain.gain.exponentialRampToValueAtTime(peak, at + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + decay);
+  osc.connect(gain).connect(dest);
   osc.start(at);
-  osc.stop(at + dur + 0.05);
+  osc.stop(at + decay + 0.05);
 }
