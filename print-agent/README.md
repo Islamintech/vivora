@@ -2,15 +2,20 @@
 
 Prints a kitchen ticket automatically the moment a customer places an order by
 scanning the table's QR code. Runs on a Windows (or Mac/Linux) computer at the
-restaurant, on the same network as the kitchen printer.
+restaurant — the one the printer is cabled to, or one on the same network as
+the printer.
 
 ## Why this exists
 
-The kitchen printer sits on the restaurant's local WiFi/LAN — the cloud
-backend has no way to reach it directly. This program is the bridge: it stays
-open on a computer at the restaurant, listens for new orders in real time
-(the same live feed the Kitchen Display page uses), and sends the ticket
-straight to the printer.
+The kitchen printer is either cabled to a PC's COM port or sits on the
+restaurant's local WiFi/LAN — the cloud backend can reach neither directly.
+This program is the bridge: it stays open on a computer at the restaurant,
+listens for new orders in real time (the same live feed the Kitchen Display
+page uses), and sends the ticket straight to the printer.
+
+Every install so far has been a **serial** printer, not a network one. If the
+printer is cabled to a PC, that is the PC the agent must run on — the cable
+decides the machine, and no configuration works around it.
 
 ## What you need
 
@@ -22,10 +27,9 @@ straight to the printer.
     cabled to a PC's COM port, and that is the PC the agent must run on. Set
     `serialPort` in config.json.
   - An IP address on the slip — it is a network printer. Set `printerIp`.
-- A dedicated login for the printer — **do not** use the owner's own
-  email/password. Create one from the dashboard: **Staff → Add staff**, e.g.
-  `printer@yourrestaurant.com` with any password. This account only needs to
-  receive order notifications, nothing else.
+- A Vivora login belonging to **that restaurant**. This is the only thing that
+  decides which restaurant's orders the printer receives — the agent takes the
+  restaurant from the account it logs in as. See "The printer's login" below.
 
 ## Setup (one-time)
 
@@ -39,7 +43,8 @@ straight to the printer.
 4. Copy `config.example.json` to `config.json` and fill in:
    - `apiUrl` / `wsUrl` — your backend's address (ask whoever set up the
      platform if you're not sure).
-   - `email` / `password` — the dedicated printer login from Staff → Add staff.
+   - `email` / `password` — a login belonging to that restaurant (see "The
+     printer's login" below).
    - **Either** `serialPort` (e.g. `COM1`) and `serialBaud` for a printer
      cabled to this PC, **or** `printerIp` for a printer with its own IP
      address. The self-test slip tells you which — see below. A `serialPort`
@@ -60,6 +65,32 @@ straight to the printer.
 
 That's it - step 6 is the last thing anyone has to do. See the next section
 for what it sets up.
+
+## The printer's login
+
+The agent takes its restaurant from the account in `config.json` and listens
+only for that restaurant's orders. Nothing else in the file scopes it, so the
+account must belong to the restaurant you are installing at.
+
+**The dashboard has no Staff page.** The backend has an `addStaff` mutation
+(owner-only), but nothing in the UI calls it yet. So there are two ways to get
+a login:
+
+- **The owner's own dashboard login.** Works immediately, and is what the
+  current installs use. The catch: `config.json` is plain text on a PC in the
+  restaurant, and the owner's login opens menu, prices, analytics and billing.
+- **A dedicated printer account**, created by calling the mutation directly.
+  It can only receive orders. Run this once, from any machine, filling in the
+  three placeholders:
+
+```powershell
+$owner = Invoke-RestMethod -Uri 'https://api.vivora.kr/graphql' -Method Post -ContentType 'application/json' -Body (@{query='mutation($i:LoginInput!){login(input:$i){token}}'; variables=@{i=@{email='OWNER-EMAIL'; password='OWNER-PASSWORD'}}} | ConvertTo-Json -Depth 9)
+Invoke-RestMethod -Uri 'https://api.vivora.kr/graphql' -Method Post -ContentType 'application/json' -Headers @{Authorization=('Bearer ' + $owner.data.login.token)} -Body (@{query='mutation($i:AddStaffInput!){addStaff(input:$i){_id email restaurantId}}'; variables=@{i=@{name='Printer'; email='printer@theirrestaurant.com'; password='NEW-PASSWORD-MIN-8-CHARS'}}} | ConvertTo-Json -Depth 9) | ConvertTo-Json
+```
+
+Either way, check the `Authenticated as ... for restaurant "X"` line in the
+log after starting the agent. If two restaurants have similar names, that line
+is what tells you the tickets will go to the right one.
 
 ## Making short tickets easier to grab
 
@@ -192,7 +223,10 @@ couple of seconds. It prints its own settings. Three lines matter:
 - **`Char line FontA/B`** — characters per line, e.g. `42/42`. Put that number
   in `paperWidth`. Guessing 48 on a 42-column printer wraps every price onto
   its own line.
-- **Baud rate** — the `9600` in the Interface line, for `serialBaud`.
+- **Baud rate** — the speed in the `Interface`/`Serial:` line, for
+  `serialBaud`. Do not assume 9600: an HCUBE-102S self-test reads
+  `Serial: 38400,None,8,1,DTR/DSR`. Getting this wrong is the single most
+  common install failure, and it presents as beeping rather than as an error.
 
 Careful with the sockets on the back: POS printers have an RJ11/RJ12
 **cash-drawer** port that looks exactly like an ethernet socket. A printer
@@ -287,8 +321,23 @@ maintainer - it can be done for a specific printer model that supports it.
 - **"Timed out … writing to COMn"** — the port accepted the connection but
   the printer never took the bytes: switched off, out of paper, or its cable
   is loose. The agent retries and keeps running.
-- **Serial ticket prints garbage characters** — the baud rate is wrong. Use
-  the number from the self-test slip's `Interface` line in `serialBaud`.
+- **The printer beeps but nothing prints** — the baud rate is wrong. At the
+  wrong speed the printer hears noise rather than text, and garbage bytes trip
+  its buzzer on their own. This looks exactly like a paper fault and is not
+  one. Take the speed from the self-test slip's `Serial:` line — it is not
+  always 9600 (one SAM4S HCUBE-102S ships at 38400).
+- **Serial ticket prints garbage characters** — same cause, wrong `serialBaud`.
+- **`--test-print` works but real orders never print** — `--test-print` only
+  logs in and writes to the printer; it never touches `wsUrl`. So this always
+  means the live order stream, not the printer. Check, in order: the agent is
+  actually running (the service, not just your manual test runs); the log
+  contains `Connected to order stream.`; `wsUrl` is exactly
+  `wss://host/graphql` with nothing appended — pasting config through a chat
+  or mail client can rewrite it to `wss://... (http://...)`, which breaks only
+  the live path; and the order was placed at the restaurant named in the
+  `Authenticated as ...` line.
+- **A config change had no effect** — the service read `config.json` at
+  startup. `Restart-Service 'Vivora Print Agent'` after every edit.
 - **Every price wraps onto its own line** — `paperWidth` is too high. Use the
   slip's `Char line FontA/B` value (often 42, not 48).
 - **Nothing prints after a restart** — check the service is running in

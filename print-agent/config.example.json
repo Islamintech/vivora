@@ -4,7 +4,7 @@
   "email": "printer@your-restaurant.com",
   "password": "the-account-password",
 
-  "_comment_credentials": "Create this login from the dashboard's Staff page — a dedicated account just for the printer, not the owner's own login.",
+  "_comment_credentials": "Any Vivora login belonging to THIS restaurant - it is what decides whose orders print here. The dashboard has no Staff page yet, so this is either the owner's own login or a dedicated printer account created by calling the addStaff mutation directly; see 'The printer's login' in README.md.",
 
   "_comment_two_printers": "For more than one printer (say one at the stove and one at the pass), list them under \"printers\" instead of the fields below - every ticket prints on all of them, and one running out of paper does not stop the others. Each entry takes the same serialPort/serialBaud or printerIp/printerPort, plus an optional name and paperWidth. Example: \"printers\": [{ \"name\": \"Kitchen\", \"serialPort\": \"COM1\" }, { \"name\": \"Pass\", \"serialPort\": \"COM4\" }]",
 
@@ -12,7 +12,7 @@
 
   "serialPort": "",
   "serialBaud": 9600,
-  "_comment_serial": "For a printer cabled to this PC's COM port (most POS printers, including any whose self-test says 'Interface: USB & Serial'). Set e.g. \"COM1\" and the baud rate from that same self-test slip. When this is set it wins over printerIp.",
+  "_comment_serial": "For a printer cabled to this PC's COM port (most POS printers, including any whose self-test says 'Interface: USB & Serial'). Set e.g. \"COM1\" and the baud rate from that same self-test slip - take it from the slip, do not assume 9600, a wrong speed makes the printer beep without printing. When this is set it wins over printerIp.",
 
   "printerIp": "",
   "printerPort": 9100,
