@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import {
@@ -168,6 +169,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Only the dashboard carries a manifest. Adding one site-wide would
+          make a guest scanning a table QR get prompted to install the owner's
+          admin app, and would fix every home-screen shortcut to /dashboard.
+          Scoped here, "Add to Home screen" on a phone lands on the dashboard
+          and opens without browser chrome. */}
+      <Head>
+        <link rel="manifest" href="/dashboard.webmanifest" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Vivora" />
+      </Head>
+
       {/* AppBar */}
       <AppBar
         position="fixed"

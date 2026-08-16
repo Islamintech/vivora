@@ -1,0 +1,17 @@
+{
+  "name": "Vivora Boshqaruv",
+  "short_name": "Vivora",
+  "description": "Restoran boshqaruv paneli",
+  "start_url": "/dashboard",
+  "scope": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "uz",
+  "theme_color": "#FD6511",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
