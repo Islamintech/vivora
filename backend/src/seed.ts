@@ -192,7 +192,7 @@ async function run() {
   console.log('========================================');
   console.log('  Restaurant admin:  demo@bistro.com / demo12345');
   console.log('  Kitchen staff:     chef@bistro.com / chef12345');
-  console.log('  Super admin:       admin@platform.com / Admin@123456');
+  console.log('  Super admin:       see SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD in .env');
   console.log('');
   console.log(`  Dashboard:   http://localhost:3000/dashboard`);
   console.log(`  Kitchen:     http://localhost:3000/kitchen`);

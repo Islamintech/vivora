@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from '../../schemas/User.model';
 import { UserRole } from '../../libs/enums/user.enum';
@@ -88,21 +89,32 @@ export class UsersService {
     }
 
     if (isProd && !password) {
-      // Never quietly stand up a production admin on a password that is
-      // published in this repository.
+      // Never quietly stand up a production admin on a password nobody chose.
       throw new Error(
         'SUPER_ADMIN_PASSWORD must be set in production - refusing to create ' +
-          'the super admin with the default password.',
+          'the super admin without one.',
       );
     }
+
+    // A literal default here would be a published password: this repository is
+    // readable, so every deployment that skipped the variable would share the
+    // same admin login. Generating one per install means an unconfigured dev
+    // machine is still unique, and printing it once is enough to get in.
+    const generated = !password ? randomBytes(12).toString('base64url') : null;
 
     await this.create({
       name: process.env.SUPER_ADMIN_NAME || 'Platform Admin',
       email,
-      password: password || 'Admin@123456',
+      password: password ?? generated!,
       role: UserRole.SUPER_ADMIN,
     });
 
     log.log(`Super admin created: ${email}`);
+    if (generated) {
+      log.warn(
+        `SUPER_ADMIN_PASSWORD was not set, so a random one was generated: ${generated}\n` +
+          'Copy it now - it is not stored anywhere and is not shown again.',
+      );
+    }
   }
 }

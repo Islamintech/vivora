@@ -132,12 +132,14 @@ docker-compose up --build
 | `STAFF` | Kitchen display, order status updates |
 | *(public)* | Customer menu, place orders, feedback |
 
-### Default Super Admin
-Created automatically on first server start:
+### Super Admin
+Created automatically on first server start, from your own `.env`:
 ```
-Email:    admin@platform.com  (see .env SUPER_ADMIN_EMAIL)
-Password: Admin@123456        (see .env SUPER_ADMIN_PASSWORD)
+Email:    SUPER_ADMIN_EMAIL     (defaults to admin@platform.com)
+Password: SUPER_ADMIN_PASSWORD  (no default - set it before first boot)
 ```
+The account is only created when it does not already exist, so changing
+these variables later does not update an existing admin.
 
 ---
 

@@ -82,9 +82,10 @@ printer; point its config at the production API URL. See `print-agent/README.md`
 
 ## Before going live
 
-- [ ] **Change the super-admin password.** The repo's default (`Admin@123456`)
-      is public. Set `SUPER_ADMIN_PASSWORD` before the first boot, because the
-      account is created on startup and the variable is ignored afterwards.
+- [ ] **Set `SUPER_ADMIN_PASSWORD` before the first boot.** The account is
+      created on startup and the variable is ignored afterwards, so a weak
+      value chosen now can only be changed from the dashboard later. In
+      production the server refuses to start without it.
 - [ ] **Set `JWT_SECRET`.** The server refuses to start in production without
       it, so you'll notice - but generate a real random one, not a guessable string.
 - [ ] **Fill in the bank details.** The To'lov page shows placeholders
