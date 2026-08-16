@@ -61,6 +61,39 @@ straight to the printer.
 That's it - step 6 is the last thing anyone has to do. See the next section
 for what it sets up.
 
+## Making a noise when a ticket prints
+
+Paper appearing makes no sound, and a kitchen is loud. If the printer's
+self-test slip says `Beeper: Yes`, add to `config.json`:
+
+```json
+"beep": true
+```
+
+That sounds three short beeps after each ticket, once it has been cut and is
+there to tear off. For more control:
+
+```json
+"beep": { "times": 3, "duration": 2, "mode": "escB" }
+```
+
+`duration` is in tenths of a second. `mode` is `escB` (the SAM4S / Sewoo /
+Bixolon command, and the one to try first) or `bel` for simpler firmware
+that only understands a plain ASCII bell.
+
+To hear which your printer supports without printing anything:
+
+```
+node index.js --test-beep
+```
+
+It sounds each dialect in turn on every configured printer and tells you
+what it tried. A printer that understands neither simply stays silent - it
+never prints stray characters, so guessing costs nothing.
+
+A `beep` inside a `printers[]` entry overrides the global one, so you can
+have the kitchen printer beep and the one at the pass stay quiet.
+
 ## More than one printer
 
 Kitchens often run two - one at the stove, one at the pass by the display.

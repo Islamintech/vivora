@@ -18,6 +18,27 @@ const DOUBLE_OFF = Buffer.from([GS, 0x21, 0x00]);
 // instead of dropping it, and works across the common printer brands.
 const FEED_AND_CUT = Buffer.from([0x0a, 0x0a, 0x0a, GS, 0x56, 0x01]);
 
+/**
+ * Sound the printer's buzzer.
+ *
+ * A ticket is no use if nobody notices it: a kitchen is loud, and paper
+ * appearing makes no sound at all.
+ *
+ * Two dialects, because no single one is universal:
+ *   'escB' — ESC B n t, the SAM4S/Sewoo/Bixolon command. `times` beeps of
+ *            `duration` × 100ms. This is the one to try first.
+ *   'bel'  — a plain ASCII BEL per beep, understood by simpler firmware that
+ *            ignores ESC B entirely.
+ * A printer that knows neither prints nothing extra and stays silent, so
+ * guessing wrong is harmless rather than a page of garbage.
+ */
+function beep(times = 3, duration = 2, mode = 'escB') {
+  const n = Math.max(1, Math.min(9, Math.round(times)));
+  const t = Math.max(1, Math.min(9, Math.round(duration)));
+  if (mode === 'bel') return Buffer.from(new Array(n).fill(0x07));
+  return Buffer.from([ESC, 0x42, n, t]);
+}
+
 // Uzbek Cyrillic -> Latin, so a menu typed in Cyrillic still prints something
 // the kitchen can read. Multi-character replacements first, since 'ch'/'sh'
 // must not be produced one letter at a time.
@@ -216,7 +237,14 @@ function buildTicket(opts) {
   chunks.push(line(width));
   chunks.push(FEED_AND_CUT);
 
+  // After the cut, so the buzzer sounds once the ticket is actually there to
+  // be torn off rather than while it is still feeding.
+  if (opts.beep) {
+    const b = opts.beep === true ? {} : opts.beep;
+    chunks.push(beep(b.times ?? 3, b.duration ?? 2, b.mode ?? 'escB'));
+  }
+
   return Buffer.concat(chunks);
 }
 
-module.exports = { buildTicket, sanitize };
+module.exports = { buildTicket, sanitize, beep };

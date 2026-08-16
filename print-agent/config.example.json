@@ -18,6 +18,9 @@
   "printerPort": 9100,
   "_comment_network": "For a printer with an ethernet port and its own IP. Leave printerIp empty to use the IP/port saved in Settings > Kitchen ticket printing on the dashboard instead.",
 
+  "beep": true,
+  "_comment_beep": "Sound the printer's buzzer after each ticket, so a busy kitchen notices it. true = 3 beeps. For more control: { \"times\": 3, \"duration\": 2, \"mode\": \"escB\" } - duration is in tenths of a second, and mode is \"escB\" (most printers) or \"bel\" (simpler firmware). Run `node index.js --test-beep` to hear which one your printer understands. Set false to keep it silent; a per-printer beep overrides this one.",
+
   "printTimeoutMs": 10000,
   "_comment_timeout": "How long to wait for a printer to accept a ticket before giving up and retrying. Only raise it for very long tickets on a slow baud rate.",
 

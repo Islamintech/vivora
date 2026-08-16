@@ -5,7 +5,7 @@ const path = require('path');
 const WebSocket = require('ws');
 const { createClient } = require('graphql-ws');
 const { login, getMyRestaurant, markOrderPreparing } = require('./graphql');
-const { buildTicket } = require('./escpos');
+const { buildTicket, beep } = require('./escpos');
 const { printToNetwork, printToSerial } = require('./printer');
 
 const CONFIG_PATH = process.argv.find((a, i) => i >= 2 && !a.startsWith('--'))
@@ -73,6 +73,9 @@ async function authenticate() {
 function describePrinter(entry, fallbackName) {
   const name = entry.name || fallbackName;
   const width = entry.paperWidth || config.paperWidth || 48;
+  // `beep: false` on one printer has to win over a global `beep: true`, so
+  // check for the key rather than falling back on truthiness.
+  const beepCfg = entry.beep !== undefined ? entry.beep : config.beep;
 
   if (entry.serialPort) {
     const port = String(entry.serialPort).toUpperCase();
@@ -81,7 +84,7 @@ function describePrinter(entry, fallbackName) {
     // while still failing fast enough for the retry to mean something.
     const timeoutMs = entry.printTimeoutMs || config.printTimeoutMs || 10000;
     return {
-      kind: 'serial', name, width, port, baud, timeoutMs,
+      kind: 'serial', name, width, port, baud, timeoutMs, beep: beepCfg,
       describe: `${name} (${port} @ ${baud} baud)`,
     };
   }
@@ -90,7 +93,7 @@ function describePrinter(entry, fallbackName) {
   const port = entry.printerIp
     ? (entry.printerPort || 9100)
     : (session.restaurant?.printerPort || 9100);
-  return { kind: 'network', name, width, ip, port, describe: `${name} (${ip}:${port})` };
+  return { kind: 'network', name, width, ip, port, beep: beepCfg, describe: `${name} (${ip}:${port})` };
 }
 
 /**
@@ -168,10 +171,11 @@ async function printOrder(order) {
   });
   if (!targets.length) return;
 
-  // Printers can differ in paper width, so each gets a ticket built for it
-  // rather than one buffer shared between them.
-  const ticketFor = (width) =>
+  // Printers can differ in paper width and buzzer settings, so each gets a
+  // ticket built for it rather than one buffer shared between them.
+  const ticketFor = (t) =>
     buildTicket({
+      beep: t.beep,
       restaurantName: session.restaurant?.name,
       tableNumber: order.tableNumber,
       items: order.items,
@@ -181,7 +185,7 @@ async function printOrder(order) {
       orderShortId: order._id?.slice(-6),
       createdAt: order.createdAt,
       takeOut: order.orderType === 'TAKE_OUT',
-      width,
+      width: t.width,
     });
 
   // In parallel and independently: one printer being out of paper must not
@@ -189,7 +193,7 @@ async function printOrder(order) {
   const results = await Promise.all(
     targets.map(async (t) => {
       try {
-        await printWithRetry(t, ticketFor(t.width));
+        await printWithRetry(t, ticketFor(t));
         return { t, ok: true };
       } catch (err) {
         log(`FAILED to print order ${order._id} to ${t.describe} - ${err.message}`);
@@ -254,6 +258,25 @@ function startSubscription() {
 }
 
 async function main() {
+  // Buzzer support varies by firmware, so let the installer hear both
+  // dialects rather than burning a ticket's worth of paper per guess.
+  if (process.argv.includes('--test-beep')) {
+    for (const t of effectivePrinters()) {
+      for (const mode of ['escB', 'bel']) {
+        log(`Beeping ${t.name} using "${mode}"...`);
+        try {
+          await sendToPrinter(t, beep(3, 2, mode));
+        } catch (err) {
+          log(`  failed: ${err.message}`);
+          break;
+        }
+        await sleep(2500);
+      }
+    }
+    log('Done. Whichever one you heard is the "beepMode" to put in config.json.');
+    process.exit(0);
+  }
+
   if (process.argv.includes('--test-print')) {
     await authenticate();
     await printOrder({
