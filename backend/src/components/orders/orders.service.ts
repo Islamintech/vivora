@@ -252,9 +252,19 @@ export class OrdersService {
     const before = await this.orderModel.findOne({ _id: orderId, restaurantId });
     if (!before) throw new NotFoundException('Order not found');
 
+    const patch: Record<string, unknown> = { status };
+    // Stamp the cooking start once, on the first move into PREPARING, so the
+    // auto-serve clock doesn't restart if staff tap through the stage twice.
+    if (status === OrderStatus.PREPARING && !before.preparingAt) {
+      patch.preparingAt = new Date();
+    }
+    if (status === OrderStatus.SERVED && !before.servedAt) {
+      patch.servedAt = new Date();
+    }
+
     const order = await this.orderModel.findOneAndUpdate(
       { _id: orderId, restaurantId },
-      { $set: { status } },
+      { $set: patch },
       { new: true },
     );
     if (!order) throw new NotFoundException('Order not found');
@@ -398,6 +408,9 @@ export class OrdersService {
     }
 
     order.status = status;
+    if (status === OrderStatus.PREPARING && !order.preparingAt) {
+      order.preparingAt = new Date();
+    }
     if (status === OrderStatus.SERVED) order.servedAt = new Date();
     await order.save();
     await this.pubSub.publish(ORDER_STATUS_UPDATED, {
@@ -490,60 +503,85 @@ export class OrdersService {
     return this.orderModel.countDocuments({ restaurantId });
   }
 
-  // Safety net only. New orders wait for a human to accept or reject them, so
-  // PENDING is never advanced automatically — otherwise the kitchen board's
-  // accept step would resolve itself. Orders staff already accepted are
-  // auto-served after a long delay so the board doesn't fill up if someone
-  // forgets to tap "done"; they still have to be marked paid by hand.
-  private static readonly AUTO_SERVE_MS = 45 * 60_000; // 45 min
-  private static readonly AUTO_SERVE_BATCH = 200;
+  // The kitchen board moves itself along, because a busy chef does not stop to
+  // tap every stage. A new order that nobody accepted or rejected is taken as
+  // accepted after 2 minutes, and an order being cooked is taken as handed over
+  // 10 minutes after cooking started. Staff can still tap ahead of both clocks,
+  // and rejecting still has to be a human decision - it just has to happen in
+  // the first 2 minutes. Payment is never automatic.
+  private static readonly AUTO_PREPARING_MS = 2 * 60_000; // 2 min
+  private static readonly AUTO_SERVE_MS = 10 * 60_000; // 10 min
+  private static readonly AUTO_BATCH = 200;
 
   @Cron(CronExpression.EVERY_MINUTE)
   async autoAdvanceOrders(): Promise<void> {
-    const serveCutoff = new Date(Date.now() - OrdersService.AUTO_SERVE_MS);
-
     try {
-      const toServe = await this.orderModel
-        .find({
-          // PENDING deliberately excluded - it needs an accept/reject decision.
-          status: { $in: [OrderStatus.PREPARING, OrderStatus.READY] },
-          // Measured from the later of "placed" and "wanted for": a phone
-          // order taken at 18:00 for 19:00 must not be counted stale the
-          // moment the kitchen starts it.
-          $expr: {
-            $lt: [
-              { $max: ['$createdAt', { $ifNull: ['$scheduledFor', '$createdAt'] }] },
-              serveCutoff,
-            ],
-          },
-        })
-        .limit(OrdersService.AUTO_SERVE_BATCH);
-
-      // Self-draining (a served order leaves the filter), so a full batch just
-      // means the rest wait a minute. Say so, because the alternative is
-      // orders quietly sitting on the board with nobody knowing why.
-      if (toServe.length === OrdersService.AUTO_SERVE_BATCH) {
-        this.logger.warn(
-          `Auto-serve hit its ${OrdersService.AUTO_SERVE_BATCH}-order batch cap; ` +
-          'the remainder waits for the next run.',
-        );
-      }
-
-      for (const order of toServe) {
-        order.status = OrderStatus.SERVED;
-        order.servedAt = new Date();
-        await order.save();
-        await this.pubSub.publish(ORDER_STATUS_UPDATED, {
-          orderStatusUpdated: order,
-          restaurantId: order.restaurantId.toString(),
-        });
-      }
-
-      if (toServe.length) {
-        this.logger.log(`Auto-served ${toServe.length} stale order(s)`);
-      }
+      await this.autoAdvanceStage(
+        [OrderStatus.PENDING],
+        OrdersService.AUTO_PREPARING_MS,
+        OrderStatus.PREPARING,
+      );
+      await this.autoAdvanceStage(
+        [OrderStatus.PREPARING, OrderStatus.READY],
+        OrdersService.AUTO_SERVE_MS,
+        OrderStatus.SERVED,
+      );
     } catch (err: any) {
       this.logger.error(`autoAdvanceOrders failed: ${err.message}`);
+    }
+  }
+
+  private async autoAdvanceStage(
+    from: OrderStatus[],
+    afterMs: number,
+    to: OrderStatus,
+  ): Promise<void> {
+    const cutoff = new Date(Date.now() - afterMs);
+    // The clock starts when this stage did. For cooking that is preparingAt;
+    // for a brand new order it is the later of "placed" and "wanted for", so a
+    // phone order taken at 18:00 for 19:00 is not started two minutes later.
+    // Orders from before preparingAt existed fall back to the same baseline.
+    const startedAt = {
+      $ifNull: [
+        '$preparingAt',
+        { $max: ['$createdAt', { $ifNull: ['$scheduledFor', '$createdAt'] }] },
+      ],
+    };
+
+    const due = await this.orderModel
+      .find({
+        status: { $in: from },
+        $expr: { $lt: [startedAt, cutoff] },
+      })
+      .limit(OrdersService.AUTO_BATCH);
+
+    // Self-draining (an advanced order leaves the filter), so a full batch just
+    // means the rest wait a minute. Say so, because the alternative is orders
+    // quietly sitting on the board with nobody knowing why.
+    if (due.length === OrdersService.AUTO_BATCH) {
+      this.logger.warn(
+        `Auto-advance to ${to} hit its ${OrdersService.AUTO_BATCH}-order batch ` +
+        'cap; the remainder waits for the next run.',
+      );
+    }
+
+    for (const order of due) {
+      order.status = to;
+      if (to === OrderStatus.PREPARING && !order.preparingAt) {
+        order.preparingAt = new Date();
+      }
+      if (to === OrderStatus.SERVED && !order.servedAt) {
+        order.servedAt = new Date();
+      }
+      await order.save();
+      await this.pubSub.publish(ORDER_STATUS_UPDATED, {
+        orderStatusUpdated: order,
+        restaurantId: order.restaurantId.toString(),
+      });
+    }
+
+    if (due.length) {
+      this.logger.log(`Auto-advanced ${due.length} order(s) to ${to}`);
     }
   }
 }
