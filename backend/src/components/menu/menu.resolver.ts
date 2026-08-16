@@ -3,7 +3,8 @@ import { UseGuards } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { MenuCategoryModel, MenuItemModel } from '../../libs/dto/menu/menu';
 import { CreateCategoryInput, UpdateCategoryInput, CreateMenuItemInput, UpdateMenuItemInput, UpdateItemAvailabilityInput } from '../../libs/dto/menu/menu.input';
-import { GqlAuthGuard } from '../auth/guards/auth.guard';
+import { Throttle } from '@nestjs/throttler';
+import { GqlAuthGuard, GqlThrottlerGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/authUser.decorator';
 import { RestaurantsService } from '../restaurants/restaurants.service';
 import { AnalyticsService } from '../analytics/analytics.service';
@@ -25,8 +26,12 @@ export class MenuResolver {
     private analyticsService: AnalyticsService,
   ) {}
 
-  // Public query — no auth required
+  // Public query - no auth required, so it is the one resolver the whole
+  // internet can reach. Generous enough for a table re-scanning between
+  // courses, low enough that nobody can use it to hammer the database.
   @Query(() => [PublicMenuSection])
+  @UseGuards(GqlThrottlerGuard)
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   async publicMenu(
     @Args('restaurantId', { type: () => ID }) restaurantId: string,
   ) {
@@ -39,11 +44,14 @@ export class MenuResolver {
       this.analyticsService.topSellingItemIds(restaurantId, 30, 5),
     ]);
     const top = new Set(topIds);
+    // Sections come back as plain cached objects, so spread them directly -
+    // and copy rather than mutate, since the cache hands the same objects to
+    // every concurrent request.
     return sections.map((s) => ({
       category: s.category,
       items: s.items.map((it) => ({
-        ...it.toObject(),
-        isBestSeller: top.has(it._id.toString()),
+        ...it,
+        isBestSeller: top.has(String(it._id)),
       })),
     }));
   }

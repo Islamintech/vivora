@@ -217,22 +217,49 @@ export class TableSessionsService {
    */
   private static readonly AUTO_FREE_AFTER_MS = 20 * 60_000;
 
+  // Caps the work one tick can do. The sweep is self-draining - a freed tab
+  // leaves the OPEN filter - so the next minute picks up the remainder. What
+  // it cannot do is tell you it is behind, hence the warning below.
+  private static readonly SWEEP_BATCH = 500;
+
   @Cron(CronExpression.EVERY_MINUTE)
   async autoFreeServedTables(): Promise<void> {
     try {
       const cutoff = new Date(Date.now() - TableSessionsService.AUTO_FREE_AFTER_MS);
       const sessions = await this.sessionModel
         .find({ status: TableSessionStatus.OPEN })
-        .limit(500)
+        .limit(TableSessionsService.SWEEP_BATCH)
         .exec();
+      if (!sessions.length) return;
+
+      if (sessions.length === TableSessionsService.SWEEP_BATCH) {
+        this.logger.warn(
+          `Open-tab sweep hit its ${TableSessionsService.SWEEP_BATCH}-session batch cap. ` +
+          'Tabs beyond it wait for the next run; if this repeats, raise SWEEP_BATCH.',
+        );
+      }
+
+      // One query for every open tab's orders instead of one per tab: at 500
+      // open sessions that was 500 round trips a minute, every minute, and it
+      // grew with each restaurant added to the platform.
+      const sessionIds = sessions.map((s) => s._id.toString());
+      const allOrders = await this.orderModel
+        .find({ sessionId: { $in: sessionIds }, status: { $ne: OrderStatus.CANCELLED } })
+        .select('sessionId status servedAt updatedAt')
+        .exec();
+
+      const ordersBySession = new Map<string, typeof allOrders>();
+      for (const order of allOrders) {
+        const key = String(order.sessionId);
+        const bucket = ordersBySession.get(key);
+        if (bucket) bucket.push(order);
+        else ordersBySession.set(key, [order]);
+      }
 
       let freed = 0;
       for (const session of sessions) {
         const id = session._id.toString();
-        const orders = await this.orderModel
-          .find({ sessionId: id, status: { $ne: OrderStatus.CANCELLED } })
-          .select('status servedAt updatedAt')
-          .exec();
+        const orders = ordersBySession.get(id) ?? [];
 
         // An empty tab is left alone: it has nothing to have been served, and
         // the stale guard already covers a tab nobody ever ordered on.

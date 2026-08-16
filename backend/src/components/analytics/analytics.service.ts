@@ -12,6 +12,18 @@ export class AnalyticsService {
   ) {}
 
   /**
+   * Best sellers are read on every QR scan but derived from 30 days of
+   * orders, so the answer barely moves minute to minute. Caching it keeps an
+   * unwind-and-group aggregation over the orders collection off the hot path
+   * of the one query customers actually hit.
+   */
+  private static readonly TOP_SELLERS_TTL_MS = 10 * 60_000;
+  private readonly topSellersCache = new Map<
+    string,
+    { at: number; ids: string[] }
+  >();
+
+  /**
    * The restaurant's best-selling menu item ids over the trailing window.
    * Used to auto-badge "best seller" items on the public customer menu, so
    * recommendations follow real sales instead of a manually ticked flag.
@@ -21,6 +33,12 @@ export class AnalyticsService {
     days = 30,
     limit = 5,
   ): Promise<string[]> {
+    const key = `${restaurantId}:${days}:${limit}`;
+    const hit = this.topSellersCache.get(key);
+    if (hit && Date.now() - hit.at < AnalyticsService.TOP_SELLERS_TTL_MS) {
+      return hit.ids;
+    }
+
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const rows = await this.orderModel.aggregate([
       {
@@ -36,7 +54,9 @@ export class AnalyticsService {
       { $sort: { sold: -1 } },
       { $limit: limit },
     ]);
-    return rows.map((r) => String(r._id));
+    const ids = rows.map((r) => String(r._id));
+    this.topSellersCache.set(key, { at: Date.now(), ids });
+    return ids;
   }
 
   async getOverview(

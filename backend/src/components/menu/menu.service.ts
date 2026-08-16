@@ -11,6 +11,14 @@ import {
 import { CreateCategoryInput, UpdateCategoryInput, CreateMenuItemInput, UpdateMenuItemInput, UpdateItemAvailabilityInput } from '../../libs/dto/menu/menu.input';
 import { TranslationService, TARGET_LANGS } from './translation.service';
 
+// Plain (lean) documents rather than Mongoose ones: these are cached and
+// handed to several requests at once, so they must not carry per-request
+// document state that a caller could mutate.
+type PublicMenuSections = {
+  category: Record<string, any>;
+  items: Record<string, any>[];
+}[];
+
 @Injectable()
 export class MenuService implements OnModuleInit {
   private readonly logger = new Logger(MenuService.name);
@@ -34,6 +42,39 @@ export class MenuService implements OnModuleInit {
   ) {}
 
   /**
+   * The customer menu is the only query the whole internet can reach without
+   * a login, and every QR scan runs it. Two collection reads per scan is
+   * wasted work when a menu changes a few times a day, so hold the assembled
+   * result briefly.
+   *
+   * The TTL is deliberately short and every write invalidates its restaurant
+   * anyway: a dish that has just sold out must disappear from the customer's
+   * menu, not linger. Cache is per-process, which is coherent today because
+   * the API runs as a single instance (see PubSubModule) - if it is ever
+   * replicated this becomes a per-instance cache, still correct but with each
+   * instance expiring on its own.
+   */
+  private static readonly PUBLIC_MENU_TTL_MS = 15_000;
+  private readonly publicMenuCache = new Map<
+    string,
+    { at: number; sections: PublicMenuSections }
+  >();
+
+  private invalidatePublicMenu(restaurantId?: string | null): void {
+    if (restaurantId) this.publicMenuCache.delete(String(restaurantId));
+  }
+
+  /**
+   * Used by the background translators, which write by document id and never
+   * learn which restaurant the row belongs to. Dropping every entry is
+   * cheaper than the lookup that would narrow it: the map holds one small
+   * object per recently-scanned restaurant and refills on the next request.
+   */
+  private invalidateAllPublicMenus(): void {
+    this.publicMenuCache.clear();
+  }
+
+  /**
    * Translate in the background and write the result back.
    *
    * Deliberately not awaited by the mutation: an owner typing up a menu
@@ -46,6 +87,7 @@ export class MenuService implements OnModuleInit {
       .translateMenuText(name, description)
       .then((translations) => {
         if (!Object.keys(translations).length) return;
+        this.invalidateAllPublicMenus();
         return this.itemModel.updateOne({ _id: id }, { $set: { translations } });
       })
       .catch((err) => this.logger.warn(`Translating item ${id} failed: ${err.message}`));
@@ -57,6 +99,7 @@ export class MenuService implements OnModuleInit {
       .translateCategoryName(name)
       .then((translations) => {
         if (!Object.keys(translations).length) return;
+        this.invalidateAllPublicMenus();
         return this.categoryModel.updateOne({ _id: id }, { $set: { translations } });
       })
       .catch((err) => this.logger.warn(`Translating category ${id} failed: ${err.message}`));
@@ -78,6 +121,7 @@ export class MenuService implements OnModuleInit {
     // would silently rearrange itself.
     const order = input.order ?? (await this.nextCategoryOrder(restaurantId));
     const cat = await this.categoryModel.create({ restaurantId, ...input, order });
+    this.invalidatePublicMenu(restaurantId);
     this.translateCategoryInBackground(cat._id.toString(), cat.name);
     return cat;
   }
@@ -94,6 +138,7 @@ export class MenuService implements OnModuleInit {
       { new: true },
     );
     if (!cat) throw new NotFoundException('Category not found');
+    this.invalidatePublicMenu(restaurantId);
     // Only when the name actually changed - renaming is rare, and reordering
     // or hiding a category should not spend a translation call.
     if (before && before.name !== cat.name) {
@@ -109,6 +154,7 @@ export class MenuService implements OnModuleInit {
     });
     if (!cat) throw new NotFoundException('Category not found');
     await this.itemModel.deleteMany({ categoryId, restaurantId });
+    this.invalidatePublicMenu(restaurantId);
     return true;
   }
 
@@ -222,6 +268,7 @@ export class MenuService implements OnModuleInit {
       return false;
     }
     await model.updateOne({ _id: doc._id }, { $set: set });
+    this.invalidateAllPublicMenus();
     return true;
   }
 
@@ -258,6 +305,7 @@ export class MenuService implements OnModuleInit {
         })),
       );
     }
+    this.invalidatePublicMenu(restaurantId);
     return this.getCategories(restaurantId);
   }
 
@@ -288,6 +336,7 @@ export class MenuService implements OnModuleInit {
       restaurantId,
       ...this.withPrimaryImage(input),
     });
+    this.invalidatePublicMenu(restaurantId);
     this.translateItemInBackground(item._id.toString(), item.name, item.description);
     return item;
   }
@@ -304,6 +353,7 @@ export class MenuService implements OnModuleInit {
       { new: true },
     );
     if (!item) throw new NotFoundException('Menu item not found');
+    this.invalidatePublicMenu(restaurantId);
 
     // A hand-edited translation wins: the owner corrected it, so do not let
     // the machine overwrite them on the next price change.
@@ -319,6 +369,7 @@ export class MenuService implements OnModuleInit {
   async deleteItem(restaurantId: string, itemId: string): Promise<boolean> {
     const item = await this.itemModel.findOneAndDelete({ _id: itemId, restaurantId });
     if (!item) throw new NotFoundException('Menu item not found');
+    this.invalidatePublicMenu(restaurantId);
     return true;
   }
 
@@ -338,6 +389,7 @@ export class MenuService implements OnModuleInit {
     // If tracking quantity, the remaining count is the source of truth.
     if (item.trackQuantity) item.isAvailable = item.quantity > 0;
 
+    this.invalidatePublicMenu(restaurantId);
     return item.save();
   }
 
@@ -347,6 +399,9 @@ export class MenuService implements OnModuleInit {
     itemId: string,
     qty: number,
   ): Promise<MenuItemDocument | null> {
+    // Selling out (and coming back) changes what the customer menu shows, so
+    // the cached copy cannot outlive the reservation that caused it.
+    this.invalidatePublicMenu(restaurantId);
     return this.itemModel.findOneAndUpdate(
       { _id: itemId, restaurantId, trackQuantity: true },
       [
@@ -368,6 +423,7 @@ export class MenuService implements OnModuleInit {
     itemId: string,
     qty: number,
   ): Promise<MenuItemDocument | null> {
+    this.invalidatePublicMenu(restaurantId);
     return this.itemModel.findOneAndUpdate(
       { _id: itemId, restaurantId, trackQuantity: true, quantity: { $gte: qty } },
       [
@@ -388,22 +444,43 @@ export class MenuService implements OnModuleInit {
     return this.itemModel.find(filter).exec();
   }
 
-  async getPublicMenu(restaurantId: string) {
-    const categories = await this.categoryModel
-      .find({ restaurantId, isActive: true })
-      .sort({ order: 1 })
-      .exec();
+  async getPublicMenu(restaurantId: string): Promise<PublicMenuSections> {
+    const key = String(restaurantId);
+    const hit = this.publicMenuCache.get(key);
+    if (hit && Date.now() - hit.at < MenuService.PUBLIC_MENU_TTL_MS) {
+      return hit.sections;
+    }
 
-    const items = await this.itemModel
-      .find({ restaurantId, isAvailable: true })
-      .exec();
+    const [categories, items] = await Promise.all([
+      this.categoryModel
+        .find({ restaurantId, isActive: true })
+        .sort({ order: 1 })
+        .lean()
+        .exec(),
+      // Sold-out dishes are returned, not filtered out. A dish that simply
+      // vanishes reads as "they never sell this"; shown greyed and marked
+      // sold out, it tells the guest it exists and to ask again tomorrow.
+      // Ordering is refused server-side either way (see placeOrder).
+      this.itemModel.find({ restaurantId }).lean().exec(),
+    ]);
 
-    return categories.map((cat) => ({
+    // Group once by category instead of scanning every item per category:
+    // a 12-category, 200-item menu did 2,400 comparisons per scan.
+    const byCategory = new Map<string, Record<string, any>[]>();
+    for (const item of items) {
+      const catId = String(item.categoryId);
+      const bucket = byCategory.get(catId);
+      if (bucket) bucket.push(item);
+      else byCategory.set(catId, [item]);
+    }
+
+    const sections = categories.map((cat) => ({
       category: cat,
-      items: items.filter(
-        (item) => item.categoryId.toString() === cat._id.toString(),
-      ),
+      items: byCategory.get(String(cat._id)) ?? [],
     }));
+
+    this.publicMenuCache.set(key, { at: Date.now(), sections });
+    return sections;
   }
 
   async getPopularItems(

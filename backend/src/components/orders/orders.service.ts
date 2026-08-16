@@ -496,6 +496,7 @@ export class OrdersService {
   // auto-served after a long delay so the board doesn't fill up if someone
   // forgets to tap "done"; they still have to be marked paid by hand.
   private static readonly AUTO_SERVE_MS = 45 * 60_000; // 45 min
+  private static readonly AUTO_SERVE_BATCH = 200;
 
   @Cron(CronExpression.EVERY_MINUTE)
   async autoAdvanceOrders(): Promise<void> {
@@ -516,7 +517,17 @@ export class OrdersService {
             ],
           },
         })
-        .limit(200);
+        .limit(OrdersService.AUTO_SERVE_BATCH);
+
+      // Self-draining (a served order leaves the filter), so a full batch just
+      // means the rest wait a minute. Say so, because the alternative is
+      // orders quietly sitting on the board with nobody knowing why.
+      if (toServe.length === OrdersService.AUTO_SERVE_BATCH) {
+        this.logger.warn(
+          `Auto-serve hit its ${OrdersService.AUTO_SERVE_BATCH}-order batch cap; ` +
+          'the remainder waits for the next run.',
+        );
+      }
 
       for (const order of toServe) {
         order.status = OrderStatus.SERVED;
