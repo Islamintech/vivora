@@ -235,6 +235,18 @@ function buildTicket(opts) {
   }
 
   chunks.push(line(width));
+
+  // A single-item order prints a stub barely longer than a thumb: fiddly to
+  // tear off, easy to lose on a busy pass. Pad short tickets up to a minimum
+  // so every one is the same comfortable size to grab, while a long order
+  // stays exactly as long as it needs to be.
+  const minLines = opts.minLines || 0;
+  if (minLines > 0) {
+    const printed = Buffer.concat(chunks).filter((b) => b === 0x0a).length;
+    const padding = minLines - printed;
+    if (padding > 0) chunks.push(Buffer.alloc(padding, 0x0a));
+  }
+
   chunks.push(FEED_AND_CUT);
 
   // After the cut, so the buzzer sounds once the ticket is actually there to

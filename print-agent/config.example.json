@@ -18,6 +18,9 @@
   "printerPort": 9100,
   "_comment_network": "For a printer with an ethernet port and its own IP. Leave printerIp empty to use the IP/port saved in Settings > Kitchen ticket printing on the dashboard instead.",
 
+  "minTicketLines": 20,
+  "_comment_minTicketLines": "Pad short tickets to at least this many lines. A one-item order otherwise prints a stub barely longer than a thumb - awkward to tear off and easy to lose. Longer orders are unaffected. Roughly 3 lines per centimetre; 0 turns it off.",
+
   "beep": true,
   "_comment_beep": "Sound the printer's buzzer after each ticket, so a busy kitchen notices it. true = 3 beeps. For more control: { \"times\": 3, \"duration\": 2, \"mode\": \"escB\" } - duration is in tenths of a second, and mode is \"escB\" (most printers) or \"bel\" (simpler firmware). Run `node index.js --test-beep` to hear which one your printer understands. Set false to keep it silent; a per-printer beep overrides this one.",
 

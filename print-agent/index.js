@@ -76,6 +76,7 @@ function describePrinter(entry, fallbackName) {
   // `beep: false` on one printer has to win over a global `beep: true`, so
   // check for the key rather than falling back on truthiness.
   const beepCfg = entry.beep !== undefined ? entry.beep : config.beep;
+  const minLines = entry.minTicketLines ?? config.minTicketLines ?? 0;
 
   if (entry.serialPort) {
     const port = String(entry.serialPort).toUpperCase();
@@ -84,7 +85,7 @@ function describePrinter(entry, fallbackName) {
     // while still failing fast enough for the retry to mean something.
     const timeoutMs = entry.printTimeoutMs || config.printTimeoutMs || 10000;
     return {
-      kind: 'serial', name, width, port, baud, timeoutMs, beep: beepCfg,
+      kind: 'serial', name, width, port, baud, timeoutMs, beep: beepCfg, minLines,
       describe: `${name} (${port} @ ${baud} baud)`,
     };
   }
@@ -93,7 +94,7 @@ function describePrinter(entry, fallbackName) {
   const port = entry.printerIp
     ? (entry.printerPort || 9100)
     : (session.restaurant?.printerPort || 9100);
-  return { kind: 'network', name, width, ip, port, beep: beepCfg, describe: `${name} (${ip}:${port})` };
+  return { kind: 'network', name, width, ip, port, beep: beepCfg, minLines, describe: `${name} (${ip}:${port})` };
 }
 
 /**
@@ -176,6 +177,7 @@ async function printOrder(order) {
   const ticketFor = (t) =>
     buildTicket({
       beep: t.beep,
+      minLines: t.minLines,
       restaurantName: session.restaurant?.name,
       tableNumber: order.tableNumber,
       items: order.items,

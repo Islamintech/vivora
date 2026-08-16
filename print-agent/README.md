@@ -61,6 +61,20 @@ straight to the printer.
 That's it - step 6 is the last thing anyone has to do. See the next section
 for what it sets up.
 
+## Making short tickets easier to grab
+
+A one-item order prints a stub barely longer than a thumb: fiddly to tear
+off, easy to lose on a busy pass. Pad short tickets to a minimum length:
+
+```json
+"minTicketLines": 20
+```
+
+Blank lines are added before the cut only when a ticket is shorter than
+that, so a big order still prints exactly as long as it needs to be. Roughly
+3 lines to the centimetre, so 20 gives about 7cm of paper. Set `0` to turn
+it off. Like the other options it can also go inside a `printers[]` entry.
+
 ## Making a noise when a ticket prints
 
 Paper appearing makes no sound, and a kitchen is loud. If the printer's
