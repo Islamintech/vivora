@@ -35,7 +35,10 @@ const BillingPage: NextPage = () => {
   };
 
   const invoices = b?.invoices ?? [];
+  // The fee is charged in Vivora's currency; the restaurant's own takings are
+  // shown in whatever it prices its menu in, so the two are not interchangeable.
   const cur = b?.currency || 'KRW';
+  const revCur = b?.currentRevenueCurrency || cur;
 
   return (
     <>
@@ -45,7 +48,8 @@ const BillingPage: NextPage = () => {
           <Box mb={4}>
             <Typography variant="h4" fontWeight={800}>Xizmat uchun to‘lov</Typography>
             <Typography color="text.secondary">
-              Vivora buyurtmalaringizdan {b ? (b.feeRate * 100).toFixed(1) : '0.3'}% xizmat haqi oladi.
+              Vivora xizmati oyiga {formatMoney(b?.feeAmount ?? 0, cur)} turadi. Summa
+              savdoingizga bog‘liq emas.
             </Typography>
           </Box>
 
@@ -60,7 +64,7 @@ const BillingPage: NextPage = () => {
                   {formatMoney(b?.currentFee ?? 0, cur)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'grey.500' }}>
-                  {formatMoney(b?.currentRevenue ?? 0, cur)} savdodan {b ? (b.feeRate * 100).toFixed(1) : '0.3'}%
+                  Bu oygi savdo: {formatMoney(b?.currentRevenue ?? 0, revCur)}
                 </Typography>
                 <Alert severity="info" icon={<Info />} sx={{ mt: 2, bgcolor: 'rgba(255,255,255,0.08)', color: 'grey.300', '& .MuiAlert-icon': { color: 'grey.400' } }}>
                   Bu oy tugagach yakuniy hisob-faktura chiqadi.
@@ -110,7 +114,7 @@ const BillingPage: NextPage = () => {
                   <TableRow>
                     <TableCell>Davr</TableCell>
                     <TableCell>Savdo</TableCell>
-                    <TableCell>To‘lov (0.3%)</TableCell>
+                    <TableCell>To‘lov</TableCell>
                     <TableCell>Holati</TableCell>
                     <TableCell align="right">Amal</TableCell>
                   </TableRow>
@@ -121,7 +125,7 @@ const BillingPage: NextPage = () => {
                     return (
                       <TableRow key={inv._id} hover>
                         <TableCell><Typography fontWeight={600}>{inv.period}</Typography></TableCell>
-                        <TableCell>{formatMoney(inv.revenue, inv.currency)}</TableCell>
+                        <TableCell>{formatMoney(inv.revenue, inv.revenueCurrency || inv.currency)}</TableCell>
                         <TableCell><Typography fontWeight={700}>{formatMoney(inv.amountDue, inv.currency)}</Typography></TableCell>
                         <TableCell><Chip label={st.label} color={st.color} size="small" /></TableCell>
                         <TableCell align="right">

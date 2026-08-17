@@ -131,10 +131,10 @@ export const FEEDBACK_LIST_QUERY = gql`
 export const MY_BILLING_QUERY = gql`
   query MyBilling {
     myBilling {
-      currentPeriod currentRevenue currentFee feeRate currency
+      currentPeriod currentRevenue currentRevenueCurrency currentFee feeAmount currency
       bank { bankName cardNumber holder }
       invoices {
-        _id period revenue feeRate amountDue currency status paidReportedAt confirmedAt createdAt
+        _id period revenue revenueCurrency feeAmount amountDue currency status paidReportedAt confirmedAt createdAt
       }
     }
   }

@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 export const ALL_INVOICES_QUERY = gql`
   query AllInvoices($period: String) {
     allInvoices(period: $period) {
-      _id restaurantId restaurantName period revenue amountDue currency status
+      _id restaurantId restaurantName period revenue revenueCurrency amountDue currency status
       paidReportedAt confirmedAt createdAt
     }
   }

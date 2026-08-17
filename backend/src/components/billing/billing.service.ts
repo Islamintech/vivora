@@ -15,10 +15,17 @@ import { Order, OrderDocument } from '../../schemas/Order.model';
 import { RestaurantsService } from '../restaurants/restaurants.service';
 import { BillingStatus } from '../../libs/enums/billing.enum';
 import { OrderStatus } from '../../libs/enums/order.enum';
+import { RestaurantStatus } from '../../libs/enums/restaurant.enum';
 
-// The platform's take rate and where restaurants transfer the fee. These are
+// What Vivora charges and where restaurants transfer it. These are
 // intentionally simple constants for now — move to env/DB config when needed.
-const FEE_RATE = Number(process.env.PLATFORM_FEE_RATE || 0.003); // 0.3%
+//
+// A flat monthly subscription rather than a share of turnover: the price is
+// the same sentence for every restaurant, and neither side has to agree on
+// which orders counted. Quoted in KRW regardless of the currency a restaurant
+// prices its own menu in, so the invoice carries FEE_CURRENCY, not theirs.
+const FEE_AMOUNT = Number(process.env.PLATFORM_FEE_AMOUNT || 79000);
+const FEE_CURRENCY = process.env.PLATFORM_FEE_CURRENCY || 'KRW';
 const BANK = {
   bankName: process.env.PLATFORM_BANK_NAME || 'Ipak Yo‘li Bank',
   cardNumber: process.env.PLATFORM_BANK_CARD || '8600 0000 0000 0000',
@@ -39,8 +46,8 @@ export class BillingService {
   bankInfo() {
     return BANK;
   }
-  feeRate() {
-    return FEE_RATE;
+  feeAmount() {
+    return FEE_AMOUNT;
   }
 
   private periodOf(d: Date): string {
@@ -83,13 +90,15 @@ export class BillingService {
       this.restaurantsService.findById(restaurantId),
       this.invoiceModel.find({ restaurantId }).sort({ period: -1 }).exec(),
     ]);
-    const currency = restaurant?.currency || 'KRW';
+    // revenue is still reported: it is what the owner wants to see on this
+    // page, even though the fee no longer depends on it.
     return {
       currentPeriod: period,
       currentRevenue: revenue,
-      currentFee: this.round(revenue * FEE_RATE),
-      feeRate: FEE_RATE,
-      currency,
+      currentRevenueCurrency: restaurant?.currency || 'KRW',
+      currentFee: FEE_AMOUNT,
+      feeAmount: FEE_AMOUNT,
+      currency: FEE_CURRENCY,
       bank: BANK,
       invoices,
     };
@@ -133,8 +142,13 @@ export class BillingService {
   }
 
   /**
-   * Create one PENDING invoice per restaurant for a month (skips zero-revenue
-   * and already-generated ones). Returns how many were created.
+   * Create one PENDING invoice per restaurant for a month (skips
+   * already-generated ones). Returns how many were created.
+   *
+   * The subscription is owed whether or not the restaurant took a single
+   * order, so a quiet month is still invoiced. Restaurants that were never
+   * approved are not: they cannot use the platform, so there is nothing to
+   * charge for.
    */
   async generateForPeriod(period: string): Promise<number> {
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) {
@@ -143,18 +157,19 @@ export class BillingService {
     const restaurants = await this.restaurantsService.findAll();
     let created = 0;
     for (const r of restaurants) {
+      if (r.status !== RestaurantStatus.APPROVED) continue;
       const rid = r._id.toString();
       const exists = await this.invoiceModel.exists({ restaurantId: rid, period });
       if (exists) continue;
-      const revenue = await this.revenueFor(rid, period);
-      if (revenue <= 0) continue;
       await this.invoiceModel.create({
         restaurantId: rid,
         period,
-        revenue,
-        feeRate: FEE_RATE,
-        amountDue: this.round(revenue * FEE_RATE),
-        currency: r.currency || 'KRW',
+        // Recorded for the owner's reference only - it does not set the price.
+        revenue: await this.revenueFor(rid, period),
+        revenueCurrency: r.currency || 'KRW',
+        feeAmount: FEE_AMOUNT,
+        amountDue: FEE_AMOUNT,
+        currency: FEE_CURRENCY,
         status: BillingStatus.PENDING,
       });
       created++;

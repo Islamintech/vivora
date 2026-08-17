@@ -4,9 +4,10 @@ import { BillingStatus } from '../libs/enums/billing.enum';
 
 export type BillingInvoiceDocument = BillingInvoice & Document;
 
-// One monthly service-fee invoice for a restaurant: 0.3% of the order revenue
-// that flowed through Vivora that month. restaurantId is stored as a plain
-// string, matching how orders store it (avoids the Mixed/ObjectId pitfall).
+// One monthly service-fee invoice for a restaurant: a flat subscription,
+// charged whether the month was busy or quiet. restaurantId is stored as a
+// plain string, matching how orders store it (avoids the Mixed/ObjectId
+// pitfall).
 @Schema({ timestamps: true })
 export class BillingInvoice {
   @Prop({ required: true, index: true })
@@ -16,17 +17,25 @@ export class BillingInvoice {
   @Prop({ required: true })
   period: string;
 
-  // Total non-cancelled order value in the period.
+  // Total non-cancelled order value in the period. Kept for the owner's
+  // reference; it no longer determines what they owe.
   @Prop({ required: true, min: 0 })
   revenue: number;
 
-  // Rate snapshot (e.g. 0.003) so historical invoices stay correct if it changes.
-  @Prop({ required: true })
-  feeRate: number;
+  // The restaurant prices its menu in its own currency, which need not be the
+  // one the fee is charged in - so revenue and amountDue carry separate codes.
+  @Prop({ default: 'KRW' })
+  revenueCurrency: string;
+
+  // Price snapshot, so an invoice still shows what was charged at the time
+  // even after the subscription price changes.
+  @Prop({ required: true, min: 0 })
+  feeAmount: number;
 
   @Prop({ required: true, min: 0 })
   amountDue: number;
 
+  // Currency of amountDue (the fee), not of revenue.
   @Prop({ default: 'KRW' })
   currency: string;
 

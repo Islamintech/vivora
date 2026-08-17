@@ -15,7 +15,8 @@ export class BillingInvoiceModel {
   @Field({ nullable: true }) restaurantName?: string;
   @Field() period: string;
   @Field(() => Float) revenue: number;
-  @Field(() => Float) feeRate: number;
+  @Field({ nullable: true }) revenueCurrency?: string;
+  @Field(() => Float) feeAmount: number;
   @Field(() => Float) amountDue: number;
   @Field() currency: string;
   @Field(() => BillingStatus) status: BillingStatus;
@@ -30,8 +31,10 @@ export class BillingInvoiceModel {
 export class MyBilling {
   @Field() currentPeriod: string;
   @Field(() => Float) currentRevenue: number;
+  // Revenue is in the restaurant's own currency; the fee is in Vivora's.
+  @Field({ nullable: true }) currentRevenueCurrency?: string;
   @Field(() => Float) currentFee: number;
-  @Field(() => Float) feeRate: number; // e.g. 0.003
+  @Field(() => Float) feeAmount: number; // flat monthly price, e.g. 79000
   @Field() currency: string;
   @Field(() => BillingBank) bank: BillingBank;
   @Field(() => [BillingInvoiceModel]) invoices: BillingInvoiceModel[];

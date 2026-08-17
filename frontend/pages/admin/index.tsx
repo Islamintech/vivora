@@ -716,7 +716,7 @@ const AdminPage: NextPage = () => {
                           <TableRow key={inv._id} hover>
                             <TableCell><Typography fontWeight={600}>{inv.restaurantName ?? inv.restaurantId?.slice(-6)}</Typography></TableCell>
                             <TableCell>{inv.period}</TableCell>
-                            <TableCell>{formatMoney(inv.revenue, inv.currency)}</TableCell>
+                            <TableCell>{formatMoney(inv.revenue, inv.revenueCurrency || inv.currency)}</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>{formatMoney(inv.amountDue, inv.currency)}</TableCell>
                             <TableCell><Chip label={meta.label} color={meta.color} size="small" /></TableCell>
                             <TableCell align="right">
