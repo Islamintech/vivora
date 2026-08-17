@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const { createClient } = require('graphql-ws');
-const { login, getMyRestaurant, markOrderPreparing } = require('./graphql');
+const { login, getMyRestaurant } = require('./graphql');
 const { buildTicket, beep, drawerKick } = require('./escpos');
 const { printToNetwork, printToSerial } = require('./printer');
 
@@ -155,10 +155,6 @@ async function printWithRetry(target, buffer, attempts = 3) {
   }
 }
 
-function markPreparing(orderId) {
-  return markOrderPreparing(config.apiUrl, session.token, orderId);
-}
-
 async function printOrder(order) {
   const targets = effectivePrinters().filter((t) => {
     if (t.kind === 'network' && !t.ip) {
@@ -215,13 +211,10 @@ async function printOrder(order) {
     (printed.length < results.length ? ` (${results.length - printed.length} failed)` : ''),
   );
 
-  // One printed copy means the kitchen has the order - advance it to
-  // Preparing so the customer sees progress without any staff tap.
-  if (order._id && order._id !== 'testprint') {
-    markPreparing(order._id).catch((err) =>
-      log(`Could not mark order ${order._id} preparing: ${err.message}`),
-    );
-  }
+  // Printing deliberately does NOT advance the order. A new ticket has to stay
+  // in "Yangi buyurtmalar" with its accept/reject buttons, because rejecting is
+  // a decision only a person can make and the paper arrives before anyone has
+  // read it. The server moves it on by itself after two minutes if nobody does.
 }
 
 const ORDER_CREATED_SUBSCRIPTION = `

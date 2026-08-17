@@ -210,8 +210,9 @@ all of them:
 Each entry takes the same settings as a single printer, so you can mix a
 serial one with a network one. They print in parallel and independently: if
 one is out of paper the other still prints, and the log names which
-succeeded. The order is marked Preparing as long as at least one copy came
-out.
+succeeded. Printing does not change the order's stage - a new ticket stays in
+"Yangi buyurtmalar" on the kitchen board so staff can still accept or reject
+it.
 
 ## Reading the printer's self-test slip
 
